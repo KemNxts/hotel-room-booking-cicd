@@ -44,12 +44,23 @@ pipeline and Ansible provisioning.
 │   ├── templates/          # Jinja2 HTML pages
 │   └── static/style.css
 ├── wsgi.py                 # entry point for Gunicorn / dev server
-├── requirements.txt
+├── gunicorn.conf.py        # Gunicorn settings (workers, bind, logs)
+├── requirements.txt        # runtime deps      requirements-dev.txt: + test tools
+├── pytest.ini
 ├── tests/
-│   ├── unit/               # pytest unit tests (Phase 3)
-│   └── e2e/                # Selenium user-journey tests (Phase 3)
+│   ├── unit/               # pytest tests of the service layer
+│   └── e2e/                # Selenium user journeys (screenshot on failure)
+├── Dockerfile              # app image (Gunicorn, non-root, HEALTHCHECK)
+├── docker-compose.yml      # nginx + app + database volume
+├── .env.example            # template for the git-ignored .env
+├── Jenkinsfile             # CI/CD pipeline
 ├── deploy/
-│   └── ansible/            # inventory + playbook (Phase 6)
+│   ├── nginx/              # reverse-proxy image + config
+│   ├── jenkins/            # ready-to-run local Jenkins (image, plugins, job setup)
+│   └── ansible/            # inventory, playbook, group_vars, controller image
+├── docs/
+│   ├── container-lifecycle.md
+│   └── viva-notes.md       # design decisions explained
 ├── .github/                # issue + PR templates
 ├── CONTRIBUTING.md         # branching + commit message rules
 └── README.md
@@ -148,6 +159,63 @@ for all build/run/stop commands.
 > `CERTIFICATE_VERIFY_FAILED`. Turn off HTTPS scanning while building
 > (Avast: Settings -> Protection -> Core Shields -> Web Shield ->
 > untick "Enable HTTPS scanning").
+
+## CI/CD with Jenkins
+
+`Jenkinsfile` stages: **Checkout -> Build** (venv + pip) **-> Unit tests -> E2E
+tests -> Package** (docker images tagged with the build number) **-> Deploy**
+(docker compose + health check). A failing test fails its stage and stops the
+pipeline, so nothing broken is packaged or deployed. Test results (JUnit XML)
+and failure screenshots are attached to each build.
+
+Parameter `APP_ENV` (`staging` | `prod`) chooses the environment: it sets
+`APP_ENV` inside the container, the port (staging 8081, prod 8082) and a
+separate compose project, so each environment has its own containers and data.
+
+### Run Jenkins locally (one command)
+
+```bash
+cd deploy/jenkins
+cp .env.example .env          # Windows: copy .env.example .env  - set both values
+docker compose up -d --build
+```
+
+Open http://localhost:8090, log in as `admin`. The job **hotel-booking** is
+already created. It builds the `develop` branch of this folder (commit first,
+Jenkins only sees committed code). Click **Build Now**; the first run uses the
+default `APP_ENV=staging`, later runs show **Build with Parameters**. Jenkins
+also polls for new commits every ~5 minutes.
+
+After a successful build: staging app at http://localhost:8081.
+
+Using your own Jenkins instead: install plugins *Pipeline, Git, JUnit,
+Credentials Binding*, add a *Secret text* credential with ID
+`hotel-secret-key`, create a *Pipeline from SCM* job pointing at this repo,
+and make sure the agent has `python3.11`, Chrome/Chromium and Docker.
+
+## Provisioning with Ansible
+
+`deploy/ansible/playbook.yml` takes a fresh **Ubuntu 22.04/24.04** server to a
+running site: installs Docker + compose plugin, copies the app, writes a
+root-only `.env` (with a generated `SECRET_KEY`), builds the images, starts
+the containers and checks `/health` through Nginx. Re-running it changes
+nothing unless something changed (idempotent).
+
+1. Put your server's IP and user in `deploy/ansible/inventory.ini`.
+2. Run Ansible (Linux/macOS/WSL with Ansible installed):
+   ```bash
+   cd deploy/ansible
+   ansible-playbook playbook.yml --ask-pass --ask-become-pass
+   ```
+   From Windows without WSL, use the provided controller image (from the repo root):
+   ```powershell
+   docker build -t hotel-ansible deploy/ansible
+   docker run --rm -it -v "${PWD}:/work" hotel-ansible ansible-playbook playbook.yml --ask-pass --ask-become-pass
+   ```
+3. Open `http://<server-ip>/`.
+
+Dry run: add `--check`. The generated key is stored on your machine in
+`deploy/ansible/credentials/secret_key` (git-ignored).
 
 ### Configuration (environment variables)
 
