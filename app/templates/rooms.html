@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Rooms{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Check availability</h1>
+  <form method="get" action="{{ url_for('rooms.list_rooms') }}" class="search" id="search-form">
+    <div>
+      <label for="check_in">Check-in</label>
+      <input id="check_in" name="check_in" type="date" value="{{ check_in }}" required>
+    </div>
+    <div>
+      <label for="check_out">Check-out</label>
+      <input id="check_out" name="check_out" type="date" value="{{ check_out }}" required>
+    </div>
+    <button type="submit" id="search-btn">Search</button>
+  </form>
+</section>
+
+{% if results is not none %}
+  {# A search was made: show each room with Available / Booked. #}
+  <section class="card">
+    <h2>Availability {{ check_in }} → {{ check_out }}</h2>
+    <table id="availability-table">
+      <thead><tr><th>Room</th><th>Type</th><th>Guests</th><th>Price / night</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for room, available in results %}
+        <tr id="room-{{ room.room_number }}">
+          <td>{{ room.room_number }}</td>
+          <td>{{ room.room_type }}</td>
+          <td>{{ room.capacity }}</td>
+          <td>₹{{ room.price_per_night }}</td>
+          <td>
+            {% if available %}<span class="badge badge-ok">Available</span>
+            {% else %}<span class="badge badge-no">Booked</span>{% endif %}
+          </td>
+          <td>
+            {% if available and g.user %}
+              <form method="post" action="{{ url_for('bookings.create') }}" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="room_id" value="{{ room.id }}">
+                <input type="hidden" name="check_in" value="{{ check_in }}">
+                <input type="hidden" name="check_out" value="{{ check_out }}">
+                <button type="submit" id="book-{{ room.room_number }}">Book</button>
+              </form>
+            {% elif available %}
+              <a href="{{ url_for('auth.login', next=request.full_path) }}">Log in to book</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% else %}
+  {# No search yet: plain list of rooms. #}
+  <section class="card">
+    <h2>Our rooms</h2>
+    <table id="rooms-table">
+      <thead><tr><th>Room</th><th>Type</th><th>Guests</th><th>Price / night</th></tr></thead>
+      <tbody>
+      {% for room in rooms %}
+        <tr><td>{{ room.room_number }}</td><td>{{ room.room_type }}</td>
+            <td>{{ room.capacity }}</td><td>₹{{ room.price_per_night }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="hint">Pick dates above to see which rooms are free.</p>
+  </section>
+{% endif %}
+{% endblock %}

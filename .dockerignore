@@ -1,0 +1,17 @@
+# Keep the build context small and keep secrets/dev files out of images.
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+instance
+reports
+tests
+docs
+deploy/ansible
+deploy/jenkins
+*.md
+.env
+*.db

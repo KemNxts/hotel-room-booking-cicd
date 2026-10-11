@@ -1,0 +1,28 @@
+# Variables for every server in the [web] group.
+# Override any of them per run, e.g.:  ansible-playbook playbook.yml -e app_env=staging
+
+# Where the application files go on the server.
+app_dir: /opt/hotel-booking
+
+# Environment setting passed to the app (APP_ENV).
+app_env: prod
+
+# Public port Nginx listens on (80 = normal http://server-ip/).
+host_port: 80
+
+# Release being deployed: the VERSION file of the checked-out repository.
+# Images on the server are tagged with it, so older releases stay on the
+# server and rollback.yml can switch back to them.
+app_version: "{{ lookup('ansible.builtin.file', playbook_dir + '/../../VERSION') | trim }}"
+image_tag: "{{ app_version }}"
+
+# Commit being deployed (shown by /health and stored as an image label).
+# Ends in "-dirty" if the working copy has uncommitted changes: commit
+# before deploying, so every deployment can be traced to a commit.
+git_commit: "{{ lookup('ansible.builtin.pipe', 'git -C ' + playbook_dir + ' describe --always --dirty --abbrev=7 --exclude \"*\" 2>/dev/null || echo unknown') }}"
+
+# SECRET_KEY for the app. The password lookup generates a random 64-char key
+# the first time and saves it on the CONTROL machine in
+# deploy/ansible/credentials/secret_key (git-ignored), so every later run
+# reuses the same key and users stay logged in across deploys.
+secret_key: "{{ lookup('ansible.builtin.password', playbook_dir + '/credentials/secret_key', length=64, chars=['ascii_letters', 'digits']) }}"

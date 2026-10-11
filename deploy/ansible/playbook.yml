@@ -1,0 +1,151 @@
+# Provision a fresh Ubuntu server and deploy the Hotel Booking Portal on it.
+#
+#   ansible-playbook playbook.yml            # run (from deploy/ansible)
+#   ansible-playbook playbook.yml --check    # dry run: show what would change
+#   ansible-playbook rollback.yml            # go back to the previous release
+#
+# Every task is idempotent: running the playbook again changes nothing
+# unless something is missing or the code changed.
+#
+# Deliberately NOT touched: SSH settings, firewall rules and any other
+# service on the server. If a firewall (ufw) is active, open host_port
+# yourself after checking what else the server exposes.
+- name: Provision server and deploy the Hotel Booking Portal
+  hosts: web
+  become: true                       # tasks run with sudo
+  vars:
+    repo_root: "{{ playbook_dir }}/../.."
+    # What gets copied to the server: source code + Docker build files.
+    deploy_items:
+      - { src: app, dest: . }
+      - { src: wsgi.py, dest: . }
+      - { src: gunicorn.conf.py, dest: . }
+      - { src: requirements.txt, dest: . }
+      - { src: VERSION, dest: . }
+      - { src: Dockerfile, dest: . }
+      - { src: .dockerignore, dest: . }
+      - { src: docker-compose.yml, dest: . }
+      - { src: certs, dest: . }       # optional extra CA certificates (usually empty)
+      - { src: deploy/nginx, dest: deploy }
+
+  tasks:
+    # ----------------------------------------------------- 1. prerequisites
+    - name: Install Docker engine and the Docker Compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600       # skip "apt update" if done in the last hour
+
+    - name: Make sure Docker is running and starts on boot
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    # --------------------------------------------------- 2. application files
+    - name: Create application directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop:
+        - "{{ app_dir }}"
+        - "{{ app_dir }}/deploy"
+
+    - name: Copy application source and Docker files
+      ansible.builtin.copy:
+        src: "{{ repo_root }}/{{ item.src }}"
+        dest: "{{ app_dir }}/{{ item.dest }}/"
+        owner: root
+        group: root
+        mode: preserve
+      loop: "{{ deploy_items }}"
+
+    # Remember what is running now, so rollback.yml can return to it.
+    - name: Read the currently deployed configuration (if any)
+      ansible.builtin.slurp:
+        src: "{{ app_dir }}/.env"
+      register: current_env
+      failed_when: false
+      no_log: true                   # the file contains SECRET_KEY
+
+    - name: Work out the currently deployed release
+      ansible.builtin.set_fact:
+        current_tag: "{{ (current_env.content | b64decode | regex_search('(?m)^IMAGE_TAG=(\\S+)', '\\1') | first)
+                         if current_env.content is defined else '' }}"
+      no_log: true
+
+    - name: Remember the previous release for rollback
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/previous_release"
+        content: "{{ current_tag }}\n"
+        mode: "0644"
+      when: current_tag | length > 0 and current_tag != image_tag
+
+    - name: Write the environment file read by docker compose
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/.env"
+        content: |
+          SECRET_KEY={{ secret_key }}
+          APP_ENV={{ app_env }}
+          HOST_PORT={{ host_port }}
+          APP_VERSION={{ app_version }}
+          GIT_COMMIT={{ git_commit }}
+          IMAGE_TAG={{ image_tag }}
+        owner: root
+        group: root
+        mode: "0600"                 # only root can read the secret
+      no_log: true                   # never print the secret in Ansible output
+
+    # ----------------------------------------------------------- 3. deploy
+    # Build only if this release + commit has not been built yet. (Even a
+    # fully cached rebuild gets a new image id, which would make compose
+    # restart the containers on every run - not idempotent.)
+    - name: Check whether images for this release and commit already exist
+      ansible.builtin.command:
+        cmd: >-
+          docker image inspect --format '{{ '{{' }}index .Config.Labels "org.opencontainers.image.revision"{{ '}}' }}'
+          hotel-booking-app:{{ image_tag }} hotel-booking-nginx:{{ image_tag }}
+      register: existing_image
+      changed_when: false
+      failed_when: false
+      tags: [build]
+
+    - name: Build the Docker images on the server
+      ansible.builtin.command:
+        cmd: docker compose build
+        chdir: "{{ app_dir }}"
+      when: existing_image.rc != 0 or existing_image.stdout_lines[0] != git_commit
+      tags: [build]
+
+    - name: Start (or update) the containers and wait until healthy
+      ansible.builtin.command:
+        cmd: docker compose up -d --no-build --wait --wait-timeout 180
+        chdir: "{{ app_dir }}"
+      register: up
+      # compose only re-creates containers whose image or settings changed.
+      changed_when: "'Started' in up.stderr or 'Recreated' in up.stderr"
+
+    - name: Check the portal answers through Nginx
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ host_port }}/health"
+        return_content: true
+      register: health
+      retries: 10
+      delay: 3
+      until: health.status == 200
+
+    - name: Check the expected release is the one running
+      ansible.builtin.assert:
+        that: health.json.version == app_version
+        fail_msg: "Expected version {{ app_version }} but /health says {{ health.json.version }}"
+        quiet: true
+
+    - name: Show result
+      ansible.builtin.debug:
+        msg: "Hotel Booking Portal is up on port {{ host_port }}: {{ health.json }}"

@@ -25,6 +25,7 @@ tests/e2e/screenshots/
 
 # --- Secrets / local config (never commit) ---
 .env
+deploy/ansible/credentials/
 *.pem
 *.key
 
@@ -33,3 +34,6 @@ tests/e2e/screenshots/
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Extra CA certificates (see certs/README.md) ---
+certs/*.crt

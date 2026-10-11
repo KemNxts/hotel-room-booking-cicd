@@ -1,0 +1,83 @@
+# Roll the server back to an earlier release.
+#
+#   ansible-playbook rollback.yml                       # back to the previous release
+#   ansible-playbook rollback.yml -e rollback_to=1.0.0  # to a specific release
+#
+# How it works: every deploy tags the images with the release version and
+# keeps older images on the server. Rolling back = pointing IMAGE_TAG in .env
+# at an older, already-built (already tested) image and restarting the
+# containers. No rebuild, no new code. The database volume is kept, so
+# bookings made since are not lost. (Fine for this app: no release has
+# changed the database schema. A release that did would also need a
+# database migration plan.)
+#
+# Running it again rolls forward again: the release it rolled back FROM is
+# saved as the new "previous" release.
+- name: Roll back the Hotel Booking Portal
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Read the previous release recorded by the last deploy
+      ansible.builtin.slurp:
+        src: "{{ app_dir }}/previous_release"
+      register: previous
+      when: rollback_to is not defined
+
+    - name: Choose the release to go back to
+      ansible.builtin.set_fact:
+        target_tag: "{{ rollback_to if rollback_to is defined else (previous.content | b64decode | trim) }}"
+
+    - name: Read the current configuration
+      ansible.builtin.slurp:
+        src: "{{ app_dir }}/.env"
+      register: current_env
+      no_log: true                   # contains SECRET_KEY
+
+    - name: Work out the release running now
+      ansible.builtin.set_fact:
+        current_tag: "{{ current_env.content | b64decode | regex_search('(?m)^IMAGE_TAG=(\\S+)', '\\1') | first }}"
+      no_log: true
+
+    - name: Refuse to continue if the target release's images are not on the server
+      ansible.builtin.command:
+        cmd: >-
+          docker image inspect --format '{{ '{{' }}.Id{{ '}}' }}'
+          hotel-booking-app:{{ target_tag }} hotel-booking-nginx:{{ target_tag }}
+      changed_when: false
+
+    - name: Point the deployment at the target release
+      ansible.builtin.lineinfile:
+        path: "{{ app_dir }}/.env"
+        regexp: "^{{ item }}="
+        line: "{{ item }}={{ target_tag }}"
+      loop: [IMAGE_TAG, APP_VERSION]
+
+    - name: Save the release we are leaving, so it can be restored the same way
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/previous_release"
+        content: "{{ current_tag }}\n"
+        mode: "0644"
+      when: current_tag != target_tag
+
+    - name: Restart the containers on the target release and wait until healthy
+      ansible.builtin.command:
+        cmd: docker compose up -d --no-build --wait --wait-timeout 180
+        chdir: "{{ app_dir }}"
+      register: up
+      changed_when: "'Started' in up.stderr or 'Recreated' in up.stderr"
+
+    - name: Check the portal answers through Nginx
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ host_port }}/health"
+        return_content: true
+      register: health
+      retries: 10
+      delay: 3
+      until: health.status == 200
+
+    - name: Verify the restored release is the one running
+      ansible.builtin.assert:
+        that: health.json.version == target_tag
+        fail_msg: "Rollback failed: expected {{ target_tag }} but /health says {{ health.json.version }}"
+        success_msg: "Rolled back from {{ current_tag }} to {{ target_tag }}: {{ health.json }}"

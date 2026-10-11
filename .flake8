@@ -1,0 +1,4 @@
+[flake8]
+# Static checks run by the Jenkins "Static checks" stage:  flake8
+max-line-length = 110
+exclude = .git,.venv,venv,__pycache__,reports,instance,dist
