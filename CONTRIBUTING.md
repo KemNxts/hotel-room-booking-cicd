@@ -13,6 +13,8 @@ Branch naming rules:
 - Lowercase, words separated by hyphens: `feature/<short-description>`
 - Optionally prefix the issue number: `feature/12-booking-cancellation`
 - Bug fixes use the same pattern: `feature/fix-login-redirect`
+  (or `fix/<short-description>`, e.g. `fix/jenkins-stale-reports`)
+- Throw-away experiments: `experiment/<name>` - **never merged** into `develop` or `main`
 
 Typical flow:
 
@@ -25,7 +27,15 @@ git push -u origin feature/booking-cancellation
 # open a Pull Request: feature/booking-cancellation -> develop
 ```
 
-Release: open a PR `develop -> main` once the CI pipeline is green on `develop`.
+Release: once the CI pipeline is green on `develop`, bump `VERSION`, open a
+PR `develop -> main`, merge with `--no-ff`, tag it and build `main`:
+
+```bash
+git checkout main && git merge --no-ff develop
+git tag -a v1.2.0 -m "v1.2.0 - <summary>"
+git push origin main --tags
+# Jenkins: Build with Parameters -> BRANCH=main, APP_ENV=prod
+```
 
 ## Commit messages
 
