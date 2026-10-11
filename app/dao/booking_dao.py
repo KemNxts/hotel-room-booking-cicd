@@ -7,7 +7,7 @@ from app.models import Booking, BookingStatus
 # Touching stays do NOT overlap: check-out on the 5th and a new check-in on
 # the 5th is fine. Only PENDING/CONFIRMED bookings block a room.
 _OVERLAP_SQL = """
-    check_in <= :check_out
+    check_in < :check_out
     AND check_out > :check_in
     AND status IN ('PENDING', 'CONFIRMED')
 """
