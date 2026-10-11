@@ -21,4 +21,15 @@ def load_config():
         "DATABASE_PATH": os.environ.get("DATABASE_PATH"),
         # Business rule: longest stay allowed in one booking.
         "MAX_NIGHTS": int(os.environ.get("MAX_NIGHTS", "30")),
+        # Which release is running. Baked into the Docker image at build time
+        # and reported by /health, so a deploy or rollback can be verified.
+        "APP_VERSION": os.environ.get("APP_VERSION", "dev"),
+        "GIT_COMMIT": os.environ.get("GIT_COMMIT", "unknown"),
+        # Session cookie protection. HttpOnly: JavaScript cannot read the
+        # cookie. SameSite=Lax: the browser does not send it with form posts
+        # from other sites. Secure (HTTPS only) is switched on with an env var
+        # because the local demo runs on plain HTTP.
+        "SESSION_COOKIE_HTTPONLY": True,
+        "SESSION_COOKIE_SAMESITE": "Lax",
+        "SESSION_COOKIE_SECURE": os.environ.get("SESSION_COOKIE_SECURE", "0") == "1",
     }

@@ -1,5 +1,6 @@
 """Features 3-6: booking request, confirmation, cancellation, status tracking."""
-from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
+from flask import (Blueprint, abort, current_app, flash, g, redirect, render_template, request,
+                   url_for)
 
 from app.services import BookingError, NotFoundError
 
@@ -30,6 +31,9 @@ def create():
         # Back to the search the user came from.
         return redirect(url_for("rooms.list_rooms",
                                 check_in=form.get("check_in"), check_out=form.get("check_out")))
+    current_app.logger.info("Booking %s requested: user_id=%s room=%s %s..%s",
+                            booking.id, g.user.id, booking.room_number,
+                            booking.check_in, booking.check_out)
     flash("Booking requested. Please review and confirm it below.", "success")
     return redirect(url_for("bookings.detail", booking_id=booking.id))
 
@@ -62,7 +66,9 @@ def _change_status(action, booking_id, success_message):
     """Confirm and cancel work the same way, so they share this helper.
     `action` is the service method to call (confirm_booking or cancel_booking)."""
     try:
-        action(booking_id, g.user.id)
+        booking = action(booking_id, g.user.id)
+        current_app.logger.info("Booking %s is now %s (user_id=%s)",
+                                booking.id, booking.status, g.user.id)
         flash(success_message, "success")
     except NotFoundError:
         abort(404)

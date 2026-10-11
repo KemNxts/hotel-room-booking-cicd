@@ -15,6 +15,7 @@
         <a href="{{ url_for('bookings.my_bookings') }}" id="nav-my-bookings">My bookings</a>
         <span class="who" id="nav-user">{{ g.user.full_name }}</span>
         <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="link" id="logout-btn">Log out</button>
         </form>
       {% else %}

@@ -36,6 +36,7 @@
           <td>
             {% if available and g.user %}
               <form method="post" action="{{ url_for('bookings.create') }}" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="room_id" value="{{ room.id }}">
                 <input type="hidden" name="check_in" value="{{ check_in }}">
                 <input type="hidden" name="check_out" value="{{ check_out }}">

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>{{ title }}</h1>
+  <p id="error-message">{{ message }}</p>
+  <p><a href="{{ url_for('rooms.list_rooms') }}">Back to rooms</a></p>
+</section>
+{% endblock %}
