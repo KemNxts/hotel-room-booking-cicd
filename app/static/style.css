@@ -47,3 +47,6 @@ th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #e5e7eb; }
 .details dd { margin: 0; }
 .actions { display: flex; gap: .75rem; margin: 1rem 0; }
 .hint { color: var(--muted); }
+
+/* Footer: shows which release is running. */
+.site-footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 1.5rem 0; }

@@ -47,6 +47,12 @@ def create_app(overrides=None):
     app.register_blueprint(room_routes.bp)
     app.register_blueprint(booking_routes.bp)
 
+    @app.context_processor
+    def release_info():
+        # Shown in every page footer, so you can see in the browser which
+        # release is deployed (handy after a deploy or a rollback).
+        return {"app_version": app.config["APP_VERSION"], "app_env": app.config["APP_ENV"]}
+
     @app.get("/health")
     def health():
         # Used by Docker HEALTHCHECK, Jenkins and Ansible to check the app is up

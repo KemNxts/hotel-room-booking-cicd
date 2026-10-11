@@ -200,3 +200,10 @@ def test_prod_refuses_to_start_without_a_real_secret_key(tmp_path, key):
     with pytest.raises(RuntimeError, match="SECRET_KEY"):
         create_app({"APP_ENV": "prod", "SECRET_KEY": key,
                     "DATABASE_PATH": str(tmp_path / "p.db")})
+
+
+def test_footer_shows_the_running_release(tmp_path):
+    app = create_app({"APP_ENV": "test", "SECRET_KEY": "k", "APP_VERSION": "9.9.9",
+                      "DATABASE_PATH": str(tmp_path / "f.db")})
+    html = app.test_client().get("/rooms").get_data(as_text=True)
+    assert 'id="app-version">Release 9.9.9 · test<' in html
