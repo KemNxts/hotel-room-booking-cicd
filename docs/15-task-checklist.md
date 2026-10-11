@@ -43,7 +43,7 @@ by antivirus HTTPS scanning.
 | 6 | Second feature branch + real merge conflict + resolution | `feature/contact-footer`, `feature/release-footer` | **Verified** | `evidence/git/merge-conflict.txt`, merge `8728b62` |
 | 6 | Version tags, release baseline | tags `v1.0.0`, `v1.1.0` on `main` | **Verified** | `git tag -n1` |
 | 6 | Password hashing, sessions, validation, authorization, no secrets | app | **Verified** | integration tests (CSRF, cookies, 404 for others) |
-| 7 | Jenkins job: checkout, Python env, deps, lint, pytest, reports, artifacts | `Jenkinsfile`, `deploy/jenkins/` | **Verified** | builds #1-#9, `evidence/jenkins/`, `jenkins-01-*.png` |
+| 7 | Jenkins job: checkout, Python env, deps, lint, pytest, reports, artifacts | `Jenkinsfile`, `deploy/jenkins/` | **Verified** | builds #1-#10, `evidence/jenkins/`, `jenkins-01-*.png` |
 | 7 | Trigger | pollSCM (documented) | **Verified** (manual + API triggers used) | Webhook impossible without public Jenkins - documented |
 | 8 | Pipeline as code with all stages, parameter, secrets outside Git, deploy, health check | `Jenkinsfile` | **Verified** | `build-01-green-staging.log`, `build-05-release-v1.0.0-prod.log` |
 | 9 | 5 Selenium journeys, stable ids, explicit waits, isolated data, screenshots on failure | `tests/e2e/` | **Verified** | `evidence/tests/`, Jenkins Tests page |

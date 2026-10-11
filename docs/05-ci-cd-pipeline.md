@@ -112,6 +112,7 @@ implemented but **was not run** (no Docker Hub account was available).
 | #7 | develop | staging | SUCCESS | 90/90 | duplicate of #6 (triggered by mistake) |
 | #8 | main (v1.1.0) | prod | SUCCESS | 90/90 | v1.1.0 live on :8082 |
 | #9 | experiment/defect-demo-2 | staging | **FAILURE** | 81 + 1 failed | defect re-run after the stale-report fix |
+| #10 | develop (2e4c93a) | staging | SUCCESS | 90/90 | final check: report fix + docs + linting `scripts/` |
 
 \* Build #2's report also listed 5 E2E tests although that stage was
 skipped: a stale `e2e-tests.xml` from build #1 in the reused workspace. Found
