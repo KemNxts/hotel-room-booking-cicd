@@ -1,0 +1,465 @@
+Started by user admin
+Checking out git file:///repo into /var/jenkins_home/workspace/hotel-booking@script/ddadb71e924e41decc876d16d459775bb07904e9c3129ad9e7b60855a2dadd2a to read Jenkinsfile
+The recommended git tool is: NONE
+No credentials specified
+Cloning the remote Git repository
+Cloning repository file:///repo
+ > git init /var/jenkins_home/workspace/hotel-booking@script/ddadb71e924e41decc876d16d459775bb07904e9c3129ad9e7b60855a2dadd2a # timeout=10
+Fetching upstream changes from file:///repo
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url file:///repo # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+ > git rev-parse refs/remotes/origin/feature/ci-release-pipeline^{commit} # timeout=10
+Checking out Revision 64351fef62d5c41e5a1cfc423a4c299bfb314345 (refs/remotes/origin/feature/ci-release-pipeline)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 64351fef62d5c41e5a1cfc423a4c299bfb314345 # timeout=10
+Commit message: "ci: add lint, versioned images, registry publish and verified deploy"
+First time build. Skipping changelog.
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/hotel-booking
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+No credentials specified
+Cloning the remote Git repository
+Cloning repository file:///repo
+ > git init /var/jenkins_home/workspace/hotel-booking # timeout=10
+Fetching upstream changes from file:///repo
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url file:///repo # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+ > git rev-parse refs/remotes/origin/feature/ci-release-pipeline^{commit} # timeout=10
+Checking out Revision 64351fef62d5c41e5a1cfc423a4c299bfb314345 (refs/remotes/origin/feature/ci-release-pipeline)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 64351fef62d5c41e5a1cfc423a4c299bfb314345 # timeout=10
+Commit message: "ci: add lint, versioned images, registry publish and verified deploy"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timestamps
+[Pipeline] {
+[Pipeline] timeout
+[2026-10-11T16:45:37.398Z] Timeout set to expire in 30 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+[2026-10-11T16:45:37.614Z] The recommended git tool is: NONE
+[2026-10-11T16:45:37.614Z] No credentials specified
+[2026-10-11T16:45:37.615Z]  > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hotel-booking/.git # timeout=10
+[2026-10-11T16:45:37.620Z] Fetching changes from the remote Git repository
+[2026-10-11T16:45:37.623Z]  > git config remote.origin.url file:///repo # timeout=10
+[2026-10-11T16:45:37.628Z] Fetching upstream changes from file:///repo
+[2026-10-11T16:45:37.628Z]  > git --version # timeout=10
+[2026-10-11T16:45:37.634Z]  > git --version # 'git version 2.47.3'
+[2026-10-11T16:45:37.634Z]  > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+[2026-10-11T16:45:37.739Z]  > git rev-parse refs/remotes/origin/feature/ci-release-pipeline^{commit} # timeout=10
+[2026-10-11T16:45:37.744Z] Checking out Revision 64351fef62d5c41e5a1cfc423a4c299bfb314345 (refs/remotes/origin/feature/ci-release-pipeline)
+[2026-10-11T16:45:37.744Z]  > git config core.sparsecheckout # timeout=10
+[2026-10-11T16:45:37.749Z]  > git checkout -f 64351fef62d5c41e5a1cfc423a4c299bfb314345 # timeout=10
+[2026-10-11T16:45:37.760Z] Commit message: "ci: add lint, versioned images, registry publish and verified deploy"
+[Pipeline] script
+[Pipeline] {
+[Pipeline] readFile
+[Pipeline] sh
+[2026-10-11T16:45:38.206Z] + git rev-parse --short HEAD
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
+[2026-10-11T16:45:38.591Z] + git log -1 --pretty=Building commit %h on feature/ci-release-pipeline: %s
+[2026-10-11T16:45:38.591Z] Building commit 64351fe on feature/ci-release-pipeline: ci: add lint, versioned images, registry publish and verified deploy
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install dependencies)
+[Pipeline] sh
+[2026-10-11T16:45:38.979Z] + python3.11 --version
+[2026-10-11T16:45:38.980Z] Python 3.11.17
+[2026-10-11T16:45:38.980Z] + python3.11 -m venv .venv
+[2026-10-11T16:45:43.108Z] + .venv/bin/pip install --quiet --upgrade pip
+[2026-10-11T16:45:46.340Z] + .venv/bin/pip install --quiet -r requirements-dev.txt
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static checks)
+[Pipeline] sh
+[2026-10-11T16:45:58.825Z] + .venv/bin/python -m compileall -q app wsgi.py
+[2026-10-11T16:45:58.825Z] + .venv/bin/flake8 app tests wsgi.py gunicorn.conf.py
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit & integration tests)
+[Pipeline] sh
+[2026-10-11T16:45:59.754Z] + .venv/bin/pytest tests/unit tests/integration --junitxml=reports/unit-integration-tests.xml
+[2026-10-11T16:46:00.306Z] ============================= test session starts ==============================
+[2026-10-11T16:46:00.306Z] platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.6.0
+[2026-10-11T16:46:00.306Z] rootdir: /var/jenkins_home/workspace/hotel-booking
+[2026-10-11T16:46:00.306Z] configfile: pytest.ini
+[2026-10-11T16:46:00.306Z] collected 82 items
+[2026-10-11T16:46:00.306Z] 
+[2026-10-11T16:46:02.063Z] tests/unit/test_auth_service.py .............                            [ 15%]
+[2026-10-11T16:46:07.332Z] tests/unit/test_booking_service.py ..................................... [ 60%]
+[2026-10-11T16:46:07.584Z] .                                                                        [ 62%]
+[2026-10-11T16:46:08.588Z] tests/unit/test_database.py ........                                     [ 71%]
+[2026-10-11T16:46:11.650Z] tests/integration/test_routes.py .......................                 [100%]
+[2026-10-11T16:46:11.650Z] 
+[2026-10-11T16:46:11.651Z] - generated xml file: /var/jenkins_home/workspace/hotel-booking/reports/unit-integration-tests.xml -
+[2026-10-11T16:46:11.651Z] ============================= 82 passed in 11.28s ==============================
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (E2E tests (Selenium))
+[Pipeline] sh
+[2026-10-11T16:46:12.036Z] + .venv/bin/pytest -m e2e --junitxml=reports/e2e-tests.xml
+[2026-10-11T16:46:12.588Z] ============================= test session starts ==============================
+[2026-10-11T16:46:12.588Z] platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.6.0
+[2026-10-11T16:46:12.588Z] rootdir: /var/jenkins_home/workspace/hotel-booking
+[2026-10-11T16:46:12.588Z] configfile: pytest.ini
+[2026-10-11T16:46:12.588Z] testpaths: tests
+[2026-10-11T16:46:12.588Z] collected 87 items / 82 deselected / 5 selected
+[2026-10-11T16:46:12.589Z] 
+[2026-10-11T16:46:22.732Z] tests/e2e/test_journeys.py .....                                         [100%]
+[2026-10-11T16:46:22.732Z] 
+[2026-10-11T16:46:22.732Z] - generated xml file: /var/jenkins_home/workspace/hotel-booking/reports/e2e-tests.xml -
+[2026-10-11T16:46:22.732Z] ====================== 5 passed, 82 deselected in 10.35s =======================
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Package source)
+[Pipeline] sh
+[2026-10-11T16:46:23.363Z] + mkdir -p dist
+[2026-10-11T16:46:23.363Z] + git archive --format=tar.gz --prefix=hotel-booking-1.0.0-64351fe/ -o dist/hotel-booking-1.0.0-64351fe.tar.gz HEAD
+[2026-10-11T16:46:23.363Z] + cd dist
+[2026-10-11T16:46:23.363Z] + sha256sum hotel-booking-1.0.0-64351fe.tar.gz
+[2026-10-11T16:46:23.363Z] + cat hotel-booking-1.0.0-64351fe.tar.gz.sha256
+[2026-10-11T16:46:23.364Z] adb0d5966340962e34ce5cc88667d12fca43ba35802f305a8818d381a1a6ee77  hotel-booking-1.0.0-64351fe.tar.gz
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build images)
+[Pipeline] sh
+[2026-10-11T16:46:23.739Z] + cp /usr/local/share/ca-certificates/extra/avast-root.crt certs/
+[2026-10-11T16:46:23.740Z] + docker build -t localhost:5000/hotel-booking-app:1.0.0-64351fe --build-arg APP_VERSION=1.0.0 --build-arg GIT_COMMIT=64351fe .
+[2026-10-11T16:46:23.740Z] #0 building with "default" instance using docker driver
+[2026-10-11T16:46:23.740Z] 
+[2026-10-11T16:46:23.740Z] #1 [internal] load build definition from Dockerfile
+[2026-10-11T16:46:23.740Z] #1 DONE 0.0s
+[2026-10-11T16:46:23.991Z] 
+[2026-10-11T16:46:23.992Z] #1 [internal] load build definition from Dockerfile
+[2026-10-11T16:46:23.992Z] #1 transferring dockerfile: 2.49kB done
+[2026-10-11T16:46:23.992Z] #1 DONE 0.0s
+[2026-10-11T16:46:23.992Z] 
+[2026-10-11T16:46:23.992Z] #2 [internal] load metadata for docker.io/library/python:3.11-slim-bookworm
+[2026-10-11T16:46:24.905Z] #2 DONE 1.1s
+[2026-10-11T16:46:25.156Z] 
+[2026-10-11T16:46:25.156Z] #3 [internal] load .dockerignore
+[2026-10-11T16:46:25.156Z] #3 transferring context: 244B done
+[2026-10-11T16:46:25.156Z] #3 DONE 0.0s
+[2026-10-11T16:46:25.156Z] 
+[2026-10-11T16:46:25.156Z] #4 [1/9] FROM docker.io/library/python:3.11-slim-bookworm@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89
+[2026-10-11T16:46:25.156Z] #4 resolve docker.io/library/python:3.11-slim-bookworm@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89 0.0s done
+[2026-10-11T16:46:25.156Z] #4 DONE 0.0s
+[2026-10-11T16:46:25.156Z] 
+[2026-10-11T16:46:25.156Z] #5 [internal] load build context
+[2026-10-11T16:46:25.156Z] #5 transferring context: 104.52kB 0.0s done
+[2026-10-11T16:46:25.407Z] #5 DONE 0.1s
+[2026-10-11T16:46:25.407Z] 
+[2026-10-11T16:46:25.407Z] #6 [2/9] WORKDIR /app
+[2026-10-11T16:46:25.407Z] #6 CACHED
+[2026-10-11T16:46:25.407Z] 
+[2026-10-11T16:46:25.407Z] #7 [3/9] COPY certs/ /usr/local/share/ca-certificates/extra/
+[2026-10-11T16:46:25.407Z] #7 DONE 0.2s
+[2026-10-11T16:46:25.407Z] 
+[2026-10-11T16:46:25.407Z] #8 [4/9] RUN update-ca-certificates >/dev/null
+[2026-10-11T16:46:27.273Z] #8 1.807 rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+[2026-10-11T16:46:27.273Z] #8 DONE 1.8s
+[2026-10-11T16:46:27.273Z] 
+[2026-10-11T16:46:27.273Z] #9 [5/9] COPY requirements.txt .
+[2026-10-11T16:46:27.273Z] #9 DONE 0.0s
+[2026-10-11T16:46:27.273Z] 
+[2026-10-11T16:46:27.273Z] #10 [6/9] RUN pip install --no-cache-dir --cert /etc/ssl/certs/ca-certificates.crt -r requirements.txt
+[2026-10-11T16:46:29.137Z] #10 1.672 Collecting Flask==3.1.3 (from -r requirements.txt (line 3))
+[2026-10-11T16:46:29.137Z] #10 1.737   Downloading flask-3.1.3-py3-none-any.whl.metadata (3.2 kB)
+[2026-10-11T16:46:29.137Z] #10 1.785 Collecting gunicorn==26.2.0 (from -r requirements.txt (line 4))
+[2026-10-11T16:46:29.137Z] #10 1.795   Downloading gunicorn-26.2.0-py3-none-any.whl.metadata (5.5 kB)
+[2026-10-11T16:46:29.137Z] #10 1.836 Collecting blinker>=1.9.0 (from Flask==3.1.3->-r requirements.txt (line 3))
+[2026-10-11T16:46:29.137Z] #10 1.851   Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+[2026-10-11T16:46:29.137Z] #10 1.890 Collecting click>=8.1.3 (from Flask==3.1.3->-r requirements.txt (line 3))
+[2026-10-11T16:46:29.137Z] #10 1.903   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+[2026-10-11T16:46:29.138Z] #10 1.932 Collecting itsdangerous>=2.2.0 (from Flask==3.1.3->-r requirements.txt (line 3))
+[2026-10-11T16:46:29.138Z] #10 1.945   Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+[2026-10-11T16:46:29.138Z] #10 1.978 Collecting jinja2>=3.1.2 (from Flask==3.1.3->-r requirements.txt (line 3))
+[2026-10-11T16:46:29.138Z] #10 1.993   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+[2026-10-11T16:46:29.389Z] #10 2.091 Collecting markupsafe>=2.1.1 (from Flask==3.1.3->-r requirements.txt (line 3))
+[2026-10-11T16:46:29.389Z] #10 2.109   Downloading markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+[2026-10-11T16:46:29.389Z] #10 2.159 Collecting werkzeug>=3.1.0 (from Flask==3.1.3->-r requirements.txt (line 3))
+[2026-10-11T16:46:29.389Z] #10 2.174   Downloading werkzeug-3.1.9-py3-none-any.whl.metadata (4.1 kB)
+[2026-10-11T16:46:29.389Z] #10 2.225 Downloading flask-3.1.3-py3-none-any.whl (103 kB)
+[2026-10-11T16:46:29.640Z] #10 2.270    ???????????????????????????????????????? 103.4/103.4 kB 2.5 MB/s eta 0:00:00
+[2026-10-11T16:46:29.640Z] #10 2.282 Downloading gunicorn-26.2.0-py3-none-any.whl (228 kB)
+[2026-10-11T16:46:29.640Z] #10 2.371    ???????????????????????????????????????? 228.4/228.4 kB 2.7 MB/s eta 0:00:00
+[2026-10-11T16:46:29.640Z] #10 2.381 Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+[2026-10-11T16:46:29.640Z] #10 2.409 Downloading click-8.5.0-py3-none-any.whl (125 kB)
+[2026-10-11T16:46:29.640Z] #10 2.455    ???????????????????????????????????????? 125.3/125.3 kB 2.7 MB/s eta 0:00:00
+[2026-10-11T16:46:29.640Z] #10 2.469 Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+[2026-10-11T16:46:29.640Z] #10 2.493 Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+[2026-10-11T16:46:29.891Z] #10 2.542    ???????????????????????????????????????? 134.9/134.9 kB 2.7 MB/s eta 0:00:00
+[2026-10-11T16:46:29.891Z] #10 2.550 Downloading markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+[2026-10-11T16:46:29.891Z] #10 2.575 Downloading werkzeug-3.1.9-py3-none-any.whl (228 kB)
+[2026-10-11T16:46:30.142Z] #10 2.675    ???????????????????????????????????????? 228.7/228.7 kB 2.3 MB/s eta 0:00:00
+[2026-10-11T16:46:30.142Z] #10 2.745 Installing collected packages: markupsafe, itsdangerous, gunicorn, click, blinker, werkzeug, jinja2, Flask
+[2026-10-11T16:46:30.694Z] #10 3.336 Successfully installed Flask-3.1.3 blinker-1.9.0 click-8.5.0 gunicorn-26.2.0 itsdangerous-2.2.0 jinja2-3.1.6 markupsafe-3.0.4 werkzeug-3.1.9
+[2026-10-11T16:46:30.694Z] #10 3.336 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+[2026-10-11T16:46:30.694Z] #10 3.539 
+[2026-10-11T16:46:30.694Z] #10 3.539 [notice] A new release of pip is available: 24.0 -> 26.2.1
+[2026-10-11T16:46:30.694Z] #10 3.539 [notice] To update, run: pip install --upgrade pip
+[2026-10-11T16:46:30.945Z] #10 DONE 3.7s
+[2026-10-11T16:46:30.945Z] 
+[2026-10-11T16:46:30.945Z] #11 [7/9] COPY app/ app/
+[2026-10-11T16:46:30.945Z] #11 DONE 0.1s
+[2026-10-11T16:46:30.945Z] 
+[2026-10-11T16:46:30.945Z] #12 [8/9] COPY wsgi.py gunicorn.conf.py ./
+[2026-10-11T16:46:30.945Z] #12 DONE 0.1s
+[2026-10-11T16:46:31.195Z] 
+[2026-10-11T16:46:31.196Z] #13 [9/9] RUN useradd --system --uid 1000 --create-home appuser     && mkdir /data && chown appuser /data
+[2026-10-11T16:46:31.196Z] #13 0.230 useradd warning: appuser's uid 1000 is greater than SYS_UID_MAX 999
+[2026-10-11T16:46:31.446Z] #13 DONE 0.3s
+[2026-10-11T16:46:31.446Z] 
+[2026-10-11T16:46:31.446Z] #14 exporting to image
+[2026-10-11T16:46:31.446Z] #14 exporting layers
+[2026-10-11T16:46:31.697Z] #14 exporting layers 0.5s done
+[2026-10-11T16:46:31.948Z] #14 exporting manifest sha256:a6bcdc37d9b31a867d772acff3831cc379eac9b917342da2a108f8f9a764ad9e 0.0s done
+[2026-10-11T16:46:31.948Z] #14 exporting config sha256:1b1c6dcc3d4703b6ff13e2611b7377e13784ddcfc6157ae3b2790d15ef74ac61 0.0s done
+[2026-10-11T16:46:31.948Z] #14 exporting attestation manifest sha256:4d0a6f8cb46e20fd2243bff8b0c914a296d2538a42ad49b1ab6e7e7797cdff7f 0.0s done
+[2026-10-11T16:46:31.948Z] #14 exporting manifest list sha256:175e92f73c43ecd2ec1cc327c315e72ffcead2e75d0ef2e2a1f8ba8133820be7 0.0s done
+[2026-10-11T16:46:31.948Z] #14 naming to localhost:5000/hotel-booking-app:1.0.0-64351fe done
+[2026-10-11T16:46:31.948Z] #14 unpacking to localhost:5000/hotel-booking-app:1.0.0-64351fe
+[2026-10-11T16:46:32.199Z] #14 unpacking to localhost:5000/hotel-booking-app:1.0.0-64351fe 0.4s done
+[2026-10-11T16:46:32.450Z] #14 DONE 1.0s
+[2026-10-11T16:46:32.450Z] + docker build -f deploy/nginx/Dockerfile -t localhost:5000/hotel-booking-nginx:1.0.0-64351fe .
+[2026-10-11T16:46:33.001Z] #0 building with "default" instance using docker driver
+[2026-10-11T16:46:33.001Z] 
+[2026-10-11T16:46:33.001Z] #1 [internal] load build definition from Dockerfile
+[2026-10-11T16:46:33.001Z] #1 transferring dockerfile: 597B done
+[2026-10-11T16:46:33.001Z] #1 DONE 0.0s
+[2026-10-11T16:46:33.001Z] 
+[2026-10-11T16:46:33.002Z] #2 [internal] load metadata for docker.io/library/nginx:1.27-alpine
+[2026-10-11T16:46:33.913Z] #2 DONE 1.3s
+[2026-10-11T16:46:34.164Z] 
+[2026-10-11T16:46:34.164Z] #3 [internal] load .dockerignore
+[2026-10-11T16:46:34.164Z] #3 transferring context: 244B done
+[2026-10-11T16:46:34.164Z] #3 DONE 0.0s
+[2026-10-11T16:46:34.164Z] 
+[2026-10-11T16:46:34.164Z] #4 [internal] load build context
+[2026-10-11T16:46:34.164Z] #4 transferring context: 1.12kB 0.0s done
+[2026-10-11T16:46:34.164Z] #4 DONE 0.0s
+[2026-10-11T16:46:34.164Z] 
+[2026-10-11T16:46:34.164Z] #5 [1/3] FROM docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+[2026-10-11T16:46:34.164Z] #5 resolve docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10 0.0s done
+[2026-10-11T16:46:34.164Z] #5 CACHED
+[2026-10-11T16:46:34.164Z] 
+[2026-10-11T16:46:34.164Z] #6 [2/3] COPY deploy/nginx/hotel.conf /etc/nginx/conf.d/default.conf
+[2026-10-11T16:46:34.164Z] #6 DONE 0.1s
+[2026-10-11T16:46:34.164Z] 
+[2026-10-11T16:46:34.164Z] #7 [3/3] COPY app/static /usr/share/nginx/static
+[2026-10-11T16:46:34.164Z] #7 DONE 0.0s
+[2026-10-11T16:46:34.164Z] 
+[2026-10-11T16:46:34.164Z] #8 exporting to image
+[2026-10-11T16:46:34.164Z] #8 exporting layers 0.1s done
+[2026-10-11T16:46:34.415Z] #8 exporting manifest sha256:77eb6c7b93223b84de1d7a9ee3be63004718334c858cbe601dfa7239d560bb15 0.0s done
+[2026-10-11T16:46:34.415Z] #8 exporting config sha256:96eef02a1f058cd5a0d0c75f66347a4eb20fb492dff57f73fb2604305677619c 0.0s done
+[2026-10-11T16:46:34.415Z] #8 exporting attestation manifest sha256:57f4e64ce6efa9028284136a1265b338d7d27c5e944bbdcfbee08a78a53e3b7c 0.0s done
+[2026-10-11T16:46:34.415Z] #8 exporting manifest list sha256:6d3698122c85c19bd66f635ffb3f0a391593b77870a10433e7909588d985a1ba 0.0s done
+[2026-10-11T16:46:34.415Z] #8 naming to localhost:5000/hotel-booking-nginx:1.0.0-64351fe done
+[2026-10-11T16:46:34.415Z] #8 unpacking to localhost:5000/hotel-booking-nginx:1.0.0-64351fe 0.1s done
+[2026-10-11T16:46:34.666Z] #8 DONE 0.3s
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Publish images)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
+[2026-10-11T16:46:35.131Z] + docker push localhost:5000/hotel-booking-app:1.0.0-64351fe
+[2026-10-11T16:46:35.131Z] The push refers to repository [localhost:5000/hotel-booking-app]
+[2026-10-11T16:46:35.131Z] 5c58b62d66ce: Waiting
+[2026-10-11T16:46:35.131Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:35.131Z] f8852cf3b2aa: Waiting
+[2026-10-11T16:46:35.131Z] 7fd1ebe418b5: Waiting
+[2026-10-11T16:46:35.132Z] 5c58b62d66ce: Waiting
+[2026-10-11T16:46:35.132Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:35.132Z] f8852cf3b2aa: Waiting
+[2026-10-11T16:46:35.132Z] 7fd1ebe418b5: Waiting
+[2026-10-11T16:46:35.383Z] 5c58b62d66ce: Waiting
+[2026-10-11T16:46:35.383Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:35.383Z] f8852cf3b2aa: Waiting
+[2026-10-11T16:46:35.383Z] 7fd1ebe418b5: Waiting
+[2026-10-11T16:46:35.383Z] f8852cf3b2aa: Waiting
+[2026-10-11T16:46:35.383Z] 7fd1ebe418b5: Waiting
+[2026-10-11T16:46:35.383Z] 5c58b62d66ce: Waiting
+[2026-10-11T16:46:35.383Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:35.634Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:35.634Z] f8852cf3b2aa: Waiting
+[2026-10-11T16:46:35.634Z] 7fd1ebe418b5: Waiting
+[2026-10-11T16:46:35.634Z] 5c58b62d66ce: Waiting
+[2026-10-11T16:46:35.634Z] 5c58b62d66ce: Waiting
+[2026-10-11T16:46:35.634Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:35.634Z] f8852cf3b2aa: Waiting
+[2026-10-11T16:46:35.634Z] 7fd1ebe418b5: Waiting
+[2026-10-11T16:46:35.634Z] f9b274ee4fbe: Waiting
+[2026-10-11T16:46:35.634Z] d23249bbe084: Waiting
+[2026-10-11T16:46:35.634Z] 5c58b62d66ce: Pushed
+[2026-10-11T16:46:35.634Z] 44136fa355b3: Pushed
+[2026-10-11T16:46:35.634Z] f8852cf3b2aa: Pushed
+[2026-10-11T16:46:35.885Z] fe821bbf3b68: Waiting
+[2026-10-11T16:46:35.885Z] a859ede1048b: Pushed
+[2026-10-11T16:46:35.885Z] f9b274ee4fbe: Pushed
+[2026-10-11T16:46:35.885Z] d23249bbe084: Pushed
+[2026-10-11T16:46:35.885Z] d85a5d93520b: Pushed
+[2026-10-11T16:46:35.885Z] 974954136d29: Waiting
+[2026-10-11T16:46:35.885Z] fe821bbf3b68: Pushed
+[2026-10-11T16:46:35.885Z] d19bc4f10fea: Pushed
+[2026-10-11T16:46:35.885Z] 21f1b1345080: Pushed
+[2026-10-11T16:46:35.885Z] 7fd1ebe418b5: Pushed
+[2026-10-11T16:46:35.885Z] da3de1e6d2c4: Pushed
+[2026-10-11T16:46:35.885Z] 974954136d29: Pushed
+[2026-10-11T16:46:35.885Z] 854b51121462: Pushed
+[2026-10-11T16:46:36.137Z] 1.0.0-64351fe: digest: sha256:175e92f73c43ecd2ec1cc327c315e72ffcead2e75d0ef2e2a1f8ba8133820be7 size: 856
+[2026-10-11T16:46:36.137Z] + docker push localhost:5000/hotel-booking-nginx:1.0.0-64351fe
+[2026-10-11T16:46:36.137Z] The push refers to repository [localhost:5000/hotel-booking-nginx]
+[2026-10-11T16:46:36.137Z] 3e81a336925a: Waiting
+[2026-10-11T16:46:36.137Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:36.137Z] 61ca4f733c80: Waiting
+[2026-10-11T16:46:36.137Z] f18232174bc9: Waiting
+[2026-10-11T16:46:36.388Z] 3e81a336925a: Waiting
+[2026-10-11T16:46:36.388Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:36.388Z] 61ca4f733c80: Waiting
+[2026-10-11T16:46:36.388Z] f18232174bc9: Waiting
+[2026-10-11T16:46:36.388Z] 3e81a336925a: Waiting
+[2026-10-11T16:46:36.388Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:36.388Z] 61ca4f733c80: Waiting
+[2026-10-11T16:46:36.388Z] f18232174bc9: Waiting
+[2026-10-11T16:46:36.388Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:36.388Z] 61ca4f733c80: Waiting
+[2026-10-11T16:46:36.388Z] f18232174bc9: Waiting
+[2026-10-11T16:46:36.388Z] 3e81a336925a: Waiting
+[2026-10-11T16:46:36.639Z] 3e81a336925a: Waiting
+[2026-10-11T16:46:36.639Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:36.639Z] 61ca4f733c80: Waiting
+[2026-10-11T16:46:36.639Z] f18232174bc9: Waiting
+[2026-10-11T16:46:36.639Z] 3e81a336925a: Waiting
+[2026-10-11T16:46:36.639Z] 44136fa355b3: Waiting
+[2026-10-11T16:46:36.639Z] 61ca4f733c80: Waiting
+[2026-10-11T16:46:36.639Z] f18232174bc9: Waiting
+[2026-10-11T16:46:36.890Z] 61ca4f733c80: Pushed
+[2026-10-11T16:46:36.890Z] f18232174bc9: Pushed
+[2026-10-11T16:46:36.890Z] d7e507024086: Pushed
+[2026-10-11T16:46:36.890Z] 39c2ddfd6010: Waiting
+[2026-10-11T16:46:36.890Z] a096614d39d3: Waiting
+[2026-10-11T16:46:36.890Z] 3e81a336925a: Pushed
+[2026-10-11T16:46:36.890Z] 44136fa355b3: Mounted from hotel-booking-app
+[2026-10-11T16:46:36.890Z] b464cfdf2a63: Pushed
+[2026-10-11T16:46:36.890Z] 197eb75867ef: Pushed
+[2026-10-11T16:46:36.890Z] 73092af0dd26: Pushed
+[2026-10-11T16:46:36.890Z] 81bd8ed7ec67: Pushed
+[2026-10-11T16:46:36.890Z] 34a64644b756: Pushed
+[2026-10-11T16:46:36.890Z] a096614d39d3: Pushed
+[2026-10-11T16:46:36.890Z] 39c2ddfd6010: Pushed
+[2026-10-11T16:46:36.890Z] 1.0.0-64351fe: digest: sha256:6d3698122c85c19bd66f635ffb3f0a391593b77870a10433e7909588d985a1ba size: 856
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy)
+[Pipeline] withCredentials
+[2026-10-11T16:46:37.095Z] Masking supported pattern matches of $SECRET_KEY
+[Pipeline] {
+[Pipeline] sh
+[2026-10-11T16:46:37.396Z] + docker compose pull
+[2026-10-11T16:46:37.396Z]  Image localhost:5000/hotel-booking-app:1.0.0-64351fe Pulling 
+[2026-10-11T16:46:37.396Z]  Image localhost:5000/hotel-booking-nginx:1.0.0-64351fe Pulling 
+[2026-10-11T16:46:39.259Z]  Image localhost:5000/hotel-booking-nginx:1.0.0-64351fe Pulled 
+[2026-10-11T16:46:39.259Z]  Image localhost:5000/hotel-booking-app:1.0.0-64351fe Pulled 
+[2026-10-11T16:46:39.259Z] + docker compose up -d --no-build --wait --wait-timeout 120
+[2026-10-11T16:46:39.259Z]  Network hotel-staging_default Creating 
+[2026-10-11T16:46:39.259Z]  Network hotel-staging_default Creating 
+[2026-10-11T16:46:39.259Z]  Volume hotel-staging_hotel-data Creating 
+[2026-10-11T16:46:39.260Z]  Volume hotel-staging_hotel-data Creating 
+[2026-10-11T16:46:39.260Z]  Volume hotel-staging_hotel-data Created 
+[2026-10-11T16:46:39.260Z]  Volume hotel-staging_hotel-data Created 
+[2026-10-11T16:46:39.510Z]  Network hotel-staging_default Created 
+[2026-10-11T16:46:39.510Z]  Network hotel-staging_default Created 
+[2026-10-11T16:46:39.510Z]  Container hotel-staging-app-1 Creating 
+[2026-10-11T16:46:39.510Z]  Container hotel-staging-app-1 Created 
+[2026-10-11T16:46:39.511Z]  Container hotel-staging-nginx-1 Creating 
+[2026-10-11T16:46:39.511Z]  Container hotel-staging-nginx-1 Created 
+[2026-10-11T16:46:39.762Z]  Container hotel-staging-app-1 Starting 
+[2026-10-11T16:46:39.762Z]  Container hotel-staging-app-1 Started 
+[2026-10-11T16:46:39.762Z]  Container hotel-staging-app-1 Waiting 
+[2026-10-11T16:46:46.250Z]  Container hotel-staging-app-1 Healthy 
+[2026-10-11T16:46:46.250Z]  Container hotel-staging-nginx-1 Starting 
+[2026-10-11T16:46:46.250Z]  Container hotel-staging-nginx-1 Started 
+[2026-10-11T16:46:46.250Z]  Container hotel-staging-nginx-1 Waiting 
+[2026-10-11T16:46:46.250Z]  Container hotel-staging-app-1 Waiting 
+[2026-10-11T16:46:46.250Z]  Container hotel-staging-app-1 Healthy 
+[2026-10-11T16:46:46.250Z]  Container hotel-staging-nginx-1 Healthy 
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Health check)
+[Pipeline] withCredentials
+[2026-10-11T16:46:46.496Z] Masking supported pattern matches of $SECRET_KEY
+[Pipeline] {
+[Pipeline] sh
+[2026-10-11T16:46:46.793Z] + docker compose exec -T nginx wget -qO- http://127.0.0.1/health
+[2026-10-11T16:46:46.793Z] + break
+[2026-10-11T16:46:46.793Z] + cat reports/health.json
+[2026-10-11T16:46:46.793Z] {"commit":"64351fe","env":"staging","status":"ok","version":"1.0.0"}
+[2026-10-11T16:46:46.793Z] + echo
+[2026-10-11T16:46:46.793Z] 
+[2026-10-11T16:46:46.793Z] + grep -q "version":"1.0.0" reports/health.json
+[2026-10-11T16:46:46.793Z] + grep -q "commit":"64351fe" reports/health.json
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] writeFile
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] junit
+[2026-10-11T16:46:47.070Z] Recording test results
+[2026-10-11T16:46:47.163Z] [Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+[2026-10-11T16:46:47.188Z] Archiving artifacts
+[Pipeline] echo
+[2026-10-11T16:46:47.248Z] Deployed 1.0.0-64351fe to staging: http://localhost:8081
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // timestamps
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+

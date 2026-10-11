@@ -1,0 +1,49 @@
+# 2026-10-11 17:21 UTC - repository: rel-v1.1.0 (d07929b)
+$ ansible-playbook -i lab/inventory.ini rollback.yml
+
+PLAY [Roll back the Hotel Booking Portal] **************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [hotel-server]
+
+TASK [Read the previous release recorded by the last deploy] *******************
+ok: [hotel-server]
+
+TASK [Choose the release to go back to] ****************************************
+ok: [hotel-server]
+
+TASK [Read the current configuration] ******************************************
+ok: [hotel-server]
+
+TASK [Work out the release running now] ****************************************
+ok: [hotel-server]
+
+TASK [Refuse to continue if the target release's images are not on the server] ***
+ok: [hotel-server]
+
+TASK [Point the deployment at the target release] ******************************
+changed: [hotel-server] => (item=IMAGE_TAG)
+changed: [hotel-server] => (item=APP_VERSION)
+
+TASK [Save the release we are leaving, so it can be restored the same way] *****
+changed: [hotel-server]
+
+TASK [Restart the containers on the target release and wait until healthy] *****
+changed: [hotel-server]
+
+TASK [Check the portal answers through Nginx] **********************************
+ok: [hotel-server]
+
+TASK [Verify the restored release is the one running] **************************
+ok: [hotel-server] => {
+    "changed": false,
+    "msg": "Rolled back from 1.1.0 to 1.0.0: {'commit': '661751d', 'env': 'prod', 'status': 'ok', 'version': '1.0.0'}"
+}
+
+PLAY RECAP *********************************************************************
+hotel-server               : ok=11   changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+
+$ curl -s http://localhost:8088/health    # from the Windows host, via the lab server's port 80
+{"commit":"661751d","env":"prod","status":"ok","version":"1.0.0"}
+

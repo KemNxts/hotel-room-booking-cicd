@@ -1,0 +1,48 @@
+# Docker-level rollback of prod (compose project hotel-prod) - 2026-10-11 17:16 UTC
+# SECRET_KEY, APP_ENV=prod, HOST_PORT=8082, IMAGE_PREFIX=localhost:5000/ set in the shell (key not shown)
+
+$ curl -s http://localhost:8082/health
+{"commit":"d07929b","env":"prod","status":"ok","version":"1.1.0"}
+
+# Roll back to the previous tested release from the registry:
+
+$ env IMAGE_TAG=1.0.0-661751d docker compose up -d --no-build --wait --wait-timeout 120
+ Container hotel-prod-app-1 Recreate 
+ Container hotel-prod-app-1 Recreated 
+ Container hotel-prod-nginx-1 Recreate 
+ Container hotel-prod-nginx-1 Recreated 
+ Container hotel-prod-app-1 Starting 
+ Container hotel-prod-app-1 Started 
+ Container hotel-prod-app-1 Waiting 
+ Container hotel-prod-app-1 Healthy 
+ Container hotel-prod-nginx-1 Starting 
+ Container hotel-prod-nginx-1 Started 
+ Container hotel-prod-nginx-1 Waiting 
+ Container hotel-prod-app-1 Waiting 
+ Container hotel-prod-nginx-1 Healthy 
+ Container hotel-prod-app-1 Healthy 
+
+$ curl -s http://localhost:8082/health
+{"commit":"661751d","env":"prod","status":"ok","version":"1.0.0"}
+
+# Roll forward again to the current release:
+
+$ env IMAGE_TAG=1.1.0-d07929b docker compose up -d --no-build --wait --wait-timeout 120
+ Container hotel-prod-app-1 Recreate 
+ Container hotel-prod-app-1 Recreated 
+ Container hotel-prod-nginx-1 Recreate 
+ Container hotel-prod-nginx-1 Recreated 
+ Container hotel-prod-app-1 Starting 
+ Container hotel-prod-app-1 Started 
+ Container hotel-prod-app-1 Waiting 
+ Container hotel-prod-app-1 Healthy 
+ Container hotel-prod-nginx-1 Starting 
+ Container hotel-prod-nginx-1 Started 
+ Container hotel-prod-nginx-1 Waiting 
+ Container hotel-prod-app-1 Waiting 
+ Container hotel-prod-nginx-1 Healthy 
+ Container hotel-prod-app-1 Healthy 
+
+$ curl -s http://localhost:8082/health
+{"commit":"d07929b","env":"prod","status":"ok","version":"1.1.0"}
+

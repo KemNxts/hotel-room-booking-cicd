@@ -1,0 +1,205 @@
+Started by user admin
+Checking out git file:///repo into /var/jenkins_home/workspace/hotel-booking@script/ddadb71e924e41decc876d16d459775bb07904e9c3129ad9e7b60855a2dadd2a to read Jenkinsfile
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hotel-booking@script/ddadb71e924e41decc876d16d459775bb07904e9c3129ad9e7b60855a2dadd2a/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url file:///repo # timeout=10
+Fetching upstream changes from file:///repo
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/experiment/defect-demo^{commit} # timeout=10
+Checking out Revision 554cad3c2cd2a13872d97dbe29585df186628128 (refs/remotes/origin/experiment/defect-demo)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 554cad3c2cd2a13872d97dbe29585df186628128 # timeout=10
+Commit message: "experiment: introduce deliberate off-by-one defect in overlap rule"
+First time build. Skipping changelog.
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/hotel-booking
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hotel-booking/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url file:///repo # timeout=10
+Fetching upstream changes from file:///repo
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/experiment/defect-demo^{commit} # timeout=10
+Checking out Revision 554cad3c2cd2a13872d97dbe29585df186628128 (refs/remotes/origin/experiment/defect-demo)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 554cad3c2cd2a13872d97dbe29585df186628128 # timeout=10
+Commit message: "experiment: introduce deliberate off-by-one defect in overlap rule"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timestamps
+[Pipeline] {
+[Pipeline] timeout
+[2026-10-11T16:47:49.440Z] Timeout set to expire in 30 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+[2026-10-11T16:47:49.554Z] The recommended git tool is: NONE
+[2026-10-11T16:47:49.554Z] No credentials specified
+[2026-10-11T16:47:49.555Z]  > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hotel-booking/.git # timeout=10
+[2026-10-11T16:47:49.560Z] Fetching changes from the remote Git repository
+[2026-10-11T16:47:49.562Z]  > git config remote.origin.url file:///repo # timeout=10
+[2026-10-11T16:47:49.568Z] Fetching upstream changes from file:///repo
+[2026-10-11T16:47:49.568Z]  > git --version # timeout=10
+[2026-10-11T16:47:49.573Z]  > git --version # 'git version 2.47.3'
+[2026-10-11T16:47:49.573Z]  > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+[2026-10-11T16:47:49.686Z]  > git rev-parse refs/remotes/origin/experiment/defect-demo^{commit} # timeout=10
+[2026-10-11T16:47:49.691Z] Checking out Revision 554cad3c2cd2a13872d97dbe29585df186628128 (refs/remotes/origin/experiment/defect-demo)
+[2026-10-11T16:47:49.691Z]  > git config core.sparsecheckout # timeout=10
+[2026-10-11T16:47:49.696Z]  > git checkout -f 554cad3c2cd2a13872d97dbe29585df186628128 # timeout=10
+[2026-10-11T16:47:49.705Z] Commit message: "experiment: introduce deliberate off-by-one defect in overlap rule"
+[Pipeline] script
+[Pipeline] {
+[Pipeline] readFile
+[Pipeline] sh
+[2026-10-11T16:47:50.077Z] + git rev-parse --short HEAD
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
+[2026-10-11T16:47:50.441Z] + git log -1 --pretty=Building commit %h on experiment/defect-demo: %s
+[2026-10-11T16:47:50.441Z] Building commit 554cad3 on experiment/defect-demo: experiment: introduce deliberate off-by-one defect in overlap rule
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install dependencies)
+[Pipeline] sh
+[2026-10-11T16:47:50.816Z] + python3.11 --version
+[2026-10-11T16:47:50.816Z] Python 3.11.17
+[2026-10-11T16:47:50.816Z] + python3.11 -m venv .venv
+[2026-10-11T16:47:53.301Z] + .venv/bin/pip install --quiet --upgrade pip
+[2026-10-11T16:47:54.213Z] + .venv/bin/pip install --quiet -r requirements-dev.txt
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static checks)
+[Pipeline] sh
+[2026-10-11T16:47:55.144Z] + .venv/bin/python -m compileall -q app wsgi.py
+[2026-10-11T16:47:55.144Z] + .venv/bin/flake8 app tests wsgi.py gunicorn.conf.py
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit & integration tests)
+[Pipeline] sh
+[2026-10-11T16:47:56.070Z] + .venv/bin/pytest tests/unit tests/integration --junitxml=reports/unit-integration-tests.xml
+[2026-10-11T16:47:56.622Z] ============================= test session starts ==============================
+[2026-10-11T16:47:56.622Z] platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.6.0
+[2026-10-11T16:47:56.622Z] rootdir: /var/jenkins_home/workspace/hotel-booking
+[2026-10-11T16:47:56.622Z] configfile: pytest.ini
+[2026-10-11T16:47:56.622Z] collected 82 items
+[2026-10-11T16:47:56.622Z] 
+[2026-10-11T16:47:58.128Z] tests/unit/test_auth_service.py .............                            [ 15%]
+[2026-10-11T16:48:03.495Z] tests/unit/test_booking_service.py ..........F.......................... [ 60%]
+[2026-10-11T16:48:03.746Z] .                                                                        [ 62%]
+[2026-10-11T16:48:05.001Z] tests/unit/test_database.py ........                                     [ 71%]
+[2026-10-11T16:48:08.412Z] tests/integration/test_routes.py .......................                 [100%]
+[2026-10-11T16:48:08.412Z] 
+[2026-10-11T16:48:08.412Z] =================================== FAILURES ===================================
+[2026-10-11T16:48:08.412Z] ________ TestSearchRooms.test_overlap_rules[2030-01-08-2030-01-10-True] ________
+[2026-10-11T16:48:08.412Z] 
+[2026-10-11T16:48:08.412Z] self = <test_booking_service.TestSearchRooms object at 0x7339cf1c7f50>
+[2026-10-11T16:48:08.412Z] booking_service = <app.services.booking_service.BookingService object at 0x7339ceed5790>
+[2026-10-11T16:48:08.412Z] user = User(id=1, email='guest@example.com', full_name='Guest User', password_hash='scrypt:32768:8:1$YKs96vI628yHoYv0$52097ac...7a4626b36db0272a324dce91a27a1aa544a72abdbcc8e38f4dc458b7bfeb9c6eae42782506455cce33937c66378d81279e8d20b51cce4d26c4e6d')
+[2026-10-11T16:48:08.412Z] room_101 = Room(id=1, room_number='101', room_type='Single', capacity=1, price_per_night=2500)
+[2026-10-11T16:48:08.412Z] check_in = '2030-01-08', check_out = '2030-01-10', room_101_free = True
+[2026-10-11T16:48:08.412Z] 
+[2026-10-11T16:48:08.412Z]     @pytest.mark.parametrize("check_in, check_out, room_101_free", [
+[2026-10-11T16:48:08.412Z]         ("2030-01-08", "2030-01-10", True),   # ends the day the other starts
+[2026-10-11T16:48:08.412Z]         ("2030-01-13", "2030-01-15", True),   # starts the day the other ends
+[2026-10-11T16:48:08.412Z]         ("2030-01-09", "2030-01-11", False),  # overlaps the start
+[2026-10-11T16:48:08.412Z]         ("2030-01-12", "2030-01-14", False),  # overlaps the end
+[2026-10-11T16:48:08.412Z]         ("2030-01-11", "2030-01-12", False),  # fully inside
+[2026-10-11T16:48:08.412Z]         ("2030-01-09", "2030-01-14", False),  # fully surrounds
+[2026-10-11T16:48:08.412Z]     ])
+[2026-10-11T16:48:08.412Z]     def test_overlap_rules(self, booking_service, user, room_101,
+[2026-10-11T16:48:08.412Z]                            check_in, check_out, room_101_free):
+[2026-10-11T16:48:08.412Z]         booking_service.request_booking(user.id, room_101.id, "2030-01-10", "2030-01-13")
+[2026-10-11T16:48:08.412Z]     
+[2026-10-11T16:48:08.412Z]         free = available_numbers(booking_service.search_rooms(check_in, check_out))
+[2026-10-11T16:48:08.412Z]     
+[2026-10-11T16:48:08.412Z] >       assert ("101" in free) is room_101_free
+[2026-10-11T16:48:08.412Z] E       AssertionError: assert ('101' in {'102', '201', '202', '301', '401'}) is True
+[2026-10-11T16:48:08.412Z] 
+[2026-10-11T16:48:08.412Z] tests/unit/test_booking_service.py:70: AssertionError
+[2026-10-11T16:48:08.412Z] - generated xml file: /var/jenkins_home/workspace/hotel-booking/reports/unit-integration-tests.xml -
+[2026-10-11T16:48:08.412Z] =========================== short test summary info ============================
+[2026-10-11T16:48:08.412Z] FAILED tests/unit/test_booking_service.py::TestSearchRooms::test_overlap_rules[2030-01-08-2030-01-10-True] - AssertionError: assert ('101' in {'102', '201', '202', '301', '401'}) is True
+[2026-10-11T16:48:08.412Z] ======================== 1 failed, 81 passed in 11.65s =========================
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (E2E tests (Selenium))
+Stage "E2E tests (Selenium)" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Package source)
+Stage "Package source" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build images)
+Stage "Build images" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Publish images)
+Stage "Publish images" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy)
+Stage "Deploy" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Health check)
+Stage "Health check" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] junit
+[2026-10-11T16:48:09.645Z] Recording test results
+[2026-10-11T16:48:09.667Z] [Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+[2026-10-11T16:48:09.709Z] Archiving artifacts
+[Pipeline] echo
+[2026-10-11T16:48:09.763Z] Pipeline FAILED - see the red stage above and the Test Results page. Nothing was deployed.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // timestamps
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE
+
