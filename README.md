@@ -32,7 +32,19 @@ pipeline and Ansible provisioning.
 
 ```
 .
-├── app/                    # Flask application (added in Phase 2)
+├── app/
+│   ├── __init__.py         # create_app() factory + /health endpoint
+│   ├── config.py           # settings read from environment variables
+│   ├── db.py               # SQLite connection per request, schema init, transactions
+│   ├── schema.sql          # tables + demo rooms
+│   ├── models.py           # User, Room, Booking data classes, BookingStatus
+│   ├── dao/                # Data Access Objects - the only place with SQL
+│   ├── services/           # business rules (validation, availability, status changes)
+│   ├── controllers/        # Flask routes: read request -> call service -> render
+│   ├── templates/          # Jinja2 HTML pages
+│   └── static/style.css
+├── wsgi.py                 # entry point for Gunicorn / dev server
+├── requirements.txt
 ├── tests/
 │   ├── unit/               # pytest unit tests (Phase 3)
 │   └── e2e/                # Selenium user-journey tests (Phase 3)
@@ -47,6 +59,68 @@ pipeline and Ansible provisioning.
 
 `feature/*` -> `develop` -> `main`. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Getting started
+## Architecture
 
-Run instructions are added in Phase 2.
+```
+Browser ──HTTP──> Controller (Flask route) ──> Service (rules) ──> DAO (SQL) ──> SQLite
+                        │                          │
+                        └── renders template       └── raises BookingError/AuthError
+```
+
+Each layer only talks to the one below it. Swapping SQLite for PostgreSQL would
+change only the DAO layer; the services can be unit-tested without a browser.
+
+Booking lifecycle:
+
+```
+ request ──> PENDING ──confirm──> CONFIRMED
+                │                     │
+                └──────cancel─────────┴──> CANCELLED
+```
+
+A room is unavailable for a date range if it has a `PENDING` or `CONFIRMED`
+booking that overlaps it. Check-out day = next guest's check-in day is allowed.
+
+## Getting started (local development)
+
+Requires Python 3.11+.
+
+```bash
+# 1. create and activate a virtual environment
+python -m venv .venv
+# Windows (PowerShell):  .venv\Scripts\Activate.ps1
+# Linux/macOS:           source .venv/bin/activate
+
+# 2. install dependencies
+pip install -r requirements.txt
+
+# 3. run the development server
+python wsgi.py
+```
+
+Open http://127.0.0.1:5000. The database file is created automatically at
+`instance/hotel.db` with six demo rooms. Delete that file to reset all data.
+
+Health check: http://127.0.0.1:5000/health -> `{"env": "dev", "status": "ok"}`
+
+Production-style run (Linux/macOS/Docker only - Gunicorn does not run on Windows):
+
+```bash
+APP_ENV=prod SECRET_KEY=<long-random-string> gunicorn --bind 0.0.0.0:8000 --workers 2 wsgi:app
+```
+
+### Configuration (environment variables)
+
+| Variable        | Default                  | Meaning                                   |
+|-----------------|--------------------------|-------------------------------------------|
+| `APP_ENV`       | `dev`                    | `dev`, `test` or `prod`                   |
+| `SECRET_KEY`    | dev-only value           | Signs session cookies. **Required** in prod |
+| `DATABASE_PATH` | `instance/hotel.db`      | SQLite file location                      |
+| `MAX_NIGHTS`    | `30`                     | Longest stay allowed per booking          |
+
+### Known limitations (deliberate, to keep the MVP small)
+
+- No CSRF tokens on forms (would add Flask-WTF in a real system).
+- PENDING bookings hold a room until confirmed or cancelled; there is no expiry.
+- No admin screen; demo rooms come from `schema.sql`.
+- No payment step.

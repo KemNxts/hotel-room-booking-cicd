@@ -1,0 +1,49 @@
+/* Minimal, framework-free styling. */
+:root {
+  --bg: #f5f6f8; --card: #fff; --text: #1f2933; --muted: #6b7280;
+  --primary: #1f5fae; --danger: #b42318; --ok: #067647; --warn: #b54708;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+.topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+          gap: .5rem; padding: .75rem 1.25rem; background: var(--primary); }
+.topbar a, .topbar .who, .topbar button.link { color: #fff; text-decoration: none; margin-left: 1rem; }
+.brand { font-weight: 700; margin-left: 0 !important; }
+
+main { max-width: 960px; margin: 1.5rem auto; padding: 0 1rem; }
+.card { background: var(--card); border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow-x: auto; }
+.narrow { max-width: 460px; margin-left: auto; margin-right: auto; }
+h1 { margin-top: 0; font-size: 1.5rem; }
+h2 { margin-top: 0; font-size: 1.2rem; }
+
+label { display: block; margin: .75rem 0 .25rem; font-weight: 600; }
+input { width: 100%; padding: .5rem; border: 1px solid #cbd2d9; border-radius: 6px; font: inherit; }
+button { margin-top: 1rem; padding: .5rem 1rem; border: 0; border-radius: 6px;
+         background: var(--primary); color: #fff; font: inherit; cursor: pointer; }
+button.danger { background: var(--danger); }
+button.link { background: none; padding: 0; margin-top: 0; }
+form.inline { display: inline; }
+form.inline button { margin-top: 0; }
+
+.search { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+.search > div { flex: 1; min-width: 160px; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #e5e7eb; }
+
+.badge { display: inline-block; padding: .15rem .5rem; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+.badge-ok, .badge-confirmed { background: #dcfae6; color: var(--ok); }
+.badge-no, .badge-cancelled { background: #fee4e2; color: var(--danger); }
+.badge-pending { background: #fef0c7; color: var(--warn); }
+
+.flash { padding: .75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
+.flash-success { background: #dcfae6; color: var(--ok); }
+.flash-error { background: #fee4e2; color: var(--danger); }
+
+.details { display: grid; grid-template-columns: 8rem 1fr; gap: .4rem; }
+.details dt { color: var(--muted); }
+.details dd { margin: 0; }
+.actions { display: flex; gap: .75rem; margin: 1rem 0; }
+.hint { color: var(--muted); }

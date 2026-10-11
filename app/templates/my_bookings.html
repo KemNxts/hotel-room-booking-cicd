@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}My bookings{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>My bookings</h1>
+  {% if bookings %}
+    <table id="bookings-table">
+      <thead><tr><th>#</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for b in bookings %}
+        <tr id="booking-row-{{ b.id }}">
+          <td>{{ b.id }}</td>
+          <td>{{ b.room_number }} ({{ b.room_type }})</td>
+          <td>{{ b.check_in }}</td>
+          <td>{{ b.check_out }}</td>
+          <td>₹{{ b.total_price }}</td>
+          <td><span class="badge badge-{{ b.status|lower }}">{{ b.status }}</span></td>
+          <td><a href="{{ url_for('bookings.detail', booking_id=b.id) }}">View</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p id="no-bookings">You have no bookings yet. <a href="{{ url_for('rooms.list_rooms') }}">Find a room</a>.</p>
+  {% endif %}
+</section>
+{% endblock %}
