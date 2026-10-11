@@ -1,0 +1,207 @@
+Started by user admin
+Checking out git file:///repo into /var/jenkins_home/workspace/hotel-booking@script/ddadb71e924e41decc876d16d459775bb07904e9c3129ad9e7b60855a2dadd2a to read Jenkinsfile
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hotel-booking@script/ddadb71e924e41decc876d16d459775bb07904e9c3129ad9e7b60855a2dadd2a/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url file:///repo # timeout=10
+Fetching upstream changes from file:///repo
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/experiment/defect-demo-2^{commit} # timeout=10
+Checking out Revision 85054865d27f2626540d55de1c3feefdba00b279 (refs/remotes/origin/experiment/defect-demo-2)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 85054865d27f2626540d55de1c3feefdba00b279 # timeout=10
+Commit message: "fix: stop Jenkins publishing stale test reports from earlier builds"
+First time build. Skipping changelog.
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/hotel-booking
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hotel-booking/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url file:///repo # timeout=10
+Fetching upstream changes from file:///repo
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/experiment/defect-demo-2^{commit} # timeout=10
+Checking out Revision 85054865d27f2626540d55de1c3feefdba00b279 (refs/remotes/origin/experiment/defect-demo-2)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 85054865d27f2626540d55de1c3feefdba00b279 # timeout=10
+Commit message: "fix: stop Jenkins publishing stale test reports from earlier builds"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timestamps
+[Pipeline] {
+[Pipeline] timeout
+[2026-10-11T17:25:36.554Z] Timeout set to expire in 30 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+[2026-10-11T17:25:36.661Z] The recommended git tool is: NONE
+[2026-10-11T17:25:36.661Z] No credentials specified
+[2026-10-11T17:25:36.662Z]  > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/hotel-booking/.git # timeout=10
+[2026-10-11T17:25:36.666Z] Fetching changes from the remote Git repository
+[2026-10-11T17:25:36.668Z]  > git config remote.origin.url file:///repo # timeout=10
+[2026-10-11T17:25:36.672Z] Fetching upstream changes from file:///repo
+[2026-10-11T17:25:36.672Z]  > git --version # timeout=10
+[2026-10-11T17:25:36.676Z]  > git --version # 'git version 2.47.3'
+[2026-10-11T17:25:36.676Z]  > git fetch --tags --force --progress -- file:///repo +refs/heads/*:refs/remotes/origin/* # timeout=10
+[2026-10-11T17:25:36.763Z]  > git rev-parse refs/remotes/origin/experiment/defect-demo-2^{commit} # timeout=10
+[2026-10-11T17:25:36.768Z] Checking out Revision 85054865d27f2626540d55de1c3feefdba00b279 (refs/remotes/origin/experiment/defect-demo-2)
+[2026-10-11T17:25:36.769Z]  > git config core.sparsecheckout # timeout=10
+[2026-10-11T17:25:36.773Z]  > git checkout -f 85054865d27f2626540d55de1c3feefdba00b279 # timeout=10
+[2026-10-11T17:25:36.781Z] Commit message: "fix: stop Jenkins publishing stale test reports from earlier builds"
+[Pipeline] sh
+[2026-10-11T17:25:37.065Z] + rm -rf reports dist
+[Pipeline] script
+[Pipeline] {
+[Pipeline] readFile
+[Pipeline] sh
+[2026-10-11T17:25:37.457Z] + git rev-parse --short HEAD
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
+[2026-10-11T17:25:37.835Z] + git log -1 --pretty=Building commit %h on experiment/defect-demo-2: %s
+[2026-10-11T17:25:37.835Z] Building commit 8505486 on experiment/defect-demo-2: fix: stop Jenkins publishing stale test reports from earlier builds
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install dependencies)
+[Pipeline] sh
+[2026-10-11T17:25:38.220Z] + python3.11 --version
+[2026-10-11T17:25:38.220Z] Python 3.11.17
+[2026-10-11T17:25:38.220Z] + python3.11 -m venv .venv
+[2026-10-11T17:25:40.705Z] + .venv/bin/pip install --quiet --upgrade pip
+[2026-10-11T17:25:41.617Z] + .venv/bin/pip install --quiet -r requirements-dev.txt
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static checks)
+[Pipeline] sh
+[2026-10-11T17:25:42.905Z] + .venv/bin/python -m compileall -q app wsgi.py
+[2026-10-11T17:25:42.905Z] + .venv/bin/flake8 app tests wsgi.py gunicorn.conf.py
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit & integration tests)
+[Pipeline] sh
+[2026-10-11T17:25:43.835Z] + .venv/bin/pytest tests/unit tests/integration --junitxml=reports/unit-integration-tests.xml
+[2026-10-11T17:25:44.386Z] ============================= test session starts ==============================
+[2026-10-11T17:25:44.386Z] platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.6.0
+[2026-10-11T17:25:44.386Z] rootdir: /var/jenkins_home/workspace/hotel-booking
+[2026-10-11T17:25:44.386Z] configfile: pytest.ini
+[2026-10-11T17:25:44.386Z] collected 82 items
+[2026-10-11T17:25:44.386Z] 
+[2026-10-11T17:25:46.139Z] tests/unit/test_auth_service.py .............                            [ 15%]
+[2026-10-11T17:25:51.652Z] tests/unit/test_booking_service.py ..........F.......................... [ 60%]
+[2026-10-11T17:25:51.902Z] .                                                                        [ 62%]
+[2026-10-11T17:25:53.156Z] tests/unit/test_database.py ........                                     [ 71%]
+[2026-10-11T17:25:56.415Z] tests/integration/test_routes.py .......................                 [100%]
+[2026-10-11T17:25:56.415Z] 
+[2026-10-11T17:25:56.415Z] =================================== FAILURES ===================================
+[2026-10-11T17:25:56.415Z] ________ TestSearchRooms.test_overlap_rules[2030-01-08-2030-01-10-True] ________
+[2026-10-11T17:25:56.415Z] 
+[2026-10-11T17:25:56.415Z] self = <test_booking_service.TestSearchRooms object at 0x735d28548110>
+[2026-10-11T17:25:56.415Z] booking_service = <app.services.booking_service.BookingService object at 0x735d2842af10>
+[2026-10-11T17:25:56.415Z] user = User(id=1, email='guest@example.com', full_name='Guest User', password_hash='scrypt:32768:8:1$fPYQXHsGkDzasyDt$b5db57d...73110a385590f369b5d2034517b4d14beb7fd7ec8770ab898c06bfc9d5a79c39c8c6d5983c6050d2b47cee01b3f897cc386976f1e3ca1c7ab84f7')
+[2026-10-11T17:25:56.415Z] room_101 = Room(id=1, room_number='101', room_type='Single', capacity=1, price_per_night=2500)
+[2026-10-11T17:25:56.415Z] check_in = '2030-01-08', check_out = '2030-01-10', room_101_free = True
+[2026-10-11T17:25:56.415Z] 
+[2026-10-11T17:25:56.415Z]     @pytest.mark.parametrize("check_in, check_out, room_101_free", [
+[2026-10-11T17:25:56.415Z]         ("2030-01-08", "2030-01-10", True),   # ends the day the other starts
+[2026-10-11T17:25:56.415Z]         ("2030-01-13", "2030-01-15", True),   # starts the day the other ends
+[2026-10-11T17:25:56.415Z]         ("2030-01-09", "2030-01-11", False),  # overlaps the start
+[2026-10-11T17:25:56.415Z]         ("2030-01-12", "2030-01-14", False),  # overlaps the end
+[2026-10-11T17:25:56.415Z]         ("2030-01-11", "2030-01-12", False),  # fully inside
+[2026-10-11T17:25:56.415Z]         ("2030-01-09", "2030-01-14", False),  # fully surrounds
+[2026-10-11T17:25:56.415Z]     ])
+[2026-10-11T17:25:56.415Z]     def test_overlap_rules(self, booking_service, user, room_101,
+[2026-10-11T17:25:56.415Z]                            check_in, check_out, room_101_free):
+[2026-10-11T17:25:56.415Z]         booking_service.request_booking(user.id, room_101.id, "2030-01-10", "2030-01-13")
+[2026-10-11T17:25:56.415Z]     
+[2026-10-11T17:25:56.415Z]         free = available_numbers(booking_service.search_rooms(check_in, check_out))
+[2026-10-11T17:25:56.415Z]     
+[2026-10-11T17:25:56.415Z] >       assert ("101" in free) is room_101_free
+[2026-10-11T17:25:56.415Z] E       AssertionError: assert ('101' in {'102', '201', '202', '301', '401'}) is True
+[2026-10-11T17:25:56.415Z] 
+[2026-10-11T17:25:56.415Z] tests/unit/test_booking_service.py:70: AssertionError
+[2026-10-11T17:25:56.415Z] - generated xml file: /var/jenkins_home/workspace/hotel-booking/reports/unit-integration-tests.xml -
+[2026-10-11T17:25:56.415Z] =========================== short test summary info ============================
+[2026-10-11T17:25:56.415Z] FAILED tests/unit/test_booking_service.py::TestSearchRooms::test_overlap_rules[2030-01-08-2030-01-10-True] - AssertionError: assert ('101' in {'102', '201', '202', '301', '401'}) is True
+[2026-10-11T17:25:56.415Z] ======================== 1 failed, 81 passed in 12.08s =========================
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (E2E tests (Selenium))
+Stage "E2E tests (Selenium)" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Package source)
+Stage "Package source" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build images)
+Stage "Build images" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Publish images)
+Stage "Publish images" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy)
+Stage "Deploy" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Health check)
+Stage "Health check" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] junit
+[2026-10-11T17:25:57.619Z] Recording test results
+[2026-10-11T17:25:57.633Z] [Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+[2026-10-11T17:25:57.665Z] Archiving artifacts
+[Pipeline] echo
+[2026-10-11T17:25:57.719Z] Pipeline FAILED - see the red stage above and the Test Results page. Nothing was deployed.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // timestamps
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE
+

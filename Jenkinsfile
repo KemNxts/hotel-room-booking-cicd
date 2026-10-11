@@ -91,7 +91,7 @@ pipeline {
                 // imports, undefined names (config in .flake8).
                 sh '''
                     .venv/bin/python -m compileall -q app wsgi.py
-                    .venv/bin/flake8 app tests wsgi.py gunicorn.conf.py
+                    .venv/bin/flake8 app tests scripts wsgi.py gunicorn.conf.py
                 '''
             }
         }
