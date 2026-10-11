@@ -48,5 +48,7 @@ th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #e5e7eb; }
 .actions { display: flex; gap: .75rem; margin: 1rem 0; }
 .hint { color: var(--muted); }
 
-/* Footer: hotel contact details on every page. */
+/* Footer: hotel contact details and the running release, on every page. */
 .site-footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 2rem 0 1rem; border-top: 1px solid #e4e7ec; }
+.site-footer span { display: block; }
+.site-footer #app-version { font-size: .75rem; margin-top: .25rem; }

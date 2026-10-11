@@ -205,3 +205,10 @@ def test_prod_refuses_to_start_without_a_real_secret_key(tmp_path, key):
 def test_every_page_shows_hotel_contact_details(client):
     for url in ("/rooms", "/login", "/register"):
         assert 'id="hotel-contact"' in client.get(url).get_data(as_text=True)
+
+
+def test_footer_shows_the_running_release(tmp_path):
+    app = create_app({"APP_ENV": "test", "SECRET_KEY": "k", "APP_VERSION": "9.9.9",
+                      "DATABASE_PATH": str(tmp_path / "f.db")})
+    html = app.test_client().get("/rooms").get_data(as_text=True)
+    assert 'id="app-version">Release 9.9.9 · test<' in html
