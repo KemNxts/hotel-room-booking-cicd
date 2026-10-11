@@ -1,0 +1,8 @@
+# Store text files with LF line endings in the repo.
+# Matters on Windows: shell scripts, Dockerfiles and Ansible files with CRLF
+# endings break when they run inside Linux containers/servers.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary

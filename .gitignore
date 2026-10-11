@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- Local runtime data (SQLite DB lives in instance/) ---
+instance/
+*.db
+*.sqlite3
+
+# --- Test & coverage output ---
+.pytest_cache/
+.coverage
+htmlcov/
+reports/
+tests/e2e/screenshots/
+
+# --- Secrets / local config (never commit) ---
+.env
+*.pem
+*.key
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
