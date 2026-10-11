@@ -2,9 +2,14 @@
 #
 #   ansible-playbook playbook.yml            # run (from deploy/ansible)
 #   ansible-playbook playbook.yml --check    # dry run: show what would change
+#   ansible-playbook rollback.yml            # go back to the previous release
 #
 # Every task is idempotent: running the playbook again changes nothing
 # unless something is missing or the code changed.
+#
+# Deliberately NOT touched: SSH settings, firewall rules and any other
+# service on the server. If a firewall (ufw) is active, open host_port
+# yourself after checking what else the server exposes.
 - name: Provision server and deploy the Hotel Booking Portal
   hosts: web
   become: true                       # tasks run with sudo
@@ -16,9 +21,11 @@
       - { src: wsgi.py, dest: . }
       - { src: gunicorn.conf.py, dest: . }
       - { src: requirements.txt, dest: . }
+      - { src: VERSION, dest: . }
       - { src: Dockerfile, dest: . }
       - { src: .dockerignore, dest: . }
       - { src: docker-compose.yml, dest: . }
+      - { src: certs, dest: . }       # optional extra CA certificates (usually empty)
       - { src: deploy/nginx, dest: deploy }
 
   tasks:
@@ -43,6 +50,8 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
+        owner: root
+        group: root
         mode: "0755"
       loop:
         - "{{ app_dir }}"
@@ -52,8 +61,31 @@
       ansible.builtin.copy:
         src: "{{ repo_root }}/{{ item.src }}"
         dest: "{{ app_dir }}/{{ item.dest }}/"
+        owner: root
+        group: root
         mode: preserve
       loop: "{{ deploy_items }}"
+
+    # Remember what is running now, so rollback.yml can return to it.
+    - name: Read the currently deployed configuration (if any)
+      ansible.builtin.slurp:
+        src: "{{ app_dir }}/.env"
+      register: current_env
+      failed_when: false
+      no_log: true                   # the file contains SECRET_KEY
+
+    - name: Work out the currently deployed release
+      ansible.builtin.set_fact:
+        current_tag: "{{ (current_env.content | b64decode | regex_search('(?m)^IMAGE_TAG=(\\S+)', '\\1') | first)
+                         if current_env.content is defined else '' }}"
+      no_log: true
+
+    - name: Remember the previous release for rollback
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/previous_release"
+        content: "{{ current_tag }}\n"
+        mode: "0644"
+      when: current_tag | length > 0 and current_tag != image_tag
 
     - name: Write the environment file read by docker compose
       ansible.builtin.copy:
@@ -62,18 +94,33 @@
           SECRET_KEY={{ secret_key }}
           APP_ENV={{ app_env }}
           HOST_PORT={{ host_port }}
+          APP_VERSION={{ app_version }}
+          GIT_COMMIT={{ git_commit }}
+          IMAGE_TAG={{ image_tag }}
+        owner: root
+        group: root
         mode: "0600"                 # only root can read the secret
       no_log: true                   # never print the secret in Ansible output
 
     # ----------------------------------------------------------- 3. deploy
+    # Build only if this release + commit has not been built yet. (Even a
+    # fully cached rebuild gets a new image id, which would make compose
+    # restart the containers on every run - not idempotent.)
+    - name: Check whether images for this release and commit already exist
+      ansible.builtin.command:
+        cmd: >-
+          docker image inspect --format '{{ '{{' }}index .Config.Labels "org.opencontainers.image.revision"{{ '}}' }}'
+          hotel-booking-app:{{ image_tag }} hotel-booking-nginx:{{ image_tag }}
+      register: existing_image
+      changed_when: false
+      failed_when: false
+      tags: [build]
+
     - name: Build the Docker images on the server
       ansible.builtin.command:
         cmd: docker compose build
         chdir: "{{ app_dir }}"
-      # Docker's layer cache makes this fast when nothing changed. Building an
-      # image does not change what is running, so we never report "changed"
-      # here; the next task reports it if containers really get replaced.
-      changed_when: false
+      when: existing_image.rc != 0 or existing_image.stdout_lines[0] != git_commit
       tags: [build]
 
     - name: Start (or update) the containers and wait until healthy
@@ -92,6 +139,12 @@
       retries: 10
       delay: 3
       until: health.status == 200
+
+    - name: Check the expected release is the one running
+      ansible.builtin.assert:
+        that: health.json.version == app_version
+        fail_msg: "Expected version {{ app_version }} but /health says {{ health.json.version }}"
+        quiet: true
 
     - name: Show result
       ansible.builtin.debug:
