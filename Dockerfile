@@ -1,21 +1,39 @@
 # Production image for the Flask app, served by Gunicorn.
-# Build:  docker build -t hotel-booking-app .
+# Build:  docker build -t hotel-booking-app --build-arg APP_VERSION=$(cat VERSION) .
 FROM python:3.11-slim-bookworm
+
+# Release information, passed in by the build (Jenkins / Ansible / compose)
+# and reported by GET /health. Not secret.
+ARG APP_VERSION=dev
+ARG GIT_COMMIT=unknown
 
 # PYTHONDONTWRITEBYTECODE: no .pyc files in the image.
 # PYTHONUNBUFFERED: print logs immediately so `docker logs` is live.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     APP_ENV=prod \
-    DATABASE_PATH=/data/hotel.db
+    DATABASE_PATH=/data/hotel.db \
+    APP_VERSION=${APP_VERSION} \
+    GIT_COMMIT=${GIT_COMMIT}
+
+# Labels: `docker inspect` shows which release/commit an image came from.
+LABEL org.opencontainers.image.title="hotel-booking-app" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${GIT_COMMIT}"
 
 WORKDIR /app
+
+# Optional extra root certificates (certs/*.crt; normally none) for networks
+# that inspect HTTPS - see certs/README.md. pip is told to use the system
+# trust store, which then contains them.
+COPY certs/ /usr/local/share/ca-certificates/extra/
+RUN update-ca-certificates >/dev/null
 
 # Install dependencies BEFORE copying the code. Docker caches each layer, so
 # this slow step is only re-run when requirements.txt changes, not on every
 # code change. Only runtime deps - no pytest/selenium in production.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --cert /etc/ssl/certs/ca-certificates.crt -r requirements.txt
 
 COPY app/ app/
 COPY wsgi.py gunicorn.conf.py ./

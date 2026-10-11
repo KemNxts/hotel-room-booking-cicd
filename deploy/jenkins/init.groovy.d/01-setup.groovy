@@ -8,6 +8,9 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider
 import com.cloudbees.plugins.credentials.domains.Domain
 import hudson.plugins.git.BranchSpec
 import hudson.plugins.git.GitSCM
+import hudson.model.ChoiceParameterDefinition
+import hudson.model.ParametersDefinitionProperty
+import hudson.model.StringParameterDefinition
 import hudson.security.FullControlOnceLoggedInAuthorizationStrategy
 import hudson.security.HudsonPrivateSecurityRealm
 import hudson.util.Secret
@@ -42,13 +45,23 @@ if (env['HOTEL_SECRET_KEY']) {
 }
 
 // 3. Pipeline job: "Pipeline script from SCM" pointing at our repository.
+//    The branch is a build parameter (BRANCH), so the same job can build
+//    develop, main or a throw-away experiment branch. The Jenkinsfile
+//    declares the same parameters, so they survive its first run.
 if (jenkins.getItem('hotel-booking') == null) {
     def repoUrl = env['HOTEL_REPO_URL'] ?: 'file:///repo'
     def branch = env['HOTEL_REPO_BRANCH'] ?: 'develop'
     def scm = new GitSCM(GitSCM.createRepoList(repoUrl, null),
-            [new BranchSpec("*/${branch}")], null, null, [])
+            [new BranchSpec('*/${BRANCH}')], null, null, [])   // single quotes: Jenkins expands it per build
     def job = jenkins.createProject(WorkflowJob, 'hotel-booking')
-    job.definition = new CpsScmFlowDefinition(scm, 'Jenkinsfile')
+    job.addProperty(new ParametersDefinitionProperty([
+            new ChoiceParameterDefinition('APP_ENV', ['staging', 'prod'] as String[], 'Where to deploy'),
+            new StringParameterDefinition('BRANCH', branch, 'Git branch to build'),
+            new StringParameterDefinition('REGISTRY', 'localhost:5000', 'Image registry'),
+    ]))
+    def definition = new CpsScmFlowDefinition(scm, 'Jenkinsfile')
+    definition.lightweight = false   // needed for a parameterised branch
+    job.definition = definition
     job.save()
 }
 

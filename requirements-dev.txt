@@ -1,5 +1,6 @@
-# Everything needed to RUN the app, plus the tools to TEST it.
+# Everything needed to RUN the app, plus the tools to TEST and LINT it.
 # Production images install only requirements.txt (smaller, fewer CVEs).
 -r requirements.txt
 pytest==9.1.1
 selenium==4.51.0
+flake8==7.4.1
