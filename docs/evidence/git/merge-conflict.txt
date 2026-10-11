@@ -1,0 +1,110 @@
+$ git merge --no-ff feature/release-footer
+Auto-merging app/static/style.css
+CONFLICT (content): Merge conflict in app/static/style.css
+Auto-merging app/templates/base.html
+CONFLICT (content): Merge conflict in app/templates/base.html
+Auto-merging tests/integration/test_routes.py
+CONFLICT (content): Merge conflict in tests/integration/test_routes.py
+Automatic merge failed; fix conflicts and then commit the result.
+(exit code 1)
+
+$ git status --short
+M  app/__init__.py
+UU app/static/style.css
+UU app/templates/base.html
+UU tests/integration/test_routes.py
+?? docs/evidence/
+
+$ git diff  (conflict markers)
+diff --cc app/static/style.css
+index 6a64e90,08f5207..0000000
+--- a/app/static/style.css
++++ b/app/static/style.css
+@@@ -48,5 -48,5 +48,10 @@@ th, td { text-align: left; padding: .5r
+  .actions { display: flex; gap: .75rem; margin: 1rem 0; }
+  .hint { color: var(--muted); }
+  
+++<<<<<<< HEAD
+ +/* Footer: hotel contact details on every page. */
+ +.site-footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 2rem 0 1rem; border-top: 1px solid #e4e7ec; }
+++=======
++ /* Footer: shows which release is running. */
++ .site-footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 1.5rem 0; }
+++>>>>>>> feature/release-footer
+diff --cc app/templates/base.html
+index 75dd08d,65a5542..0000000
+--- a/app/templates/base.html
++++ b/app/templates/base.html
+@@@ -35,7 -35,7 +35,11 @@@
+    </main>
+  
+    <footer class="site-footer" id="site-footer">
+++<<<<<<< HEAD
+ +    <span id="hotel-contact">Grand Stay Hotel · Front desk: dial 0 from your room · help@grandstay.example</span>
+++=======
++     <span id="app-version">Release {{ app_version }} · {{ app_env }}</span>
+++>>>>>>> feature/release-footer
+    </footer>
+  </body>
+  </html>
+diff --cc tests/integration/test_routes.py
+index bbf9a47,6535dd4..0000000
+--- a/tests/integration/test_routes.py
++++ b/tests/integration/test_routes.py
+@@@ -202,6 -202,8 +202,14 @@@ def test_prod_refuses_to_start_without_
+                      "DATABASE_PATH": str(tmp_path / "p.db")})
+  
+  
+++<<<<<<< HEAD
+ +def test_every_page_shows_hotel_contact_details(client):
+ +    for url in ("/rooms", "/login", "/register"):
+ +        assert 'id="hotel-contact"' in client.get(url).get_data(as_text=True)
+++=======
++ def test_footer_shows_the_running_release(tmp_path):
++     app = create_app({"APP_ENV": "test", "SECRET_KEY": "k", "APP_VERSION": "9.9.9",
++                       "DATABASE_PATH": str(tmp_path / "f.db")})
++     html = app.test_client().get("/rooms").get_data(as_text=True)
++     assert 'id="app-version">Release 9.9.9 · test<' in html
+++>>>>>>> feature/release-footer
+
+--- Resolution commit ---
+commit 8728b6224728ed82e9c7df53fa208687a3cf67da
+Merge: cfeacef c24148f
+Author: Kem.Nxts <padhaio087@gmail.com>
+Date:   Sun Oct 11 22:21:26 2026 +0530
+
+    Merge branch 'feature/release-footer' into develop
+    
+    Conflicts resolved (both branches added a footer in the same place):
+    - app/templates/base.html: keep both lines - hotel contact first, then
+      the running release.
+    - app/static/style.css: one .site-footer rule (contact branch styling)
+      plus a rule that puts each footer line on its own row.
+    - tests/integration/test_routes.py: keep both new tests.
+    Verified after resolution: flake8 clean, 89 tests passed.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ app/__init__.py                  | 6 ++++++
+ app/static/style.css             | 4 +++-
+ app/templates/base.html          | 1 +
+ tests/integration/test_routes.py | 7 +++++++
+ 4 files changed, 17 insertions(+), 1 deletion(-)
+
+$ git log --graph --oneline -8
+*   8728b62 Merge branch 'feature/release-footer' into develop
+|\  
+| * c24148f feat: show running release and environment in page footer
+* |   cfeacef Merge branch 'feature/contact-footer' into develop
+|\ \  
+| |/  
+|/|   
+| * 65ad990 feat: add hotel contact details footer to every page
+|/  
+*   f4d0b26 Merge branch 'feature/ci-release-pipeline' into develop
+|\  
+| * 64351fe ci: add lint, versioned images, registry publish and verified deploy
+|/  
+*   37a4663 Merge branch 'feature/security-hardening' into develop
+|\  
+| * 388c47b test: add route-level integration tests and database rule tests

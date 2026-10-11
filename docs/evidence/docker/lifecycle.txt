@@ -1,0 +1,92 @@
+# Docker lifecycle demo - 2026-10-11 17:09 UTC - commit 224384f
+# (SECRET_KEY is passed with --env-file and is not shown)
+
+$ docker build -q -t hotel-booking-app:1.0.0 --build-arg APP_VERSION=1.0.0 --build-arg GIT_COMMIT=224384f .
+sha256:656f499ba021ea305c0d10f857aa9635726994b55395c7c77f239aef77e10b95
+
+$ docker tag hotel-booking-app:1.0.0 hotel-booking-app:latest
+
+$ docker image ls hotel-booking-app
+IMAGE                      ID             DISK USAGE   CONTENT SIZE   EXTRA
+hotel-booking-app:1.0.0    656f499ba021        218MB         52.3MB        
+hotel-booking-app:latest   656f499ba021        218MB         52.3MB        
+
+$ docker image inspect -f labels={{json .Config.Labels}} user={{.Config.User}} exposed={{json .Config.ExposedPorts}} hotel-booking-app:1.0.0
+labels={"org.opencontainers.image.revision":"224384f","org.opencontainers.image.title":"hotel-booking-app","org.opencontainers.image.version":"1.0.0"} user=appuser exposed={"8000/tcp":{}}
+
+$ docker volume create hotel-demo-data
+hotel-demo-data
+
+$ docker run -d --name hotel-demo -p 8095:8000 --env-file <scratch>/demo.env -v hotel-demo-data:/data hotel-booking-app:1.0.0
+919e8cb1aa47a45ddef7535095ea1f15d0823461d2e775b9b1bf73fe12b581a2
+(health status: healthy)
+
+$ docker ps --filter name=hotel-demo --format table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}
+NAMES        IMAGE                     STATUS                   PORTS
+hotel-demo   hotel-booking-app:1.0.0   Up 6 seconds (healthy)   0.0.0.0:8095->8000/tcp, [::]:8095->8000/tcp
+
+$ docker port hotel-demo
+8000/tcp -> 0.0.0.0:8095
+8000/tcp -> [::]:8095
+
+$ curl -s http://localhost:8095/health
+{"commit":"224384f","env":"prod","status":"ok","version":"1.0.0"}
+
+$ /d/DevOPS/CICD_FOR_HOTEL_ROOM_BOOKING/.venv/Scripts/python <scratch>/guest.py http://localhost:8095 register lifecycle@example.com
+register lifecycle@example.com: HTTP 302 (success, redirected)
+
+$ docker logs --tail 6 hotel-demo
+[2026-10-11 17:09:34,621] INFO in __init__: Hotel booking app started: env=prod version=1.0.0 commit=224384f
+127.0.0.1 - - [11/Oct/2026:17:09:39 +0000] "GET /health HTTP/1.1" 200 66 "-" "Python-urllib/3.11"
+172.17.0.1 - - [11/Oct/2026:17:09:40 +0000] "GET /health HTTP/1.1" 200 66 "-" "curl/8.22.0"
+172.17.0.1 - - [11/Oct/2026:17:09:41 +0000] "GET /register HTTP/1.1" 200 1555 "-" "Python-urllib/3.13"
+[2026-10-11 17:09:41,288] INFO in auth_routes: User registered: user_id=1
+172.17.0.1 - - [11/Oct/2026:17:09:41 +0000] "POST /register HTTP/1.1" 302 199 "-" "Python-urllib/3.13"
+
+$ docker inspect -f state={{.State.Status}} health={{.State.Health.Status}} restart={{.HostConfig.RestartPolicy.Name}} mounts={{range .Mounts}}{{.Name}}->{{.Destination}}{{end}} hotel-demo
+state=running health=healthy restart=no mounts=hotel-demo-data->/data
+
+$ docker exec hotel-demo whoami
+appuser
+
+$ docker stop hotel-demo
+hotel-demo
+
+$ docker ps -a --filter name=hotel-demo --format table {{.Names}}\t{{.Status}}
+NAMES        STATUS
+hotel-demo   Exited (0) Less than a second ago
+
+$ docker start hotel-demo
+hotel-demo
+(health status: healthy)
+
+$ docker restart hotel-demo
+hotel-demo
+(health status: healthy)
+
+$ docker ps --filter name=hotel-demo --format table {{.Names}}\t{{.Status}}
+NAMES        STATUS
+hotel-demo   Up 6 seconds (healthy)
+
+# Remove the container completely, then create a NEW one on the same volume:
+
+$ docker rm -f hotel-demo
+hotel-demo
+
+$ docker ps -a --filter name=hotel-demo --format {{.Names}}
+
+$ docker run -d --name hotel-demo -p 8095:8000 --env-file <scratch>/demo.env -v hotel-demo-data:/data hotel-booking-app:1.0.0
+1aca4464008a989428b37a648dbceb1a296ea077deef54485cbadd41d2d47257
+(health status: healthy)
+# The account registered in the OLD container still exists (data is in the volume):
+
+$ /d/DevOPS/CICD_FOR_HOTEL_ROOM_BOOKING/.venv/Scripts/python <scratch>/guest.py http://localhost:8095 login lifecycle@example.com
+login lifecycle@example.com: HTTP 302 (success, redirected)
+
+# Clean up
+
+$ docker rm -f hotel-demo
+hotel-demo
+
+$ docker volume rm hotel-demo-data
+hotel-demo-data
