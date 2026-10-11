@@ -130,12 +130,31 @@ pytest                  # everything
   - Test a running deployment instead: `E2E_BASE_URL=http://localhost:8080 pytest -m e2e`
   - On failure, a screenshot and the page HTML are saved in `reports/screenshots/`.
 
+## Running with Docker (Nginx + Gunicorn)
+
+```bash
+cp .env.example .env          # Windows: copy .env.example .env  - then set SECRET_KEY
+docker compose up -d --build
+```
+
+Open http://localhost:8080. Requests go browser -> Nginx (port 8080) ->
+Gunicorn (app container, port 8000, not published) -> SQLite in the
+`hotel-data` volume. See [docs/container-lifecycle.md](docs/container-lifecycle.md)
+for all build/run/stop commands.
+
+> **Antivirus note (Avast/AVG/Kaspersky "HTTPS scanning"):** these products
+> intercept HTTPS with their own certificate, which Linux containers do not
+> trust, so `pip install` inside `docker build` fails with
+> `CERTIFICATE_VERIFY_FAILED`. Turn off HTTPS scanning while building
+> (Avast: Settings -> Protection -> Core Shields -> Web Shield ->
+> untick "Enable HTTPS scanning").
+
 ### Configuration (environment variables)
 
 | Variable        | Default                  | Meaning                                   |
 |-----------------|--------------------------|-------------------------------------------|
-| `APP_ENV`       | `dev`                    | `dev`, `test` or `prod`                   |
-| `SECRET_KEY`    | dev-only value           | Signs session cookies. **Required** in prod |
+| `APP_ENV`       | `dev`                    | `dev`, `test`, `staging` or `prod`        |
+| `SECRET_KEY`    | dev-only value           | Signs session cookies. **Required** outside dev/test |
 | `DATABASE_PATH` | `instance/hotel.db`      | SQLite file location                      |
 | `MAX_NIGHTS`    | `30`                     | Longest stay allowed per booking          |
 
