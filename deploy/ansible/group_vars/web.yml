@@ -1,0 +1,16 @@
+# Variables for every server in the [web] group.
+
+# Where the application files go on the server.
+app_dir: /opt/hotel-booking
+
+# Environment setting passed to the app (APP_ENV).
+app_env: prod
+
+# Public port Nginx listens on (80 = normal http://server-ip/).
+host_port: 80
+
+# SECRET_KEY for the app. The password lookup generates a random 64-char key
+# the first time and saves it on the CONTROL machine in
+# deploy/ansible/credentials/secret_key (git-ignored), so every later run
+# reuses the same key and users stay logged in across deploys.
+secret_key: "{{ lookup('ansible.builtin.password', playbook_dir + '/credentials/secret_key', length=64, chars=['ascii_letters', 'digits']) }}"
