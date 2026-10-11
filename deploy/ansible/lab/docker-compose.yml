@@ -1,0 +1,42 @@
+# Ansible test lab: a fake "server" container plus the Ansible controller.
+# Use it when you have no Ubuntu VM. From deploy/ansible/lab:
+#
+#   docker compose up -d --build target              # start the "server"
+#   docker compose run --rm controller ansible-playbook -i lab/inventory.ini playbook.yml
+#   -> the portal runs inside the "server": http://localhost:8088
+#   docker compose down -v                           # throw the lab away
+#
+# The target runs systemd and its own Docker engine, so it needs
+# privileged mode. That is acceptable for a disposable lab, never for prod.
+name: hotel-ansible-lab
+
+services:
+  target:
+    build:
+      context: .
+      dockerfile: Dockerfile.target
+      additional_contexts:
+        certs: ../../../certs
+    hostname: hotel-server
+    privileged: true
+    cgroup: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      # Docker inside the target needs real (non-overlay) storage.
+      - target-docker:/var/lib/docker
+      - target-containerd:/var/lib/containerd
+    ports:
+      - "127.0.0.1:8088:80"     # the server's port 80 = the deployed portal
+
+  controller:
+    build:
+      context: ../../..
+      dockerfile: deploy/ansible/Dockerfile
+    image: hotel-ansible
+    volumes:
+      - ../../..:/work          # the repository
+    profiles: [tools]           # only started by "docker compose run"
+
+volumes:
+  target-docker:
+  target-containerd:

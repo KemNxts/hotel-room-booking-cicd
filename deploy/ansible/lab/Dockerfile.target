@@ -1,0 +1,23 @@
+# LAB ONLY: a throw-away "fresh Ubuntu 24.04 server" (systemd + sshd) to run
+# the playbook against when you have no real VM. Not for production.
+FROM ubuntu:24.04
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        systemd systemd-sysv openssh-server python3 sudo ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Optional extra root certificates (see certs/README.md), so the server's
+# Docker can download images on networks with HTTPS inspection.
+COPY --from=certs . /usr/local/share/ca-certificates/extra/
+
+# A sudo-capable "ubuntu" user, like a cloud VM. The password is a lab-only
+# value: this container's SSH port is not published outside Docker.
+RUN update-ca-certificates \
+    && useradd --create-home --shell /bin/bash ubuntu 2>/dev/null || true \
+    && echo 'ubuntu:labpass' | chpasswd \
+    && echo 'ubuntu ALL=(ALL) ALL' > /etc/sudoers.d/ubuntu \
+    && systemctl enable ssh
+
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]
