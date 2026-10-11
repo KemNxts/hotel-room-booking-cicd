@@ -108,6 +108,20 @@ class TestRequestBooking:
         with pytest.raises(BookingError, match="no longer available"):
             booking_service.request_booking(other_user.id, room_101.id, "2030-01-12", "2030-01-14")
 
+    def test_different_rooms_can_be_booked_for_the_same_dates(
+            self, booking_service, user, other_user, room_101):
+        room_102 = next(r for r in booking_service.list_rooms() if r.room_number == "102")
+        first = booking_service.request_booking(user.id, room_101.id, "2030-01-10", "2030-01-13")
+        second = booking_service.request_booking(other_user.id, room_102.id, "2030-01-10", "2030-01-13")
+        assert first.room_id != second.room_id
+        assert second.status == BookingStatus.PENDING
+
+    def test_cancelled_room_can_be_booked_again(self, booking_service, user, other_user, room_101):
+        first = booking_service.request_booking(user.id, room_101.id, "2030-01-10", "2030-01-13")
+        booking_service.cancel_booking(first.id, user.id)
+        again = booking_service.request_booking(other_user.id, room_101.id, "2030-01-10", "2030-01-13")
+        assert again.status == BookingStatus.PENDING
+
     def test_invalid_dates_are_rejected_before_anything_is_saved(self, booking_service, user, room_101):
         with pytest.raises(BookingError):
             booking_service.request_booking(user.id, room_101.id, "2029-12-01", "2029-12-03")
