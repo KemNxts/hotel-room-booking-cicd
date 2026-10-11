@@ -55,6 +55,10 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                // The workspace is reused between builds. Delete outputs of the
+                // previous build, otherwise a stage skipped in THIS build would
+                // still publish the OLD build's test report.
+                sh 'rm -rf reports dist'
                 script {
                     // Version = VERSION file + commit, e.g. 1.0.0-3f2c1ab. The same
                     // tag goes on the source archive, both images and /health,
