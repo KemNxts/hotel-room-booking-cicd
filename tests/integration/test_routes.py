@@ -212,3 +212,11 @@ def test_footer_shows_the_running_release(tmp_path):
                       "DATABASE_PATH": str(tmp_path / "f.db")})
     html = app.test_client().get("/rooms").get_data(as_text=True)
     assert 'id="app-version">Release 9.9.9 · test<' in html
+
+
+def test_my_bookings_shows_number_of_nights(client, stay):
+    register(client, "guest@example.com")
+    book(client, stay)                                    # the stay fixture is 2 nights
+    html = client.get("/bookings").get_data(as_text=True)
+    assert "<th>Nights</th>" in html
+    assert '<td class="nights">2</td>' in html
