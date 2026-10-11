@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from werkzeug.serving import make_server
 
 from app import create_app
@@ -49,9 +50,15 @@ def driver(request):
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
 
-    # Selenium Manager (built into Selenium 4) finds or downloads a matching
-    # chromedriver automatically.
-    drv = webdriver.Chrome(options=options)
+    # On a CI agent with distro Chromium (see deploy/jenkins/Dockerfile) we are
+    # told where the browser and driver are. Otherwise Selenium Manager (built
+    # into Selenium 4) finds Chrome and downloads a matching chromedriver.
+    service = None
+    if os.environ.get("CHROME_BIN"):
+        options.binary_location = os.environ["CHROME_BIN"]
+    if os.environ.get("CHROMEDRIVER"):
+        service = Service(executable_path=os.environ["CHROMEDRIVER"])
+    drv = webdriver.Chrome(options=options, service=service)
     drv.implicitly_wait(0)  # we use explicit waits (WebDriverWait) instead
     yield drv
 

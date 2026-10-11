@@ -12,7 +12,7 @@ DEV_SECRET_KEY = "dev-only-change-me"
 def load_config():
     """Read settings from the environment at app start-up (not at import time)."""
     return {
-        # Which environment we are running in: dev | test | prod.
+        # Which environment we are running in: dev | test | staging | prod.
         "APP_ENV": os.environ.get("APP_ENV", "dev"),
         # Signs the session cookie. The default is only for local development;
         # create_app refuses to start in prod without a real SECRET_KEY.
