@@ -65,7 +65,8 @@ gitGraph
 
 (Simplified - the full graph: `git log --graph --oneline --all`.)
 
-- `main`: released code only; every commit on it is a tagged release.
+- `main`: released code only. Every software release on it is tagged; a
+  documentation-only merge may follow a tag (as after v1.1.0).
 - `develop`: integration branch; Jenkins builds it and deploys to staging.
 - `feature/*`, `fix/*`: one per change, merged into `develop` with `--no-ff`
   so the history shows each feature as a unit.

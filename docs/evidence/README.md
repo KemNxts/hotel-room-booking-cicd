@@ -26,7 +26,7 @@ checked and do not appear in any file.
 | `screenshots/jenkins-*.png` | Stage view (incl. failed #2), last build, test results, failed test | 7, 10 |
 | `screenshots/ansible-lab-after-rollback-v1.0.0.png` | Footer shows "Release 1.0.0" after rollback | 14 |
 
-Jenkins build list for reference: #1-#9 (see `docs/05-ci-cd-pipeline.md`).
+Jenkins build list for reference: #1-#10 (see `docs/05-ci-cd-pipeline.md`).
 Logs for #4, #6, #7, #8 are in Jenkins itself (Console Output) - only the
 key builds were copied here.
 
