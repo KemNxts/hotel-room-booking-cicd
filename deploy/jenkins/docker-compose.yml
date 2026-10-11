@@ -1,14 +1,19 @@
-# Local Jenkins for this project.
+# Local Jenkins + local Docker image registry for this project.
 #
 #   cd deploy/jenkins
 #   cp .env.example .env        # then set the two passwords in .env
 #   docker compose up -d --build
-#   -> http://localhost:8090  (user: admin)
+#   -> Jenkins:  http://localhost:8090  (user: admin)
+#   -> Registry: localhost:5000  (list images: http://localhost:5000/v2/_catalog)
 name: hotel-jenkins
 
 services:
   jenkins:
-    build: .
+    build:
+      context: .
+      # The repo's certs/ folder (optional extra root CAs, see certs/README.md).
+      additional_contexts:
+        certs: ../../certs
     image: hotel-jenkins:local
     ports:
       - "127.0.0.1:8090:8080"   # Jenkins UI, reachable only from this computer
@@ -30,5 +35,18 @@ services:
       - ../..:/repo:ro                                # this git repository, read-only
     restart: unless-stopped
 
+  # Private image registry (the official "registry" image). The pipeline
+  # pushes every tested release here and deploys from it. Images are kept
+  # in a volume, so older releases stay available for rollback.
+  # Docker treats localhost registries as trusted, so no TLS setup is needed.
+  registry:
+    image: registry:2
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    restart: unless-stopped
+
 volumes:
   jenkins-home:
+  registry-data:

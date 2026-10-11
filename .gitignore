@@ -34,3 +34,6 @@ deploy/ansible/credentials/
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Extra CA certificates (see certs/README.md) ---
+certs/*.crt

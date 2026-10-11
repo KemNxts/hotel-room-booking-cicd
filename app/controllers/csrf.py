@@ -32,4 +32,5 @@ def check_csrf():
     # cannot be guessed character by character from response times.
     if not expected or not hmac.compare_digest(expected, sent):
         current_app.logger.warning("Rejected POST %s: missing or invalid CSRF token", request.path)
-        abort(400, description="Your form has expired or is invalid. Please go back, reload the page and try again.")
+        abort(400, description="Your form has expired or is invalid. "
+                               "Please go back, reload the page and try again.")

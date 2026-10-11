@@ -4,6 +4,18 @@ FROM jenkins/jenkins:lts-jdk21
 
 USER root
 
+# Optional extra root certificates from the repo's certs/ folder (normally
+# none; see certs/README.md). Added to the system store (git, pip via
+# PIP_CERT, docker builds via the Jenkinsfile) and to Java's store
+# (plugin downloads).
+COPY --from=certs . /usr/local/share/ca-certificates/extra/
+RUN update-ca-certificates >/dev/null \
+    && for c in /usr/local/share/ca-certificates/extra/*.crt; do \
+         [ -e "$c" ] && keytool -importcert -noprompt -cacerts -storepass changeit \
+              -alias "extra-$(basename "$c")" -file "$c"; \
+       done; true
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+
 # Python 3.11 (same version as the production image), copied from the
 # official Python image built on the same Debian release as Jenkins.
 COPY --from=python:3.11-slim-trixie /usr/local/bin/python3.11 /usr/local/bin/python3.11

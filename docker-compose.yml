@@ -4,12 +4,20 @@
 #   docker compose up -d --build
 #
 # Variables come from the shell or from the .env file next to this file.
+#   IMAGE_TAG     which release to run, e.g. 1.0.0-3f2c1ab (default: latest)
+#   IMAGE_PREFIX  registry/namespace, e.g. "localhost:5000/" or "mydockerid/"
+#                 (default: empty = local images only)
+# Rollback = run again with an older IMAGE_TAG (see docs/container-lifecycle.md).
 name: hotel-booking
 
 services:
   app:
-    build: .
-    image: hotel-booking-app:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    image: ${IMAGE_PREFIX:-}hotel-booking-app:${IMAGE_TAG:-latest}
     environment:
       APP_ENV: ${APP_ENV:-prod}
       # Compose stops with this message if SECRET_KEY is not provided.
@@ -23,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: deploy/nginx/Dockerfile
-    image: hotel-booking-nginx:${IMAGE_TAG:-latest}
+    image: ${IMAGE_PREFIX:-}hotel-booking-nginx:${IMAGE_TAG:-latest}
     ports:
       - "${HOST_PORT:-8080}:80"
     depends_on:
