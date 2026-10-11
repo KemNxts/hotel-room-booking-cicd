@@ -109,6 +109,27 @@ Production-style run (Linux/macOS/Docker only - Gunicorn does not run on Windows
 APP_ENV=prod SECRET_KEY=<long-random-string> gunicorn --bind 0.0.0.0:8000 --workers 2 wsgi:app
 ```
 
+## Running the tests
+
+```bash
+pip install -r requirements-dev.txt
+
+pytest -m "not e2e"     # unit tests only - fast, no browser needed
+pytest -m e2e           # Selenium journeys - needs Google Chrome installed
+pytest                  # everything
+```
+
+- **Unit tests** (`tests/unit/`) test the service layer directly. Each test
+  gets a fresh temporary SQLite file and "today" is frozen at 2030-01-01, so
+  results never depend on when the tests run.
+- **E2E tests** (`tests/e2e/`) start the app on a free port and drive headless
+  Chrome through 5 journeys: register, login (wrong + right password),
+  search -> book -> confirm, cancel -> status tracking, and a booked room being
+  unavailable to a second guest.
+  - Watch the browser: `HEADLESS=0 pytest -m e2e` (PowerShell: `$env:HEADLESS="0"; pytest -m e2e`)
+  - Test a running deployment instead: `E2E_BASE_URL=http://localhost:8080 pytest -m e2e`
+  - On failure, a screenshot and the page HTML are saved in `reports/screenshots/`.
+
 ### Configuration (environment variables)
 
 | Variable        | Default                  | Meaning                                   |
