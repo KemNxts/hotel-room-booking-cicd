@@ -25,6 +25,7 @@ tests/e2e/screenshots/
 
 # --- Secrets / local config (never commit) ---
 .env
+deploy/ansible/credentials/
 *.pem
 *.key
 
