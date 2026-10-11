@@ -1,0 +1,38 @@
+# Runs the full stack:  browser -> nginx (port HOST_PORT) -> app (gunicorn :8000) -> SQLite volume
+#
+#   cp .env.example .env      # then put a real SECRET_KEY in .env
+#   docker compose up -d --build
+#
+# Variables come from the shell or from the .env file next to this file.
+name: hotel-booking
+
+services:
+  app:
+    build: .
+    image: hotel-booking-app:${IMAGE_TAG:-latest}
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      # Compose stops with this message if SECRET_KEY is not provided.
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is not set - copy .env.example to .env and fill it in}
+    volumes:
+      - hotel-data:/data
+    # No "ports:" here on purpose - the app is reachable only through nginx.
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: deploy/nginx/Dockerfile
+    image: hotel-booking-nginx:${IMAGE_TAG:-latest}
+    ports:
+      - "${HOST_PORT:-8080}:80"
+    depends_on:
+      app:
+        # Start nginx only after the app's HEALTHCHECK reports healthy.
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  # Named volume: Docker manages it; it survives `docker compose down`
+  # (only `docker compose down -v` deletes it).
+  hotel-data:

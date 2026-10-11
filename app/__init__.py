@@ -17,10 +17,11 @@ def create_app(overrides=None):
     if overrides:
         app.config.update(overrides)
 
-    # Fail fast: never run production with the publicly known dev key,
-    # otherwise anyone could forge a login session cookie.
-    if app.config["APP_ENV"] == "prod" and app.config["SECRET_KEY"] == DEV_SECRET_KEY:
-        raise RuntimeError("SECRET_KEY must be set when APP_ENV=prod")
+    # Fail fast: outside dev/test (i.e. staging, prod) never run with a missing
+    # or publicly known key, otherwise anyone could forge a login session cookie.
+    if app.config["APP_ENV"] not in ("dev", "test") and \
+            app.config["SECRET_KEY"] in ("", DEV_SECRET_KEY):
+        raise RuntimeError(f"SECRET_KEY must be set when APP_ENV={app.config['APP_ENV']}")
 
     if not app.config["DATABASE_PATH"]:
         os.makedirs(app.instance_path, exist_ok=True)
