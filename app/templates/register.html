@@ -4,6 +4,7 @@
 <section class="card narrow">
   <h1>Create an account</h1>
   <form method="post" id="register-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label for="full_name">Full name</label>
     <input id="full_name" name="full_name" value="{{ form.get('full_name', '') }}" required>
 

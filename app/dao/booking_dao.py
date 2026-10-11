@@ -1,3 +1,5 @@
+import sqlite3
+
 from app.db import immediate_transaction
 from app.models import Booking, BookingStatus
 
@@ -44,19 +46,25 @@ class BookingDao:
             "total_price": total_price,
             "status": BookingStatus.PENDING,
         }
-        with immediate_transaction(self.conn):
-            clash = self.conn.execute(
-                f"SELECT 1 FROM bookings WHERE room_id = :room_id AND {_OVERLAP_SQL} LIMIT 1",
-                params,
-            ).fetchone()
-            if clash:
-                return None
-            cur = self.conn.execute(
-                """INSERT INTO bookings (user_id, room_id, check_in, check_out, total_price, status)
-                   VALUES (:user_id, :room_id, :check_in, :check_out, :total_price, :status)""",
-                params,
-            )
-            return cur.lastrowid
+        try:
+            with immediate_transaction(self.conn):
+                clash = self.conn.execute(
+                    f"SELECT 1 FROM bookings WHERE room_id = :room_id AND {_OVERLAP_SQL} LIMIT 1",
+                    params,
+                ).fetchone()
+                if clash:
+                    return None
+                cur = self.conn.execute(
+                    """INSERT INTO bookings
+                           (user_id, room_id, check_in, check_out, total_price, status)
+                       VALUES (:user_id, :room_id, :check_in, :check_out, :total_price, :status)""",
+                    params,
+                )
+                return cur.lastrowid
+        except sqlite3.IntegrityError:
+            # The database trigger (see schema.sql) refused an overlapping
+            # booking. Normally the check above already caught it.
+            return None
 
     def find_by_id(self, booking_id):
         row = self.conn.execute(
