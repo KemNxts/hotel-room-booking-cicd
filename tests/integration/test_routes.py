@@ -200,3 +200,8 @@ def test_prod_refuses_to_start_without_a_real_secret_key(tmp_path, key):
     with pytest.raises(RuntimeError, match="SECRET_KEY"):
         create_app({"APP_ENV": "prod", "SECRET_KEY": key,
                     "DATABASE_PATH": str(tmp_path / "p.db")})
+
+
+def test_every_page_shows_hotel_contact_details(client):
+    for url in ("/rooms", "/login", "/register"):
+        assert 'id="hotel-contact"' in client.get(url).get_data(as_text=True)
