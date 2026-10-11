@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Hotel Booking{% endblock %} · Grand Stay Hotel</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('rooms.list_rooms') }}">Grand Stay Hotel</a>
+    <nav>
+      <a href="{{ url_for('rooms.list_rooms') }}" id="nav-rooms">Rooms</a>
+      {% if g.user %}
+        <a href="{{ url_for('bookings.my_bookings') }}" id="nav-my-bookings">My bookings</a>
+        <span class="who" id="nav-user">{{ g.user.full_name }}</span>
+        <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+          <button type="submit" class="link" id="logout-btn">Log out</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" id="nav-login">Log in</a>
+        <a href="{{ url_for('auth.register') }}" id="nav-register">Register</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {# Flash messages: one-time notices set by the controllers. #}
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
