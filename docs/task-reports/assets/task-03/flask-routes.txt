@@ -1,0 +1,16 @@
+$ "D:\DevOPS\CICD_FOR_HOTEL_ROOM_BOOKING\.venv\Scripts\python.exe" -m flask --app wsgi routes --sort rule
+Endpoint              Methods    Rule                              
+--------------------  ---------  ----------------------------------
+rooms.index           GET        /                                 
+bookings.my_bookings  GET        /bookings                         
+bookings.create       POST       /bookings                         
+bookings.detail       GET        /bookings/<int:booking_id>        
+bookings.cancel       POST       /bookings/<int:booking_id>/cancel 
+bookings.confirm      POST       /bookings/<int:booking_id>/confirm
+health                GET        /health                           
+auth.login            GET, POST  /login                            
+auth.logout           POST       /logout                           
+auth.register         GET, POST  /register                         
+rooms.list_rooms      GET        /rooms                            
+static                GET        /static/<path:filename>           
+[2026-10-20 18:25:34,313] INFO in __init__: Hotel booking app started: env=dev version=dev commit=unknown

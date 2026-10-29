@@ -5,6 +5,7 @@ their own settings (e.g. a temporary database); Gunicorn calls it via wsgi.py.
 """
 import logging
 import os
+from datetime import date
 
 from flask import Flask, jsonify, render_template
 
@@ -41,6 +42,9 @@ def create_app(overrides=None):
     app.before_request(check_csrf)
     app.jinja_env.globals["csrf_token"] = csrf_token
 
+    # Display-only helpers for templates (no business rules here).
+    app.jinja_env.filters.update(to_date=_to_date, long_date=_long_date, money=_money)
+
     # Controller layer: one blueprint per area of the site.
     from .controllers import auth_routes, booking_routes, room_routes
     app.register_blueprint(auth_routes.bp)
@@ -73,3 +77,24 @@ def create_app(overrides=None):
     app.logger.info("Hotel booking app started: env=%s version=%s commit=%s",
                     app.config["APP_ENV"], app.config["APP_VERSION"], app.config["GIT_COMMIT"])
     return app
+
+
+def _to_date(value):
+    """'2030-01-10' -> date(2030, 1, 10); None if it is not a valid ISO date."""
+    if isinstance(value, date):
+        return value
+    try:
+        return date.fromisoformat(value or "")
+    except ValueError:
+        return None
+
+
+def _long_date(value, fmt="%a %d %b %Y"):
+    """date or ISO string -> 'Thu 10 Jan 2030' (unchanged if not a date)."""
+    parsed = _to_date(value)
+    return parsed.strftime(fmt) if parsed else value
+
+
+def _money(amount):
+    """2500 -> '₹2,500' (prices are whole rupees)."""
+    return f"₹{amount:,}"

@@ -1,0 +1,15 @@
+$ findstr /n /c:"stage(" /c:"choice(" /c:"string(name" /c:"pollSCM" Jenkinsfile
+21:        choice(name: 'APP_ENV', choices: ['staging', 'prod'],
+24:        string(name: 'BRANCH', defaultValue: 'develop',
+26:        string(name: 'REGISTRY', defaultValue: 'localhost:5000',
+35:        pollSCM('H/5 * * * *')
+55:        stage('Checkout') {
+76:        stage('Install dependencies') {
+88:        stage('Static checks') {
+99:        stage('Unit & integration tests') {
+105:        stage('E2E tests (Selenium)') {
+113:        stage('Package source') {
+127:        stage('Build images') {
+141:        stage('Publish images') {
+163:        stage('Deploy') {
+177:        stage('Health check') {

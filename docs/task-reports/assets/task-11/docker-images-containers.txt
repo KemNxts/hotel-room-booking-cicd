@@ -1,0 +1,45 @@
+$ docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" --filter reference=*hotel*
+REPOSITORY                 TAG       SIZE
+hotel-ansible-lab-target   latest    222MB
+hotel-booking-app          1.1.0     219MB
+hotel-booking-app          latest    219MB
+hotel-ansible              latest    397MB
+hotel-jenkins              local     2.22GB
+
+$ docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" --filter reference=localhost:5000/*
+REPOSITORY                           TAG             SIZE
+localhost:5000/hotel-booking-app     1.1.0-1c2103c   218MB
+localhost:5000/hotel-booking-app     1.1.0-2e4c93a   218MB
+localhost:5000/hotel-booking-app     1.1.0-d07929b   218MB
+localhost:5000/hotel-booking-app     1.1.0-5aa909d   218MB
+localhost:5000/hotel-booking-app     1.0.0-661751d   218MB
+localhost:5000/hotel-booking-nginx   1.1.0-d07929b   73.6MB
+localhost:5000/hotel-booking-nginx   1.0.0-661751d   73.6MB
+localhost:5000/hotel-booking-nginx   1.0.0-224384f   73.6MB
+localhost:5000/hotel-booking-nginx   1.1.0-2e4c93a   73.6MB
+localhost:5000/hotel-booking-nginx   1.1.0-5aa909d   73.6MB
+localhost:5000/hotel-booking-nginx   1.1.0-1c2103c   73.6MB
+localhost:5000/hotel-booking-app     1.0.0-224384f   218MB
+localhost:5000/hotel-booking-app     1.0.0-30c6a05   218MB
+localhost:5000/hotel-booking-nginx   1.0.0-64351fe   73.6MB
+localhost:5000/hotel-booking-nginx   1.0.0-30c6a05   73.6MB
+localhost:5000/hotel-booking-app     1.0.0-64351fe   218MB
+
+$ docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+NAMES                        IMAGE                                              STATUS                    PORTS
+hotel-ansible-lab-target-1   hotel-ansible-lab-target                           Up 12 minutes             127.0.0.1:8088->80/tcp
+hotel-staging-nginx-1        localhost:5000/hotel-booking-nginx:1.1.0-1c2103c   Up 15 minutes             0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
+hotel-staging-app-1          localhost:5000/hotel-booking-app:1.1.0-1c2103c     Up 15 minutes (healthy)   8000/tcp
+hotel-prod-nginx-1           localhost:5000/hotel-booking-nginx:1.1.0-d07929b   Up 51 minutes             0.0.0.0:8082->80/tcp, [::]:8082->80/tcp
+hotel-prod-app-1             localhost:5000/hotel-booking-app:1.1.0-d07929b     Up 51 minutes (healthy)   8000/tcp
+hotel-jenkins-jenkins-1      hotel-jenkins:local                                Up 51 minutes             127.0.0.1:8090->8080/tcp
+hotel-jenkins-registry-1     registry:2                                         Up 51 minutes             127.0.0.1:5000->5000/tcp
+
+$ docker volume ls --filter name=hotel
+DRIVER    VOLUME NAME
+local     hotel-ansible-lab_target-containerd
+local     hotel-ansible-lab_target-docker
+local     hotel-jenkins_jenkins-home
+local     hotel-jenkins_registry-data
+local     hotel-prod_hotel-data
+local     hotel-staging_hotel-data

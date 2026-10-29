@@ -1,0 +1,29 @@
+$ git log --format="%h %s" -3 experiment/defect-demo
+2fb62d6 fix: restore strict overlap comparison in booking DAO
+5844eec experiment: introduce deliberate off-by-one defect in overlap rule
+da225fb Merge branch 'feature/ci-release-pipeline' into develop
+
+$ git show 5844eec --stat --format="%h %s"
+5844eec experiment: introduce deliberate off-by-one defect in overlap rule
+
+ app/dao/booking_dao.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git diff 5844eec~1 5844eec -- app/dao/booking_dao.py
+diff --git a/app/dao/booking_dao.py b/app/dao/booking_dao.py
+index 4c2c743..71a85aa 100644
+--- a/app/dao/booking_dao.py
++++ b/app/dao/booking_dao.py
+@@ -7,7 +7,7 @@ from app.models import Booking, BookingStatus
+ # Touching stays do NOT overlap: check-out on the 5th and a new check-in on
+ # the 5th is fine. Only PENDING/CONFIRMED bookings block a room.
+ _OVERLAP_SQL = """
+-    check_in < :check_out
++    check_in <= :check_out
+     AND check_out > :check_in
+     AND status IN ('PENDING', 'CONFIRMED')
+ """
+
+$ git branch --contains 5844eec
+  experiment/defect-demo
+  experiment/defect-demo-2

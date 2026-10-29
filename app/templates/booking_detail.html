@@ -1,36 +1,100 @@
 {% extends "base.html" %}
+{% import "partials/macros.html" as ui %}
 {% block title %}Booking #{{ booking.id }}{% endblock %}
 {% block content %}
-<section class="card narrow">
-  <h1>Booking #{{ booking.id }}</h1>
-  <p>Status:
-    <span class="badge badge-{{ booking.status|lower }}" id="booking-status">{{ booking.status }}</span>
-  </p>
+{% set stay_text = booking.check_in | long_date("%a %d %b") ~ " to " ~ booking.check_out | long_date("%a %d %b %Y") %}
+<div class="container section">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="{{ url_for('bookings.my_bookings') }}">My bookings</a></li>
+      <li aria-current="page">Booking #{{ booking.id }}</li>
+    </ol>
+  </nav>
 
-  <dl class="details">
-    <dt>Room</dt>      <dd>{{ booking.room_number }} ({{ booking.room_type }})</dd>
-    <dt>Check-in</dt>  <dd id="booking-check-in">{{ booking.check_in }}</dd>
-    <dt>Check-out</dt> <dd id="booking-check-out">{{ booking.check_out }}</dd>
-    <dt>Nights</dt>    <dd>{{ booking.nights }}</dd>
-    <dt>Total</dt>     <dd id="booking-total">₹{{ booking.total_price }}</dd>
-    <dt>Requested</dt> <dd>{{ booking.created_at }} UTC</dd>
-  </dl>
+  <div class="reservation">
+    <section class="reservation__main card" aria-labelledby="booking-title">
+      <header class="reservation__header">
+        <h1 class="reservation__title" id="booking-title">Booking #{{ booking.id }}</h1>
+        {{ ui.status_badge(booking.status, id="booking-status") }}
+      </header>
 
-  <div class="actions">
-    {% if booking.can_confirm %}
-      <form method="post" action="{{ url_for('bookings.confirm', booking_id=booking.id) }}" class="inline">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" id="confirm-btn">Confirm booking</button>
-      </form>
-    {% endif %}
-    {% if booking.can_cancel %}
-      <form method="post" action="{{ url_for('bookings.cancel', booking_id=booking.id) }}" class="inline">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="danger" id="cancel-btn">Cancel booking</button>
-      </form>
-    {% endif %}
+      {# The two real steps of a booking. A cancelled booking leaves the sequence. #}
+      {% if booking.status != "CANCELLED" %}
+        <ol class="progress" aria-label="Booking progress">
+          <li class="progress__step is-done"><span class="progress__dot" aria-hidden="true"></span>Requested</li>
+          <li class="progress__step {{ 'is-done' if booking.status == 'CONFIRMED' else 'is-current' }}"
+              {% if booking.status == 'PENDING' %}aria-current="step"{% endif %}>
+            <span class="progress__dot" aria-hidden="true"></span>Confirmed
+          </li>
+        </ol>
+      {% endif %}
+
+      {% if booking.status == "CONFIRMED" %}
+        <div class="notice notice--success">
+          <p class="notice__title">Your stay is confirmed</p>
+          <p>Room {{ booking.room_number }} is reserved for you from {{ stay_text }}.</p>
+        </div>
+      {% elif booking.status == "PENDING" %}
+        <div class="notice notice--pending">
+          <p class="notice__title">Waiting for your confirmation</p>
+          <p>This request is holding room {{ booking.room_number }} for you. Confirm it to complete your booking.</p>
+        </div>
+      {% else %}
+        <div class="notice notice--muted">
+          <p class="notice__title">This booking was cancelled</p>
+          <p>Room {{ booking.room_number }} is no longer held for these dates.</p>
+        </div>
+      {% endif %}
+
+      <dl class="summary">
+        <div class="summary__row">
+          <dt>Check-in</dt>
+          <dd><time id="booking-check-in" datetime="{{ booking.check_in.isoformat() }}">{{ booking.check_in | long_date }}</time></dd>
+        </div>
+        <div class="summary__row">
+          <dt>Check-out</dt>
+          <dd><time id="booking-check-out" datetime="{{ booking.check_out.isoformat() }}">{{ booking.check_out | long_date }}</time></dd>
+        </div>
+        <div class="summary__row">
+          <dt>Nights</dt>
+          <dd>{{ booking.nights }}</dd>
+        </div>
+        <div class="summary__row summary__row--total">
+          <dt>Total</dt>
+          <dd id="booking-total">{{ booking.total_price | money }}</dd>
+        </div>
+        <div class="summary__row summary__row--quiet">
+          <dt>Requested</dt>
+          <dd>{{ booking.created_at }} UTC</dd>
+        </div>
+      </dl>
+
+      {% if booking.can_confirm or booking.can_cancel %}
+        <div class="actions">
+          {% if booking.can_confirm %}
+            <form method="post" action="{{ url_for('bookings.confirm', booking_id=booking.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn--primary btn--lg" id="confirm-btn">Confirm booking</button>
+            </form>
+          {% endif %}
+          {% if booking.can_cancel %}
+            <form method="post" action="{{ url_for('bookings.cancel', booking_id=booking.id) }}"
+                  data-confirm data-confirm-title="Cancel booking #{{ booking.id }}?"
+                  data-confirm-body="Room {{ booking.room_number }}, {{ stay_text }}, will be released. This cannot be undone.">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn--danger-outline btn--lg" id="cancel-btn">Cancel booking</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endif %}
+    </section>
+
+    <aside class="reservation__room card" aria-label="Room">
+      {{ ui.plate(booking.room_number, size="lg", muted=booking.status == "CANCELLED") }}
+      <p class="reservation__room-type">{{ booking.room_type }} room</p>
+      <p class="reservation__room-meta">{{ booking.nights }} night{{ "s" if booking.nights != 1 }}, {{ booking.total_price | money }}</p>
+      <a class="btn btn--secondary btn--block" href="{{ url_for('bookings.my_bookings') }}">All my bookings</a>
+    </aside>
   </div>
-
-  <p><a href="{{ url_for('bookings.my_bookings') }}">← All my bookings</a></p>
-</section>
+</div>
 {% endblock %}

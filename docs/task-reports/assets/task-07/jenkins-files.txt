@@ -1,0 +1,12 @@
+$ type deploy\jenkins\plugins.txt
+workflow-aggregator
+git
+junit
+credentials-binding
+pipeline-stage-view
+timestamper
+
+$ docker compose -f deploy/jenkins/docker-compose.yml ps --format "table {{.Service}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+SERVICE    IMAGE                 STATUS          PORTS
+jenkins    hotel-jenkins:local   Up 49 minutes   127.0.0.1:8090->8080/tcp
+registry   registry:2            Up 49 minutes   127.0.0.1:5000->5000/tcp

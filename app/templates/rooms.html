@@ -1,70 +1,134 @@
 {% extends "base.html" %}
-{% block title %}Rooms{% endblock %}
-{% block content %}
-<section class="card">
-  <h1>Check availability</h1>
-  <form method="get" action="{{ url_for('rooms.list_rooms') }}" class="search" id="search-form">
-    <div>
-      <label for="check_in">Check-in</label>
-      <input id="check_in" name="check_in" type="date" value="{{ check_in }}" required>
+{% import "partials/macros.html" as ui %}
+{% block title %}{% if results is not none %}Availability{% else %}Rooms{% endif %}{% endblock %}
+{% set searched = results is not none %}
+{% set from_price = rooms | map(attribute="price_per_night") | min if rooms else none %}
+
+{% block hero %}
+<section class="hero{% if searched %} hero--compact{% endif %}">
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      {% if searched %}
+        <h1 class="hero__title">Rooms for your dates</h1>
+        <p class="hero__lead">Change the dates below to search again.</p>
+      {% else %}
+        <h1 class="hero__title">Your room at Grand Stay, booked in minutes</h1>
+        <p class="hero__lead">Choose your dates to see which of our six rooms are free.
+          Request a room, confirm it, and track every booking from one place.</p>
+        {% if from_price %}
+          <p class="hero__note">Single rooms to a suite, from {{ from_price | money }} a night.</p>
+        {% endif %}
+      {% endif %}
     </div>
-    <div>
-      <label for="check_out">Check-out</label>
-      <input id="check_out" name="check_out" type="date" value="{{ check_out }}" required>
-    </div>
-    <button type="submit" id="search-btn">Search</button>
-  </form>
+    {% include "partials/hero_arches.html" %}
+  </div>
 </section>
 
-{% if results is not none %}
-  {# A search was made: show each room with Available / Booked. #}
-  <section class="card">
-    <h2>Availability {{ check_in }} → {{ check_out }}</h2>
-    <table id="availability-table">
-      <thead><tr><th>Room</th><th>Type</th><th>Guests</th><th>Price / night</th><th>Status</th><th></th></tr></thead>
-      <tbody>
+<div class="container">
+  <form method="get" action="{{ url_for('rooms.list_rooms') }}" class="search-card" id="search-form"
+        aria-label="Check availability" data-date-range>
+    <div class="field">
+      <label class="field__label" for="check_in">Check-in</label>
+      <input class="input" id="check_in" name="check_in" type="date" value="{{ check_in }}" required
+             aria-describedby="dates-hint">
+    </div>
+    <div class="field">
+      <label class="field__label" for="check_out">Check-out</label>
+      <input class="input" id="check_out" name="check_out" type="date" value="{{ check_out }}" required
+             aria-describedby="dates-hint">
+    </div>
+    <button type="submit" class="btn btn--primary btn--lg search-card__submit" id="search-btn">Check availability</button>
+    <p class="search-card__hint" id="dates-hint">Stays of up to 30 nights. Check-out must be after check-in.</p>
+  </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container section">
+  {% if searched %}
+    {% set nights = ((check_out | to_date) - (check_in | to_date)).days %}
+    {% set free_count = results | selectattr(1) | list | length %}
+
+    <header class="section__header">
+      <h2 class="section__title">
+        {{ check_in | long_date }} to {{ check_out | long_date }}
+      </h2>
+      <p class="section__meta">
+        {{ nights }} night{{ "s" if nights != 1 }}.
+        {% if free_count %}{{ free_count }} of {{ results | length }} rooms available.{% else %}No rooms available.{% endif %}
+      </p>
+    </header>
+
+    {% if not free_count %}
+      {% call ui.state("No rooms are free for these dates",
+                       "Every room is already booked for at least one of these nights. Try different dates.",
+                       heading_level=3) %}
+        <a class="btn btn--secondary" href="#check_in">Change dates</a>
+      {% endcall %}
+    {% endif %}
+
+    <div class="room-grid" id="availability-table">
       {% for room, available in results %}
-        <tr id="room-{{ room.room_number }}">
-          <td>{{ room.room_number }}</td>
-          <td>{{ room.room_type }}</td>
-          <td>{{ room.capacity }}</td>
-          <td>₹{{ room.price_per_night }}</td>
-          <td>
-            {% if available %}<span class="badge badge-ok">Available</span>
-            {% else %}<span class="badge badge-no">Booked</span>{% endif %}
-          </td>
-          <td>
-            {% if available and g.user %}
-              <form method="post" action="{{ url_for('bookings.create') }}" class="inline">
+        <article class="room-card{% if not available %} room-card--booked{% endif %}" id="room-{{ room.room_number }}"
+                 data-testid="room-card" aria-labelledby="room-{{ room.room_number }}-title">
+          {{ ui.plate(room.room_number, muted=not available) }}
+          <div class="room-card__body">
+            <div class="room-card__heading">
+              <h3 class="room-card__title" id="room-{{ room.room_number }}-title">
+                <span class="visually-hidden">Room {{ room.room_number }}, </span>{{ room.room_type }}
+              </h3>
+              {% if available %}<span class="badge badge-ok">Available</span>
+              {% else %}<span class="badge badge-no">Booked</span>{% endif %}
+            </div>
+            <p class="room-card__meta">Sleeps up to {{ room.capacity }} guest{{ "s" if room.capacity != 1 }}</p>
+            <p class="room-card__price">
+              <span class="room-card__amount">{{ room.price_per_night | money }}</span> per night
+            </p>
+            {% if available %}
+              <p class="room-card__total">{{ (room.price_per_night * nights) | money }} for {{ nights }} night{{ "s" if nights != 1 }}</p>
+            {% endif %}
+          </div>
+          {% if available %}
+          <div class="room-card__action">
+            {% if g.user %}
+              <form method="post" action="{{ url_for('bookings.create') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="room_id" value="{{ room.id }}">
                 <input type="hidden" name="check_in" value="{{ check_in }}">
                 <input type="hidden" name="check_out" value="{{ check_out }}">
-                <button type="submit" id="book-{{ room.room_number }}">Book</button>
+                <button type="submit" class="btn btn--primary btn--block" id="book-{{ room.room_number }}">Book room {{ room.room_number }}</button>
               </form>
-            {% elif available %}
-              <a href="{{ url_for('auth.login', next=request.full_path) }}">Log in to book</a>
+            {% else %}
+              <a class="btn btn--secondary btn--block" href="{{ url_for('auth.login', next=request.full_path) }}">Log in to book</a>
             {% endif %}
-          </td>
-        </tr>
+          </div>
+          {% endif %}
+        </article>
       {% endfor %}
-      </tbody>
-    </table>
-  </section>
-{% else %}
-  {# No search yet: plain list of rooms. #}
-  <section class="card">
-    <h2>Our rooms</h2>
-    <table id="rooms-table">
-      <thead><tr><th>Room</th><th>Type</th><th>Guests</th><th>Price / night</th></tr></thead>
-      <tbody>
+    </div>
+
+  {% else %}
+    <header class="section__header">
+      <h2 class="section__title">Our rooms</h2>
+      <p class="section__meta">Pick your dates above to see which rooms are free.</p>
+    </header>
+
+    <div class="room-grid" id="rooms-table">
       {% for room in rooms %}
-        <tr><td>{{ room.room_number }}</td><td>{{ room.room_type }}</td>
-            <td>{{ room.capacity }}</td><td>₹{{ room.price_per_night }}</td></tr>
+        <article class="room-card" data-testid="room-card" aria-labelledby="room-{{ room.room_number }}-title">
+          {{ ui.plate(room.room_number) }}
+          <div class="room-card__body">
+            <h3 class="room-card__title" id="room-{{ room.room_number }}-title">
+              <span class="visually-hidden">Room {{ room.room_number }}, </span>{{ room.room_type }}
+            </h3>
+            <p class="room-card__meta">Sleeps up to {{ room.capacity }} guest{{ "s" if room.capacity != 1 }}</p>
+            <p class="room-card__price">
+              <span class="room-card__amount">{{ room.price_per_night | money }}</span> per night
+            </p>
+          </div>
+        </article>
       {% endfor %}
-      </tbody>
-    </table>
-    <p class="hint">Pick dates above to see which rooms are free.</p>
-  </section>
-{% endif %}
+    </div>
+  {% endif %}
+</div>
 {% endblock %}

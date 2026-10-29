@@ -1,0 +1,92 @@
+# Docker lifecycle demo - 2026-10-20 12:42 UTC - commit 1c2103c-dirty
+# (SECRET_KEY is passed with --env-file and is not shown)
+
+$ docker build -q -t hotel-booking-app:1.1.0 --build-arg APP_VERSION=1.1.0 --build-arg GIT_COMMIT=1c2103c-dirty .
+sha256:4507c862db2abe44c6a443f9ef9f26d107f2543675ef9b420285864d1e94758d
+
+$ docker tag hotel-booking-app:1.1.0 hotel-booking-app:latest
+
+$ docker image ls hotel-booking-app
+IMAGE                      ID             DISK USAGE   CONTENT SIZE   EXTRA
+hotel-booking-app:1.1.0    4507c862db2a        219MB         52.5MB        
+hotel-booking-app:latest   4507c862db2a        219MB         52.5MB        
+
+$ docker image inspect -f labels={{json .Config.Labels}} user={{.Config.User}} exposed={{json .Config.ExposedPorts}} hotel-booking-app:1.1.0
+labels={"org.opencontainers.image.revision":"1c2103c-dirty","org.opencontainers.image.title":"hotel-booking-app","org.opencontainers.image.version":"1.1.0"} user=appuser exposed={"8000/tcp":{}}
+
+$ docker volume create hotel-demo-data
+hotel-demo-data
+
+$ docker run -d --name hotel-demo -p 8095:8000 --env-file <scratch>/demo.env -v hotel-demo-data:/data hotel-booking-app:1.1.0
+de9aca8d95bcce39e874fb43c4e415c99f5f9b8025c6d600868c25c2d4f1f0f9
+(health status: healthy)
+
+$ docker ps --filter name=hotel-demo --format table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}
+NAMES        IMAGE                     STATUS                   PORTS
+hotel-demo   hotel-booking-app:1.1.0   Up 6 seconds (healthy)   0.0.0.0:8095->8000/tcp, [::]:8095->8000/tcp
+
+$ docker port hotel-demo
+8000/tcp -> 0.0.0.0:8095
+8000/tcp -> [::]:8095
+
+$ curl -s http://localhost:8095/health
+{"commit":"1c2103c-dirty","env":"prod","status":"ok","version":"1.1.0"}
+
+$ /d/DevOPS/CICD_FOR_HOTEL_ROOM_BOOKING/.venv/Scripts/python <scratch>/guest.py http://localhost:8095 register lifecycle@example.com
+register lifecycle@example.com: HTTP 302 (success, redirected)
+
+$ docker logs --tail 6 hotel-demo
+[2026-10-20 12:42:40 +0000] [1] [INFO] Control socket listening at /home/appuser/.gunicorn/gunicorn.ctl
+127.0.0.1 - - [20/Oct/2026:12:42:44 +0000] "GET /health HTTP/1.1" 200 72 "-" "Python-urllib/3.11"
+172.17.0.1 - - [20/Oct/2026:12:42:45 +0000] "GET /health HTTP/1.1" 200 72 "-" "curl/8.22.0"
+172.17.0.1 - - [20/Oct/2026:12:42:45 +0000] "GET /register HTTP/1.1" 200 8089 "-" "Python-urllib/3.13"
+[2026-10-20 12:42:45,860] INFO in auth_routes: User registered: user_id=1
+172.17.0.1 - - [20/Oct/2026:12:42:45 +0000] "POST /register HTTP/1.1" 302 199 "-" "Python-urllib/3.13"
+
+$ docker inspect -f state={{.State.Status}} health={{.State.Health.Status}} restart={{.HostConfig.RestartPolicy.Name}} mounts={{range .Mounts}}{{.Name}}->{{.Destination}}{{end}} hotel-demo
+state=running health=healthy restart=no mounts=hotel-demo-data->/data
+
+$ docker exec hotel-demo whoami
+appuser
+
+$ docker stop hotel-demo
+hotel-demo
+
+$ docker ps -a --filter name=hotel-demo --format table {{.Names}}\t{{.Status}}
+NAMES        STATUS
+hotel-demo   Exited (0) Less than a second ago
+
+$ docker start hotel-demo
+hotel-demo
+(health status: healthy)
+
+$ docker restart hotel-demo
+hotel-demo
+(health status: healthy)
+
+$ docker ps --filter name=hotel-demo --format table {{.Names}}\t{{.Status}}
+NAMES        STATUS
+hotel-demo   Up 6 seconds (healthy)
+
+# Remove the container completely, then create a NEW one on the same volume:
+
+$ docker rm -f hotel-demo
+hotel-demo
+
+$ docker ps -a --filter name=hotel-demo --format {{.Names}}
+
+$ docker run -d --name hotel-demo -p 8095:8000 --env-file <scratch>/demo.env -v hotel-demo-data:/data hotel-booking-app:1.1.0
+8eb2e569109a0e1ab817538f3b64b9a0ddd0dc0ad345476cf1a1449bafba4caf
+(health status: healthy)
+# The account registered in the OLD container still exists (data is in the volume):
+
+$ /d/DevOPS/CICD_FOR_HOTEL_ROOM_BOOKING/.venv/Scripts/python <scratch>/guest.py http://localhost:8095 login lifecycle@example.com
+login lifecycle@example.com: HTTP 302 (success, redirected)
+
+# Clean up
+
+$ docker rm -f hotel-demo
+hotel-demo
+
+$ docker volume rm hotel-demo-data
+hotel-demo-data

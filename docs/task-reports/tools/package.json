@@ -1,0 +1,6 @@
+{
+  "name": "task-report-word-builder",
+  "private": true,
+  "description": "Builds the Word versions of docs/task-reports/*.md",
+  "dependencies": { "docx": "^9.0.0", "image-size": "^1.0.0", "marked": "^14.0.0", "sharp": "^0.33.0" }
+}

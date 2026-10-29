@@ -1,0 +1,55 @@
+$ git ls-files .github
+.github/ISSUE_TEMPLATE/bug_report.md
+.github/ISSUE_TEMPLATE/feature_request.md
+.github/pull_request_template.md
+
+$ type .gitattributes
+# Store text files with LF line endings in the repo.
+# Matters on Windows: shell scripts, Dockerfiles and Ansible files with CRLF
+# endings break when they run inside Linux containers/servers.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+
+$ type .gitignore
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- Local runtime data (SQLite DB lives in instance/) ---
+instance/
+*.db
+*.sqlite3
+
+# --- Test & coverage output ---
+.pytest_cache/
+.coverage
+htmlcov/
+reports/
+tests/e2e/screenshots/
+
+# --- Secrets / local config (never commit) ---
+.env
+deploy/ansible/credentials/
+*.pem
+*.key
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Extra CA certificates (see certs/README.md) ---
+certs/*.crt

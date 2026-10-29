@@ -1,0 +1,20 @@
+# 2026-10-20 13:02 UTC - deliberately failing Selenium test (temporary file, deleted afterwards)
+$ pytest tests/e2e/test_zz_failure_screenshot_demo.py
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [20/Oct/2026 18:32:16] "GET /rooms HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [20/Oct/2026 18:32:17] "GET /static/fonts/Marcellus-400.woff2 HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [20/Oct/2026 18:32:17] "GET /static/style.css HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [20/Oct/2026 18:32:17] "GET /static/app.js HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [20/Oct/2026 18:32:17] "GET /static/fonts/SourceSans3-Variable-latin-ext.woff2 HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [20/Oct/2026 18:32:17] "GET /static/fonts/SourceSans3-Variable.woff2 HTTP/1.1" 200 -
+INFO     werkzeug:_internal.py:97 127.0.0.1 - - [20/Oct/2026 18:32:17] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+-------------------------- Captured stdout teardown ---------------------------
+[e2e] failure screenshot saved: reports\screenshots\test_demo_deliberate_failure_shows_screenshot.png
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_zz_failure_screenshot_demo.py::test_demo_deliberate_failure_shows_screenshot
+============================== 1 failed in 5.88s ==============================
+
+$ dir reports\screenshots
+drwxr-xr-x 1 HP 197609     0 Oct 20 18:32 .
+drwxr-xr-x 1 HP 197609     0 Oct 20 18:32 ..
+-rw-r--r-- 1 HP 197609 11909 Oct 20 18:32 test_demo_deliberate_failure_shows_screenshot.html
+-rw-r--r-- 1 HP 197609 28653 Oct 20 18:32 test_demo_deliberate_failure_shows_screenshot.png

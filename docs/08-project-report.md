@@ -28,6 +28,7 @@ with Ansible.
 | Test plan, Selenium, reports (Tasks 9, 10) | [06-test-plan.md](06-test-plan.md) |
 | Docker image + container lifecycle + rollback (Task 11) | [container-lifecycle.md](container-lifecycle.md) |
 | Ansible, idempotency, rollback (Tasks 13, 14) | [07-ansible.md](07-ansible.md) |
+| User interface design + before/after screenshots | [09-ui-design.md](09-ui-design.md) |
 | Viva questions and answers | [viva-notes.md](viva-notes.md) |
 | Deliverable checklist for all 15 tasks | [15-task-checklist.md](15-task-checklist.md) |
 | Raw evidence (logs, screenshots, test reports) | [evidence/](evidence/README.md) |

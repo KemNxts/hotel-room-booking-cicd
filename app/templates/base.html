@@ -3,40 +3,139 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Hotel Booking{% endblock %} · Grand Stay Hotel</title>
+  <title>{% block title %}Hotel Booking{% endblock %} | Grand Stay Hotel</title>
+  <meta name="description" content="Check room availability and book your stay at Grand Stay Hotel.">
+  {# Mark JS as available before first paint, so enhanced widgets (mobile menu,
+     dismiss buttons) don't flash. Without JS everything still works. #}
+  <script>document.documentElement.classList.add("js");</script>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/Marcellus-400.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="{{ url_for('rooms.list_rooms') }}">Grand Stay Hotel</a>
-    <nav>
-      <a href="{{ url_for('rooms.list_rooms') }}" id="nav-rooms">Rooms</a>
-      {% if g.user %}
-        <a href="{{ url_for('bookings.my_bookings') }}" id="nav-my-bookings">My bookings</a>
-        <span class="who" id="nav-user">{{ g.user.full_name }}</span>
-        <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="link" id="logout-btn">Log out</button>
-        </form>
-      {% else %}
-        <a href="{{ url_for('auth.login') }}" id="nav-login">Log in</a>
-        <a href="{{ url_for('auth.register') }}" id="nav-register">Register</a>
-      {% endif %}
-    </nav>
+{%- set endpoint = request.endpoint or "" %}
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="{{ url_for('rooms.list_rooms') }}">
+        {% include "partials/arch_mark.html" %}
+        <span class="brand__name">Grand Stay Hotel</span>
+      </a>
+
+      <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Menu</span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul class="site-nav__links">
+          <li><a href="{{ url_for('rooms.list_rooms') }}" id="nav-rooms"
+                 {% if endpoint.startswith('rooms.') %}aria-current="page"{% endif %}>Rooms</a></li>
+          {% if g.user %}
+            <li><a href="{{ url_for('bookings.my_bookings') }}" id="nav-my-bookings"
+                   {% if endpoint.startswith('bookings.') %}aria-current="page"{% endif %}>My bookings</a></li>
+          {% endif %}
+        </ul>
+
+        <div class="site-nav__account">
+          {% if g.user %}
+            <span class="account">
+              <span class="account__avatar" aria-hidden="true">{{ g.user.full_name[:1] | upper }}</span>
+              <span class="account__name" id="nav-user">{{ g.user.full_name }}</span>
+            </span>
+            <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn--ghost btn--sm" id="logout-btn">Log out</button>
+            </form>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" id="nav-login" class="btn btn--ghost btn--sm"
+               {% if endpoint == 'auth.login' %}aria-current="page"{% endif %}>Log in</a>
+            <a href="{{ url_for('auth.register') }}" id="nav-register" class="btn btn--brass btn--sm"
+               {% if endpoint == 'auth.register' %}aria-current="page"{% endif %}>Register</a>
+          {% endif %}
+        </div>
+      </nav>
+    </div>
   </header>
 
-  <main>
+  <main id="main" tabindex="-1">
+    {% block hero %}{% endblock %}
+
     {# Flash messages: one-time notices set by the controllers. #}
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-      <div class="flash flash-{{ category }}" role="alert">{{ message }}</div>
-    {% endfor %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container flashes">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
+              {% if category == 'error' %}
+                <svg class="flash__icon" aria-hidden="true" viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              {% else %}
+                <svg class="flash__icon" aria-hidden="true" viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.2 10.3l2.5 2.5 5-5.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              {% endif %}
+              <p class="flash__text">{{ message }}</p>
+              <button type="button" class="flash__close" data-dismiss aria-label="Dismiss message">
+                <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="site-footer" id="site-footer">
-    <span id="hotel-contact">Grand Stay Hotel · Front desk: dial 0 from your room · help@grandstay.example</span>
-    <span id="app-version">Release {{ app_version }} · {{ app_env }}</span>
+  <footer class="site-footer">
+    <div class="container site-footer__grid">
+      <div class="site-footer__brand">
+        <a class="brand brand--light" href="{{ url_for('rooms.list_rooms') }}">
+          {% include "partials/arch_mark.html" %}
+          <span class="brand__name">Grand Stay Hotel</span>
+        </a>
+        <p>Six rooms, from single rooms to a suite. Check availability and manage your bookings online.</p>
+      </div>
+
+      <nav class="site-footer__links" aria-label="Footer">
+        <h2 class="site-footer__heading">Your stay</h2>
+        <ul>
+          <li><a href="{{ url_for('rooms.list_rooms') }}">Check availability</a></li>
+          {% if g.user %}
+            <li><a href="{{ url_for('bookings.my_bookings') }}">My bookings</a></li>
+          {% else %}
+            <li><a href="{{ url_for('auth.login') }}">Log in</a></li>
+            <li><a href="{{ url_for('auth.register') }}">Create an account</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="site-footer__contact" id="hotel-contact">
+        <h2 class="site-footer__heading">Contact</h2>
+        <ul>
+          <li>Front desk: dial 0 from your room</li>
+          <li><a href="mailto:help@grandstay.example">help@grandstay.example</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container site-footer__bar">
+      <div class="site-footer__base">
+        <span>&copy; Grand Stay Hotel</span>
+        <span id="app-version">Release {{ app_version }} · {{ app_env }}</span>
+      </div>
+    </div>
   </footer>
+
+  {# One shared confirmation dialog. app.js opens it for any form marked
+     data-confirm and submits that form only if the guest confirms.
+     Without JavaScript the form simply submits straight away. #}
+  <dialog class="dialog" id="confirm-dialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-body">
+    <h2 class="dialog__title" id="confirm-dialog-title">Cancel this booking?</h2>
+    <p class="dialog__body" id="confirm-dialog-body">The room will be released. This cannot be undone.</p>
+    <div class="dialog__actions">
+      <button type="button" class="btn btn--secondary" data-dialog-close>Keep booking</button>
+      <button type="button" class="btn btn--danger" id="cancel-confirm-btn" data-dialog-confirm>Yes, cancel booking</button>
+    </div>
+  </dialog>
 </body>
 </html>

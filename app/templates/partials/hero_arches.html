@@ -1,0 +1,20 @@
+{# Decorative facade: a row of arched windows, one of them lit. Pure SVG, no images. #}
+<svg class="hero__art" aria-hidden="true" focusable="false" viewBox="0 0 420 300" preserveAspectRatio="xMidYMax meet">
+  <defs>
+    <linearGradient id="lit-window" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3E3C3" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#C9A56E" stop-opacity=".55"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="currentColor" stroke-width="1.5">
+    {% for x in [20, 120, 220, 320] %}
+      {# outer arch, inner arch, glazing bar #}
+      <path d="M{{ x }} 290V120a40 40 0 0 1 80 0v170"/>
+      <path d="M{{ x + 12 }} 290V124a28 28 0 0 1 56 0v166" stroke-opacity=".55"/>
+      <path d="M{{ x + 40 }} 96V290M{{ x + 12 }} 190h56" stroke-opacity=".35"/>
+    {% endfor %}
+    <path d="M0 290h420" stroke-width="2"/>
+  </g>
+  <path d="M232 290V124a28 28 0 0 1 56 0v166z" fill="url(#lit-window)"/>
+  <path d="M260 96V290M232 190h56" stroke="#13203B" stroke-opacity=".35" stroke-width="1.5" fill="none"/>
+</svg>

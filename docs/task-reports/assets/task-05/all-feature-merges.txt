@@ -1,0 +1,16 @@
+$ git log --merges --first-parent --format="%h %ad %s" --date=short develop
+1c2103c 2026-10-12 Merge branch 'docs/history-rewrite' into develop
+f32f905 2026-10-11 Merge branch 'docs/final-build-record' into develop
+09d322f 2026-10-11 Merge branch 'feature/project-docs' into develop
+10849e2 2026-10-11 Merge branch 'fix/jenkins-stale-reports' into develop
+78d9860 2026-10-11 Merge branch 'feature/nights-column' into develop
+a2bb052 2026-10-11 Merge branch 'feature/ansible-rollback' into develop
+9e766ac 2026-10-11 Merge branch 'feature/release-footer' into develop
+4463add 2026-10-11 Merge branch 'feature/contact-footer' into develop
+da225fb 2026-10-11 Merge branch 'feature/ci-release-pipeline' into develop
+bdfc2fb 2026-10-11 Merge branch 'feature/security-hardening' into develop
+475cecd 2026-10-11 Merge branch 'feature/ansible' into develop
+6d808a3 2026-10-11 Merge branch 'feature/jenkins-pipeline' into develop
+984a568 2026-10-11 Merge branch 'feature/docker' into develop
+e819cea 2026-10-11 Merge branch 'feature/tests' into develop
+c18cfc5 2026-10-11 Merge branch 'feature/app-mvp' into develop

@@ -114,8 +114,10 @@ def test_journey_3_search_request_and_confirm_booking(driver, base_url):
 
     book_first_free_room(driver)
     assert status(driver) == "PENDING"
-    assert driver.find_element(By.ID, "booking-check-in").text == check_in
-    assert driver.find_element(By.ID, "booking-check-out").text == check_out
+    for element_id, iso in (("booking-check-in", check_in), ("booking-check-out", check_out)):
+        element = driver.find_element(By.ID, element_id)
+        assert element.get_attribute("datetime") == iso
+        assert element.text == date.fromisoformat(iso).strftime("%a %d %b %Y")
 
     driver.find_element(By.ID, "confirm-btn").click()
     wait(driver, EC.text_to_be_present_in_element((By.ID, "booking-status"), "CONFIRMED"))
@@ -131,6 +133,10 @@ def test_journey_4_cancel_booking_and_track_status(driver, base_url):
     wait(driver, EC.text_to_be_present_in_element((By.ID, "booking-status"), "CONFIRMED"))
 
     driver.find_element(By.ID, "cancel-btn").click()
+    # A confirmation dialog opens; nothing is cancelled until the guest confirms.
+    wait(driver, EC.visibility_of_element_located((By.ID, "cancel-confirm-btn")))
+    assert status(driver) == "CONFIRMED"
+    driver.find_element(By.ID, "cancel-confirm-btn").click()
     wait(driver, EC.text_to_be_present_in_element((By.ID, "booking-status"), "CANCELLED"))
     assert "Booking cancelled" in flash_text(driver)
     assert not driver.find_elements(By.ID, "cancel-btn")

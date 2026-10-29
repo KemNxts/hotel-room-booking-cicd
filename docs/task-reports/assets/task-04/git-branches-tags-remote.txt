@@ -1,0 +1,49 @@
+$ git branch -a --format=%(refname:short)
+develop
+docs/final-build-record
+docs/history-rewrite
+experiment/defect-demo
+experiment/defect-demo-2
+feature/ansible
+feature/ansible-rollback
+feature/app-mvp
+feature/ci-release-pipeline
+feature/contact-footer
+feature/docker
+feature/jenkins-pipeline
+feature/nights-column
+feature/project-docs
+feature/release-footer
+feature/security-hardening
+feature/tests
+feature/ui-redesign
+fix/jenkins-stale-reports
+main
+origin
+origin/develop
+origin/docs/final-build-record
+origin/docs/history-rewrite
+origin/experiment/defect-demo
+origin/experiment/defect-demo-2
+origin/feature/ansible
+origin/feature/ansible-rollback
+origin/feature/app-mvp
+origin/feature/ci-release-pipeline
+origin/feature/contact-footer
+origin/feature/docker
+origin/feature/jenkins-pipeline
+origin/feature/nights-column
+origin/feature/project-docs
+origin/feature/release-footer
+origin/feature/security-hardening
+origin/feature/tests
+origin/fix/jenkins-stale-reports
+origin/main
+
+$ git tag -n1
+v1.0.0          v1.0.0 - MVP: registration/login, availability, booking request, confirmation, cancellation, status tracking; CI/CD with Jenkins, Docker, Ansible
+v1.1.0          v1.1.0 - show number of nights in My bookings
+
+$ git remote -v
+origin	https://github.com/KemNxts/hotel-room-booking-cicd.git (fetch)
+origin	https://github.com/KemNxts/hotel-room-booking-cicd.git (push)

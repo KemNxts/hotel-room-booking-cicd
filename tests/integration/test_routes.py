@@ -46,7 +46,9 @@ def test_health_reports_status_env_and_version(client):
 def test_home_redirects_to_rooms_and_lists_six_rooms(client):
     assert client.get("/").headers["Location"] == "/rooms"
     html = client.get("/rooms").get_data(as_text=True)
-    assert html.count("<tr><td>") == 6
+    assert html.count('data-testid="room-card"') == 6
+    for number in ("101", "102", "201", "202", "301", "401"):
+        assert f'<span class="plate__number">{number}</span>' in html
 
 
 def test_unknown_page_returns_404(client):
@@ -120,10 +122,10 @@ def test_availability_search_shows_booked_room(client, stay):
     register(client, "guest@example.com")
     book(client, stay, room_id=1)
     html = client.get(f"/rooms?check_in={stay[0]}&check_out={stay[1]}").get_data(as_text=True)
-    row_101 = re.search(r'<tr id="room-101">.*?</tr>', html, re.S).group(0)
-    row_102 = re.search(r'<tr id="room-102">.*?</tr>', html, re.S).group(0)
-    assert "Booked" in row_101
-    assert "Available" in row_102
+    card_101 = re.search(r'<article [^>]*id="room-101".*?</article>', html, re.S).group(0)
+    card_102 = re.search(r'<article [^>]*id="room-102".*?</article>', html, re.S).group(0)
+    assert "Booked" in card_101 and 'id="book-101"' not in card_101
+    assert "Available" in card_102 and 'id="book-102"' in card_102
 
 
 def test_invalid_search_dates_show_an_error(client):

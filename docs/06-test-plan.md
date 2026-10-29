@@ -48,6 +48,15 @@ Good practice used:
   `tests/e2e/conftest.py`) records the result; the `driver` fixture then saves
   `reports/screenshots/<test>.png` and the page HTML. Jenkins archives them.
 
+## UI redesign and the tests
+
+The 2026-10-20 redesign kept every form field, route and id the tests rely
+on. Four assertions changed with the UI contract (rooms as cards, readable
+dates in `<time datetime>`, a confirmation dialog before cancelling) - each
+stays at least as strict; details in [09-ui-design.md](09-ui-design.md#test-contract-changes).
+Visual checks: `python scripts/capture_ui.py` screenshots every page at 3
+screen sizes and fails if any page overflows horizontally.
+
 ## Running the tests
 
 ```powershell

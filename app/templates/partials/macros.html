@@ -1,0 +1,24 @@
+{# Reusable UI pieces. Import with:  {% import "partials/macros.html" as ui %} #}
+
+{# The room's brass door plate: the arched plaque with the real room number. #}
+{% macro plate(number, size="md", muted=false) -%}
+  <span class="plate plate--{{ size }}{% if muted %} plate--muted{% endif %}" aria-hidden="true">
+    <span class="plate__label">Room</span>
+    <span class="plate__number">{{ number }}</span>
+  </span>
+{%- endmacro %}
+
+{# Booking status, using the app's own terms (PENDING / CONFIRMED / CANCELLED). #}
+{% macro status_badge(status, id=none) -%}
+  <span class="badge badge-{{ status | lower }}"{% if id %} id="{{ id }}"{% endif %}>{{ status }}</span>
+{%- endmacro %}
+
+{# Empty / error state: arch outline, heading, message, optional actions (caller). #}
+{% macro state(title, message, id=none, heading_level=1) -%}
+  <section class="state"{% if id %} id="{{ id }}"{% endif %}>
+    <svg class="state__art" aria-hidden="true" viewBox="0 0 120 120" width="96" height="96"><path d="M24 110V54a36 36 0 0 1 72 0v56" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M40 110V58a20 20 0 0 1 40 0v52" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 5"/><path d="M12 110h96" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <h{{ heading_level }} class="state__title">{{ title }}</h{{ heading_level }}>
+    <p class="state__message">{{ message }}</p>
+    {% if caller %}<div class="state__actions">{{ caller() }}</div>{% endif %}
+  </section>
+{%- endmacro %}

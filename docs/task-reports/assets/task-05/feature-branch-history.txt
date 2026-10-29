@@ -1,0 +1,22 @@
+$ git log --graph --format="%h %s" 475cecd..bdfc2fb
+* bdfc2fb Merge branch 'feature/security-hardening' into develop
+* fd3cb60 test: add route-level integration tests and database rule tests
+* 716b910 feat: add CSRF protection, secure cookies, audit logs and DB overlap guard
+
+$ git show --stat --format="%h %ad %s" --date=short 716b910
+716b910 2026-10-11 feat: add CSRF protection, secure cookies, audit logs and DB overlap guard
+
+ app/__init__.py                   | 23 +++++++++++++++++++++--
+ app/config.py                     | 11 +++++++++++
+ app/controllers/auth_routes.py    |  8 +++++++-
+ app/controllers/booking_routes.py | 10 ++++++++--
+ app/controllers/csrf.py           | 35 +++++++++++++++++++++++++++++++++++
+ app/dao/booking_dao.py            | 34 +++++++++++++++++++++-------------
+ app/schema.sql                    | 33 +++++++++++++++++++++++++++++++++
+ app/templates/base.html           |  1 +
+ app/templates/booking_detail.html |  2 ++
+ app/templates/error.html          |  9 +++++++++
+ app/templates/login.html          |  1 +
+ app/templates/register.html       |  1 +
+ app/templates/rooms.html          |  1 +
+ 13 files changed, 151 insertions(+), 18 deletions(-)

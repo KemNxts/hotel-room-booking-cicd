@@ -51,8 +51,8 @@ in [docs/03-srs-architecture.md](docs/03-srs-architecture.md#note-on-maven--grad
 │   ├── dao/                # Data Access Objects - the only place with SQL
 │   ├── services/           # business rules (validation, availability, status changes)
 │   ├── controllers/        # Flask routes + csrf.py
-│   ├── templates/          # Jinja2 HTML pages
-│   └── static/style.css
+│   ├── templates/          # Jinja2 pages + partials/ (macros, arch artwork)
+│   └── static/             # style.css (design tokens), app.js, self-hosted fonts/
 ├── wsgi.py                 # entry point for Gunicorn / dev server
 ├── gunicorn.conf.py        # Gunicorn settings (workers, bind, logs)
 ├── VERSION                 # release number, baked into images and /health
@@ -71,7 +71,7 @@ in [docs/03-srs-architecture.md](docs/03-srs-architecture.md#note-on-maven--grad
 │   ├── nginx/              # reverse-proxy image + config
 │   ├── jenkins/            # ready-to-run local Jenkins + registry
 │   └── ansible/            # inventory, playbook, rollback, group_vars, controller image, lab/
-├── scripts/capture_screenshots.py   # real screenshots of the running system
+├── scripts/                # capture_screenshots.py (running system), capture_ui.py (UI at 3 screen sizes)
 ├── docs/                   # project documentation + evidence/
 ├── .github/                # issue + PR templates
 ├── CONTRIBUTING.md         # branching + commit message rules
@@ -94,6 +94,7 @@ Browser ──> Nginx ──> Gunicorn ──> Controller (Flask route) ──> 
 Each layer only talks to the one below it. Swapping SQLite for PostgreSQL would
 change only the DAO layer; the services can be unit-tested without a browser.
 Diagrams (use cases, ER, state machine): [docs/03-srs-architecture.md](docs/03-srs-architecture.md).
+UI design system and before/after screenshots: [docs/09-ui-design.md](docs/09-ui-design.md).
 
 Booking lifecycle:
 

@@ -1,28 +1,56 @@
 {% extends "base.html" %}
+{% import "partials/macros.html" as ui %}
 {% block title %}My bookings{% endblock %}
 {% block content %}
-<section class="card">
-  <h1>My bookings</h1>
+<div class="container section">
+  <header class="page-header">
+    <div>
+      <h1 class="page-header__title">My bookings</h1>
+      {% if bookings %}
+        <p class="page-header__meta">{{ bookings | length }} booking{{ "s" if bookings | length != 1 }}, newest stay first.</p>
+      {% endif %}
+    </div>
+    <a class="btn btn--primary" href="{{ url_for('rooms.list_rooms') }}">Book another room</a>
+  </header>
+
   {% if bookings %}
-    <table id="bookings-table">
-      <thead><tr><th>#</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Nights</th><th>Total</th><th>Status</th><th></th></tr></thead>
-      <tbody>
-      {% for b in bookings %}
-        <tr id="booking-row-{{ b.id }}">
-          <td>{{ b.id }}</td>
-          <td>{{ b.room_number }} ({{ b.room_type }})</td>
-          <td>{{ b.check_in }}</td>
-          <td>{{ b.check_out }}</td>
-          <td class="nights">{{ b.nights }}</td>
-          <td>₹{{ b.total_price }}</td>
-          <td><span class="badge badge-{{ b.status|lower }}">{{ b.status }}</span></td>
-          <td><a href="{{ url_for('bookings.detail', booking_id=b.id) }}">View</a></td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+    {# A real table on wide screens; on phones each row becomes a card (see style.css). #}
+    <div class="table-card card">
+      <table class="bookings" id="bookings-table">
+        <caption class="visually-hidden">Your bookings and their status</caption>
+        <thead>
+          <tr><th scope="col">Booking</th><th scope="col">Room</th><th scope="col">Check-in</th><th scope="col">Check-out</th><th>Nights</th><th scope="col">Total</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody>
+        {% for b in bookings %}
+          <tr id="booking-row-{{ b.id }}" class="bookings__row bookings__row--{{ b.status | lower }}">
+            <th scope="row" data-label="Booking"><a href="{{ url_for('bookings.detail', booking_id=b.id) }}">#{{ b.id }}</a></th>
+            <td data-label="Room"><span class="room-chip">{{ b.room_number }}</span> {{ b.room_type }}</td>
+            <td data-label="Check-in"><time datetime="{{ b.check_in.isoformat() }}">{{ b.check_in | long_date }}</time></td>
+            <td data-label="Check-out"><time datetime="{{ b.check_out.isoformat() }}">{{ b.check_out | long_date }}</time></td>
+            <td class="nights">{{ b.nights }}</td>
+            <td data-label="Total" class="num">{{ b.total_price | money }}</td>
+            <td data-label="Status">{{ ui.status_badge(b.status) }}</td>
+            <td class="bookings__actions">
+              <a class="btn btn--secondary btn--sm" href="{{ url_for('bookings.detail', booking_id=b.id) }}">View<span class="visually-hidden"> booking #{{ b.id }}</span></a>
+              {% if b.can_cancel %}
+                <form method="post" action="{{ url_for('bookings.cancel', booking_id=b.id) }}" class="inline"
+                      data-confirm data-confirm-title="Cancel booking #{{ b.id }}?"
+                      data-confirm-body="Room {{ b.room_number }}, {{ b.check_in | long_date('%a %d %b') }} to {{ b.check_out | long_date }}, will be released. This cannot be undone.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn--danger-outline btn--sm" data-testid="cancel-booking-{{ b.id }}">Cancel<span class="visually-hidden"> booking #{{ b.id }}</span></button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
-    <p id="no-bookings">You have no bookings yet. <a href="{{ url_for('rooms.list_rooms') }}">Find a room</a>.</p>
+    {% call ui.state("You have no bookings yet.", "Choose your dates to see which rooms are free, then book one in a few clicks.", id="no-bookings", heading_level=2) %}
+      <a class="btn btn--primary" href="{{ url_for('rooms.list_rooms') }}">Find a room</a>
+    {% endcall %}
   {% endif %}
-</section>
+</div>
 {% endblock %}

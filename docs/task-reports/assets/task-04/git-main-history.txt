@@ -1,0 +1,24 @@
+$ git log --first-parent --format="%h %ad %s" --date=short main
+bea6a4c 2026-10-12 Merge branch 'docs/history-rewrite' into main
+364c506 2026-10-11 docs: bring project documentation and pipeline fix to main
+ce1726d 2026-10-11 release: v1.1.0
+224de14 2026-10-11 release: v1.0.0
+541dad5 2026-10-11 chore: initialise repository skeleton
+
+$ git rev-list --max-parents=0 --abbrev-commit HEAD
+541dad5
+
+$ git show --stat --format="%h %ad %s" --date=short 541dad5
+541dad5 2026-10-11 chore: initialise repository skeleton
+
+ .gitattributes                            |  8 ++++
+ .github/ISSUE_TEMPLATE/bug_report.md      | 30 +++++++++++++++
+ .github/ISSUE_TEMPLATE/feature_request.md | 21 +++++++++++
+ .github/pull_request_template.md          | 13 +++++++
+ .gitignore                                | 35 +++++++++++++++++
+ CONTRIBUTING.md                           | 63 +++++++++++++++++++++++++++++++
+ README.md                                 | 52 +++++++++++++++++++++++++
+ deploy/ansible/.gitkeep                   |  0
+ tests/e2e/.gitkeep                        |  0
+ tests/unit/.gitkeep                       |  0
+ 10 files changed, 222 insertions(+)

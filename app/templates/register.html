@@ -1,21 +1,40 @@
-{% extends "base.html" %}
-{% block title %}Register{% endblock %}
-{% block content %}
-<section class="card narrow">
-  <h1>Create an account</h1>
-  <form method="post" id="register-form">
+{% extends "auth_base.html" %}
+{% block title %}Create an account{% endblock %}
+{% block aside_title %}All your bookings in one place{% endblock %}
+{% block aside_text %}With an account you can request rooms, confirm or cancel them, and see the status of every booking.{% endblock %}
+{% block form_title %}Create an account{% endblock %}
+{% block form_intro %}It takes less than a minute.{% endblock %}
+{% block form %}
+  <form method="post" id="register-form" class="form" novalidate data-validate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label for="full_name">Full name</label>
-    <input id="full_name" name="full_name" value="{{ form.get('full_name', '') }}" required>
 
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email" value="{{ form.get('email', '') }}" required>
+    <div class="field">
+      <label class="field__label" for="full_name">Full name</label>
+      <input class="input" id="full_name" name="full_name" value="{{ form.get('full_name', '') }}"
+             autocomplete="name" required aria-describedby="full_name-error">
+      <p class="field__error" id="full_name-error" data-error-for="full_name" hidden></p>
+    </div>
 
-    <label for="password">Password <small>(at least 8 characters)</small></label>
-    <input id="password" name="password" type="password" minlength="8" required>
+    <div class="field">
+      <label class="field__label" for="email">Email</label>
+      <input class="input" id="email" name="email" type="email" value="{{ form.get('email', '') }}"
+             autocomplete="email" required aria-describedby="email-error">
+      <p class="field__error" id="email-error" data-error-for="email" hidden></p>
+    </div>
 
-    <button type="submit" id="register-btn">Register</button>
+    <div class="field">
+      <label class="field__label" for="password">Password</label>
+      <div class="input-group">
+        <input class="input" id="password" name="password" type="password" minlength="8"
+               autocomplete="new-password" required aria-describedby="password-hint password-error">
+        <button type="button" class="input-group__btn" data-toggle-password="password"
+                aria-controls="password" aria-pressed="false">Show</button>
+      </div>
+      <p class="field__hint" id="password-hint">At least 8 characters.</p>
+      <p class="field__error" id="password-error" data-error-for="password" hidden></p>
+    </div>
+
+    <button type="submit" class="btn btn--primary btn--lg btn--block" id="register-btn">Create account</button>
   </form>
-  <p>Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
-</section>
 {% endblock %}
+{% block switch %}Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>{% endblock %}

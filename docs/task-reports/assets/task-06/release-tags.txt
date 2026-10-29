@@ -1,0 +1,17 @@
+$ git tag -n1
+v1.0.0          v1.0.0 - MVP: registration/login, availability, booking request, confirmation, cancellation, status tracking; CI/CD with Jenkins, Docker, Ansible
+v1.1.0          v1.1.0 - show number of nights in My bookings
+
+$ git log --oneline -1 v1.0.0
+224de14 release: v1.0.0
+
+$ git log --oneline -1 v1.1.0
+ce1726d release: v1.1.0
+
+$ git cat-file -p v1.1.0
+object ce1726d6ec217bba2e28962bf960ae61f3b96cf6
+type commit
+tag v1.1.0
+tagger Kem.Nxts <padhaio087@gmail.com> 1791738923 +0530
+
+v1.1.0 - show number of nights in My bookings

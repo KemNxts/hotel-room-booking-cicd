@@ -1,0 +1,69 @@
+# 2026-10-20 12:48 UTC - controller repository: rel-v1.1.0 (ce1726d)
+$ ansible-playbook -i lab/inventory.ini playbook.yml
+
+PLAY [Provision server and deploy the Hotel Booking Portal] ********************
+
+TASK [Gathering Facts] *********************************************************
+ok: [hotel-server]
+
+TASK [Install Docker engine and the Docker Compose plugin] *********************
+ok: [hotel-server]
+
+TASK [Make sure Docker is running and starts on boot] **************************
+ok: [hotel-server]
+
+TASK [Create application directories] ******************************************
+ok: [hotel-server] => (item=/opt/hotel-booking)
+ok: [hotel-server] => (item=/opt/hotel-booking/deploy)
+
+TASK [Copy application source and Docker files] ********************************
+ok: [hotel-server] => (item={'src': 'app', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'wsgi.py', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'gunicorn.conf.py', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'requirements.txt', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'VERSION', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'Dockerfile', 'dest': '.'})
+ok: [hotel-server] => (item={'src': '.dockerignore', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'docker-compose.yml', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'certs', 'dest': '.'})
+ok: [hotel-server] => (item={'src': 'deploy/nginx', 'dest': 'deploy'})
+
+TASK [Read the currently deployed configuration (if any)] **********************
+ok: [hotel-server]
+
+TASK [Work out the currently deployed release] *********************************
+ok: [hotel-server]
+
+TASK [Remember the previous release for rollback] ******************************
+skipping: [hotel-server]
+
+TASK [Write the environment file read by docker compose] ***********************
+ok: [hotel-server]
+
+TASK [Check whether images for this release and commit already exist] **********
+ok: [hotel-server]
+
+TASK [Build the Docker images on the server] ***********************************
+skipping: [hotel-server]
+
+TASK [Start (or update) the containers and wait until healthy] *****************
+ok: [hotel-server]
+
+TASK [Check the portal answers through Nginx] **********************************
+ok: [hotel-server]
+
+TASK [Check the expected release is the one running] ***************************
+ok: [hotel-server]
+
+TASK [Show result] *************************************************************
+ok: [hotel-server] => {
+    "msg": "Hotel Booking Portal is up on port 80: {'commit': 'ce1726d', 'env': 'prod', 'status': 'ok', 'version': '1.1.0'}"
+}
+
+PLAY RECAP *********************************************************************
+hotel-server               : ok=13   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+
+
+$ curl -s http://localhost:8088/health    # from the Windows host
+{"commit":"ce1726d","env":"prod","status":"ok","version":"1.1.0"}
+

@@ -1,0 +1,21 @@
+$ docker compose -f deploy/ansible/lab/docker-compose.yml exec -T target sh -c "stat -c '%a %U %n' /opt/hotel-booking/.env /opt/hotel-booking/previous_release; cat /opt/hotel-booking/previous_release; ls /opt/hotel-booking; docker image ls --format '{{.Repository}}:{{.Tag}}' | grep hotel; docker ps --format '{{.Names}} {{.Image}} {{.Status}}'; systemctl is-enabled docker"
+600 root /opt/hotel-booking/.env
+644 root /opt/hotel-booking/previous_release
+1.1.0
+Dockerfile
+VERSION
+app
+certs
+deploy
+docker-compose.yml
+gunicorn.conf.py
+previous_release
+requirements.txt
+wsgi.py
+hotel-booking-app:1.1.0
+hotel-booking-nginx:1.1.0
+hotel-booking-nginx:1.0.0
+hotel-booking-app:1.0.0
+hotel-booking-nginx-1 hotel-booking-nginx:1.0.0 Up 7 minutes
+hotel-booking-app-1 hotel-booking-app:1.0.0 Up 7 minutes (healthy)
+enabled

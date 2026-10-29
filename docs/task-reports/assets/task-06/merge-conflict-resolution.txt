@@ -1,0 +1,28 @@
+$ git log --graph --format="%h %s" da225fb..9e766ac
+*   9e766ac Merge branch 'feature/release-footer' into develop
+|\  
+| * 63498a8 feat: show running release and environment in page footer
+* 4463add Merge branch 'feature/contact-footer' into develop
+* 74a153d feat: add hotel contact details footer to every page
+
+$ git show --stat 9e766ac
+commit 9e766acc473fc0e07f1e161e4de14db6f4efcef0
+Merge: 4463add 63498a8
+Author: Kem.Nxts <padhaio087@gmail.com>
+Date:   Sun Oct 11 22:21:26 2026 +0530
+
+    Merge branch 'feature/release-footer' into develop
+    
+    Conflicts resolved (both branches added a footer in the same place):
+    - app/templates/base.html: keep both lines - hotel contact first, then
+      the running release.
+    - app/static/style.css: one .site-footer rule (contact branch styling)
+      plus a rule that puts each footer line on its own row.
+    - tests/integration/test_routes.py: keep both new tests.
+    Verified after resolution: flake8 clean, 89 tests passed.
+
+ app/__init__.py                  | 6 ++++++
+ app/static/style.css             | 4 +++-
+ app/templates/base.html          | 1 +
+ tests/integration/test_routes.py | 7 +++++++
+ 4 files changed, 17 insertions(+), 1 deletion(-)

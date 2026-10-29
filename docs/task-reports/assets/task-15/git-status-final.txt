@@ -1,0 +1,32 @@
+$ git branch --show-current
+feature/ui-redesign
+
+$ git status --short
+ M README.md
+ M app/__init__.py
+ M app/static/style.css
+ M app/templates/404.html
+ M app/templates/base.html
+ M app/templates/booking_detail.html
+ M app/templates/error.html
+ M app/templates/login.html
+ M app/templates/my_bookings.html
+ M app/templates/register.html
+ M app/templates/rooms.html
+ M docs/01-problem-definition.md
+ M docs/06-test-plan.md
+ M docs/08-project-report.md
+ M tests/e2e/test_journeys.py
+ M tests/integration/test_routes.py
+?? app/static/app.js
+?? app/static/fonts/
+?? app/templates/auth_base.html
+?? app/templates/partials/
+?? docs/09-ui-design.md
+?? docs/task-reports/
+?? docs/ui-evidence/
+?? scripts/capture_report_evidence.py
+?? scripts/capture_ui.py
+
+$ git log --oneline -1
+1c2103c Merge branch 'docs/history-rewrite' into develop

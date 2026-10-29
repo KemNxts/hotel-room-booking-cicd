@@ -1,0 +1,18 @@
+$ docker ps --filter name=hotel-staging --filter name=hotel-prod --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+NAMES                   IMAGE                                              STATUS
+hotel-staging-nginx-1   localhost:5000/hotel-booking-nginx:1.1.0-1c2103c   Up 15 minutes
+hotel-staging-app-1     localhost:5000/hotel-booking-app:1.1.0-1c2103c     Up 15 minutes (healthy)
+hotel-prod-nginx-1      localhost:5000/hotel-booking-nginx:1.1.0-d07929b   Up 51 minutes
+hotel-prod-app-1        localhost:5000/hotel-booking-app:1.1.0-d07929b     Up 51 minutes (healthy)
+
+$ curl -s http://localhost:8081/health
+{"commit":"1c2103c","env":"staging","status":"ok","version":"1.1.0"}
+
+$ curl -s http://localhost:8082/health
+{"commit":"d07929b","env":"prod","status":"ok","version":"1.1.0"}
+
+$ curl -s http://localhost:5000/v2/_catalog
+{"repositories":["hotel-booking-app","hotel-booking-nginx"]}
+
+$ curl -s http://localhost:5000/v2/hotel-booking-app/tags/list
+{"name":"hotel-booking-app","tags":["1.0.0-64351fe","1.1.0-d07929b","1.0.0-224384f","1.1.0-2e4c93a","1.1.0-5aa909d","1.0.0-30c6a05","1.0.0-661751d","1.1.0-1c2103c"]}
