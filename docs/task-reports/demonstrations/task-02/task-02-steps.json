@@ -1,0 +1,110 @@
+{
+  "title": "Task 2 - Agile Planning and DevOps Workflow",
+  "prereq": [
+    "Nothing needs to be running. Only the live test step needs the project's `.venv`.",
+    "The GitHub step reads the public repository's issue count over the internet (read-only); if you are offline, skip it and say the repository has no issues yet.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "`pytest` is not recognised", "fix": "Use `.venv\\Scripts\\pytest ...`, or create the environment: `python -m venv .venv` then `.venv\\Scripts\\pip install -r requirements-dev.txt`."},
+    {"symptom": "GitHub step prints an error", "fix": "No internet or GitHub rate limit. Open https://github.com/KemNxts/hotel-room-booking-cicd/issues in a browser instead; it shows 0 open and 0 closed issues."},
+    {"symptom": "Line ranges are shifted", "fix": "The document was edited. Open `docs/02-agile-plan.md` in VS Code preview (Ctrl+Shift+V) and scroll to the section."}
+  ],
+  "extra": [
+    {"what": "Open the plan with the lifecycle diagram drawn (VS Code preview or GitHub)", "cmd": "code docs/02-agile-plan.md"},
+    {"what": "Show the issue template that is ready for creating backlog issues", "cmd": "Get-Content .github/ISSUE_TEMPLATE/feature_request.md"}
+  ],
+  "extraQuestions": [
+    {"q": "Do GitHub issues exist for the backlog?", "a": "No. The backlog is written in docs/02-agile-plan.md and the issue templates are ready, but no GitHub issues have been created yet (the live check in this video shows 0). Creating one issue per HB item is the remaining step and needs the student's GitHub login."}
+  ],
+  "steps": [
+    {
+      "title": "What the Agile plan document contains",
+      "say": "This is Task 2, Agile planning and the DevOps workflow. Agile means we build in small steps and keep a list of work to do. I am listing the headings of the planning document. It has user stories, a product backlog, a Kanban board, a sprint plan, the Definition of Done, and the DevOps lifecycle diagram. I will walk through each one.",
+      "cmd": "Select-String -Path docs/02-agile-plan.md -Pattern '^## ' | Select-Object LineNumber, Line",
+      "expect": "Six headings with their line numbers: stories, backlog, Kanban board, sprint plan, Definition of Done, lifecycle.",
+      "tell": "The planning is written in one versioned document with everything an Agile team needs.",
+      "pauseAfter": 2
+    },
+    {
+      "title": "User stories",
+      "say": "A user story is one sentence that says who wants what and why, in the form: as a guest, I want something, so that something. Stories one to six are the six booking features. Stories seven to nine are for the developer and the operator: automatic testing, one command deployment, and rollback. Writing needs as stories keeps every feature tied to a real person.",
+      "cmd": "Select-String -Path docs/02-agile-plan.md -Pattern '^\\| US' | ForEach-Object { ($_.Line -split '\\|')[1,2] -join ' ->' }",
+      "expect": "Nine stories, US1 to US9, each as 'As a ... I want ...'.",
+      "tell": "Every feature is written as a user story, so each one has a person and a reason.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Acceptance criteria",
+      "say": "Acceptance criteria say exactly when a story is finished. Here is story five, cancelling a booking. A pending or confirmed booking becomes cancelled, the room becomes free, and you cannot cancel twice. Notice that the last part names the automated tests that check it. So the criteria are not opinions, they are tests.",
+      "cmd": "(Select-String -Path docs/02-agile-plan.md -Pattern '^\\| US5').Line",
+      "expect": "One table row: story US5 with its criteria and the test names TestCancelBooking and test_journey_4.",
+      "tell": "Each acceptance criterion is linked to an automated test, so completion can be checked by running it.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Proving story 5 with its tests, live",
+      "say": "Now I prove story five live. I run only the tests whose name contains cancel. Seven tests run and seven should pass, including cannot cancel twice and other user cannot cancel. If these pass, the acceptance criteria of the cancellation story are met today.",
+      "cmd": "pytest tests/unit/test_booking_service.py -k cancel -v --no-header",
+      "expect": "7 passed, 31 deselected. Each line is one test name with PASSED; 'deselected' means other tests were skipped on purpose.",
+      "tell": "I can prove an acceptance criterion in seconds by running its tests.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Product backlog",
+      "say": "The product backlog is the ordered list of work. Our backlog items are HB one to HB fifteen, one for each of the fifteen course tasks, with the task number and a status. All are done. Items like payments are not here, because they are out of scope.",
+      "cmd": "Select-String -Path docs/02-agile-plan.md -Pattern '^\\| HB-' | ForEach-Object { ($_.Line -split '\\|')[1,2,3,5] -join ' |' }",
+      "expect": "Fifteen rows HB-01 to HB-15, each with its course task number and status Done.",
+      "tell": "The fifteen course tasks are the backlog; each item has a status.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "GitHub issues: the honest status",
+      "say": "I want to be honest about GitHub issues. This command asks GitHub, live, how many issues the public repository has. The answer is zero. The backlog exists in the document, and the issue and pull request templates are ready in the dot github folder, but the real GitHub issues have not been created yet. That is the one remaining step for this task.",
+      "cmd": "$r = Invoke-RestMethod https://api.github.com/repos/KemNxts/hotel-room-booking-cicd; \"open issues on GitHub: $($r.open_issues_count)\"; Get-ChildItem .github -Recurse -File | Resolve-Path -Relative",
+      "expect": "'open issues on GitHub: 0', then the three template files: bug report, feature request and pull request template.",
+      "tell": "The backlog is in the repository and the templates are ready, but I have not yet created GitHub issues.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Kanban board",
+      "say": "A Kanban board shows work moving through columns: backlog, to do, in progress, review and done. Each card moved from left to right. A card reached review when its feature branch was ready to merge, and done when it met the Definition of Done. Payments and an admin screen stay in the backlog as future work.",
+      "cmd": "Get-Content docs/02-agile-plan.md | Select-Object -Skip 41 -First 12",
+      "expect": "A five-column table; HB-01 to HB-15 are in Done; payments, admin UI and auto-expiry stay in Backlog.",
+      "tell": "The board shows every item finished and the out-of-scope ideas parked in the backlog.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Sprint plan",
+      "say": "A sprint is a short fixed period of work with a goal. We planned three sprints in ten working days. Sprint one is foundation, sprint two is automation with Jenkins and Docker, and sprint three is operations and release. Each sprint ends with a review, a demo of what works, and a retrospective, what to keep and what to improve.",
+      "cmd": "Get-Content docs/02-agile-plan.md | Select-Object -Skip 53 -First 13",
+      "expect": "Three sprints with days, goals and the backlog items in each; a note about the footer branches that conflicted and how that was fixed.",
+      "tell": "Work was organised into three goal-based sprints that each ended with a review and a retrospective.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Definition of Done",
+      "say": "The Definition of Done is the checklist that must be true before any item counts as finished. Code on a feature branch, automated tests, a clean linter, a green Jenkins pipeline, a merge into develop, updated documentation and no secrets. This is how completion is determined, so nobody can say it is done when it is not.",
+      "cmd": "Get-Content docs/02-agile-plan.md | Select-Object -Skip 66 -First 12",
+      "expect": "Seven numbered conditions. Items 3 and 4 are enforced automatically by Jenkins.",
+      "tell": "An item is done only when all seven conditions are met, and the pipeline checks the important ones for me.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "DevOps lifecycle diagram",
+      "say": "This is the DevOps lifecycle, written as a diagram in text form. It is drawn automatically on GitHub. Plan, code, build, test. If any test fails we stop and fix, there is no deployment. If everything is green we release, deploy, operate and monitor, and if there is a problem we roll back to the previous version, and then planning starts again.",
+      "cmd": "Get-Content docs/02-agile-plan.md | Select-Object -Skip 79",
+      "expect": "Mermaid diagram source: boxes Plan, Code, Build, Test, Release, Deploy, Operate, Monitor, Rollback, with an arrow that stops the flow when a test fails.",
+      "tell": "A change travels from plan to monitoring automatically, and a failed test stops it before deployment.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "The lifecycle in the real pipeline",
+      "say": "Finally, here is the same workflow in real code. These are the stages in our Jenkinsfile, in order: checkout, install, static checks, tests, Selenium browser tests, package, build images, publish, deploy and health check. A developer's code change passes through them one after another. Only if the test stages pass does the pipeline reach deployment. That is how a task is traced from commit to operation.",
+      "cmd": "Select-String -Path Jenkinsfile -Pattern \"stage\\('\" | ForEach-Object { $_.Line.Trim() }",
+      "expect": "Ten stage names. Test stages come before Package, Build, Publish and Deploy, which is the quality gate.",
+      "tell": "The lifecycle diagram is not just a picture; the Jenkinsfile implements it stage by stage.",
+      "pauseAfter": 4
+    }
+  ]
+}

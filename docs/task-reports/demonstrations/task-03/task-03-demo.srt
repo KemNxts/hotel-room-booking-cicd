@@ -1,0 +1,245 @@
+﻿1
+00:00:01,000 --> 00:00:06,000
+This is Task 3, requirements, architecture and technology setup.
+
+2
+00:00:06,000 --> 00:00:12,000
+The Software Requirements Specification, or SRS, lists what the system must do.
+
+3
+00:00:12,000 --> 00:00:17,000
+There are eleven functional requirements, FR one to FR eleven.
+
+4
+00:00:17,000 --> 00:00:30,000
+Here I print each requirement number next to the exact code that implements it, for example FR three, showing room availability, is implemented in BookingService dot search rooms.
+
+5
+00:00:33,000 --> 00:00:38,000
+A use case diagram shows who uses the system and what they can do.
+
+6
+00:00:38,000 --> 00:00:40,000
+This is the source of the diagram.
+
+7
+00:00:40,000 --> 00:00:44,000
+The guest has six use cases, the six booking features.
+
+8
+00:00:44,000 --> 00:00:51,000
+The developer pushes a commit that starts the pipeline, and the operator deploys and rolls back a release.
+
+9
+00:00:51,000 --> 00:00:54,000
+On GitHub this text is drawn as a picture.
+
+10
+00:00:57,000 --> 00:00:59,000
+This is the architecture.
+
+11
+00:00:59,000 --> 00:01:05,000
+A request comes from the browser to Nginx, then Gunicorn, then our Flask app.
+
+12
+00:01:05,000 --> 00:01:18,000
+Inside Flask there are layers: controllers handle web requests, services hold business rules, DAOs, which means data access objects, are the only place with SQL, and models hold the data.
+
+13
+00:01:18,000 --> 00:01:21,000
+At the bottom is the SQLite file.
+
+14
+00:01:21,000 --> 00:01:25,000
+The rules of the layers are written below the diagram.
+
+15
+00:01:28,000 --> 00:01:29,000
+Now the real folders.
+
+16
+00:01:29,000 --> 00:01:37,000
+Under the app folder there are controllers, services, dao, plus models, config, db and the schema file.
+
+17
+00:01:37,000 --> 00:01:39,000
+These match the diagram exactly.
+
+18
+00:01:39,000 --> 00:01:47,000
+Controllers are the web layer, services are the business rules, and dao files contain the database queries.
+
+19
+00:01:47,000 --> 00:01:52,000
+Templates and static files for the pages are in other folders.
+
+20
+00:01:55,000 --> 00:02:04,000
+Dependencies are in requirements dot txt, pinned to exact versions, so every computer and the Jenkins server install the same thing.
+
+21
+00:02:04,000 --> 00:02:07,000
+This is the Python equivalent of a Maven pom file.
+
+22
+00:02:07,000 --> 00:02:14,000
+Configuration is in app config dot py, and every setting comes from an environment variable.
+
+23
+00:02:14,000 --> 00:02:21,000
+That lets the same code run in development, test and production with different values, without secrets in the code.
+
+24
+00:02:24,000 --> 00:02:26,000
+The database is SQLite.
+
+25
+00:02:26,000 --> 00:02:35,000
+Here is the rooms table with its columns, and below it the seed data: six demo rooms, two singles, two doubles, a deluxe and a suite.
+
+26
+00:02:35,000 --> 00:02:43,000
+Insert or ignore means that running the schema again never creates duplicates, so it is safe on every start.
+
+27
+00:02:43,000 --> 00:02:51,000
+The same schema file also defines the users and bookings tables and the triggers that prevent double booking.
+
+28
+00:02:54,000 --> 00:03:00,000
+Now I start the real application with the documented command, python wsgi dot py.
+
+29
+00:03:00,000 --> 00:03:07,000
+I give it a temporary database through an environment variable so that your real data is not touched.
+
+30
+00:03:07,000 --> 00:03:11,000
+After four seconds I call the health endpoint.
+
+31
+00:03:11,000 --> 00:03:14,000
+Status ok, environment dev, and the version I set.
+
+32
+00:03:14,000 --> 00:03:16,000
+The server is running.
+
+33
+00:03:19,000 --> 00:03:21,000
+Now I follow one real request.
+
+34
+00:03:21,000 --> 00:03:29,000
+This is what the browser does when a guest searches rooms from the tenth to the twelfth of January 2030.
+
+35
+00:03:29,000 --> 00:03:32,000
+I request the rooms page with those dates.
+
+36
+00:03:32,000 --> 00:03:39,000
+The answer is HTTP 200, and the page says six of six rooms are available, with six Available badges.
+
+37
+00:03:39,000 --> 00:03:43,000
+Next I show which code produced this answer.
+
+38
+00:03:46,000 --> 00:03:47,000
+First, the controller.
+
+39
+00:03:47,000 --> 00:03:55,000
+The function list rooms receives the request, reads the two dates from the web address, and calls the service.
+
+40
+00:03:55,000 --> 00:03:58,000
+It does not contain any database code.
+
+41
+00:03:58,000 --> 00:04:05,000
+If the dates are invalid, the service raises an error and the controller shows it as a message.
+
+42
+00:04:05,000 --> 00:04:10,000
+Then it renders the template, which is the HTML page sent back to the browser.
+
+43
+00:04:13,000 --> 00:04:15,000
+Second, the service.
+
+44
+00:04:15,000 --> 00:04:25,000
+Search rooms first validates the dates, then asks the booking DAO which rooms are already booked in that period, and marks every other room as available.
+
+45
+00:04:25,000 --> 00:04:27,000
+This is the business rule.
+
+46
+00:04:27,000 --> 00:04:29,000
+Third, the DAO runs the SQL.
+
+47
+00:04:29,000 --> 00:04:39,000
+The overlap rule is written once here: a stay overlaps another when it starts before the other ends and ends after the other starts.
+
+48
+00:04:39,000 --> 00:04:41,000
+Cancelled bookings never block a room.
+
+49
+00:04:45,000 --> 00:04:47,000
+Why is SQL only in the DAO?
+
+50
+00:04:47,000 --> 00:04:49,000
+I prove it with a search.
+
+51
+00:04:49,000 --> 00:04:54,000
+In the controllers and services there are zero lines containing SQL keywords.
+
+52
+00:04:54,000 --> 00:04:56,000
+In the DAO files there are ten.
+
+53
+00:04:56,000 --> 00:05:10,000
+Keeping SQL in one layer means that business rules can be tested without a web server, the database can be changed in one place, and nobody can accidentally write a query inside a web page function.
+
+54
+00:05:13,000 --> 00:05:15,000
+A necessary clarification.
+
+55
+00:05:15,000 --> 00:05:18,000
+The course brief mentions Maven and Tomcat.
+
+56
+00:05:18,000 --> 00:05:20,000
+Those are Java tools.
+
+57
+00:05:20,000 --> 00:05:34,000
+This project is Python, so I use the Python equivalents shown in this table: requirements dot txt instead of a pom file, pytest instead of Maven test, and Gunicorn behind Nginx instead of Tomcat.
+
+58
+00:05:34,000 --> 00:05:43,000
+The document says clearly that if Maven is mandatory and not just an example, I must confirm that with the professor.
+
+59
+00:05:43,000 --> 00:05:46,000
+That is the one unresolved point of Task 3.
+
+60
+00:05:50,000 --> 00:05:59,000
+Finally I stop the demo server, delete the temporary database, and confirm that nothing answers on port 5000 any more.
+
+61
+00:05:59,000 --> 00:06:03,000
+The demonstration leaves your real database and files unchanged.
+
+

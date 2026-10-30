@@ -1,0 +1,97 @@
+{
+  "title": "Task 9 (part 1) - Selenium test design: the code and a real headless run",
+  "prereq": [
+    "The project `.venv` with Selenium and pytest, and Google Chrome installed. Selenium Manager downloads a matching chromedriver the first time (internet needed once).",
+    "Nothing else needs to be running: the tests start the real Flask app themselves on a free port with a throw-away database.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "'session not created' / Chrome version mismatch", "fix": "Update Chrome, or run once with internet so Selenium Manager can fetch the matching chromedriver. In Jenkins the Dockerfile installs Chromium + chromedriver instead."},
+    {"symptom": "Tests fail with timeouts", "fix": "Run one test alone to see it: `pytest tests/e2e -k journey_3 -v`. Watch it in a visible browser with `$env:HEADLESS='0'`. A failing test saves a screenshot in reports/screenshots/."},
+    {"symptom": "`pytest` is not recognised", "fix": "Use `.venv\\Scripts\\pytest` or activate the environment."},
+    {"symptom": "Want to test a running deployment instead", "fix": "`$env:E2E_BASE_URL='http://localhost:8081'; pytest tests/e2e -v` runs the same journeys against that URL."}
+  ],
+  "extra": [
+    {"what": "Watch the same tests in a visible browser", "cmd": "$env:HEADLESS='0'; pytest tests/e2e -v"},
+    {"what": "Run one journey only", "cmd": "pytest tests/e2e -k journey_3 -v"},
+    {"what": "Run the whole suite (unit + integration + browser)", "cmd": "pytest -q"}
+  ],
+  "extraQuestions": [
+    {"q": "Which five journeys did you choose, and why those?", "a": "Register; login with a wrong then right password; search, request and confirm a booking; cancel and track the status; and a booked room being unavailable to another guest. Together they cover all six MVP workflows and the most important business rule (no double booking)."},
+    {"q": "Are the screenshots in reports/screenshots from a failure that happened by accident?", "a": "They are from earlier deliberate-failure experiments (Tasks 9 and 10), kept to prove that the screenshot-on-failure feature works. A passing run does not create any."}
+  ],
+  "steps": [
+    {
+      "title": "Selenium and the five critical journeys",
+      "say": "This is Task 9, Selenium test design. Selenium is a tool that controls a real web browser from code: it opens pages, types in fields, clicks buttons and reads what is on the screen, like a very fast, very careful user. We chose five critical user journeys. Here are the five test functions: register, login with wrong and right password, search request and confirm, cancel and track, and a booked room being unavailable to another guest.",
+      "cmd": "Select-String -Path tests/e2e/test_journeys.py -Pattern '^def test_' | ForEach-Object { $_.Line }",
+      "expect": "Five test functions test_journey_1 to test_journey_5.",
+      "tell": "Five journeys cover all six workflows and the no-double-booking rule.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "WebDriver: the browser fixture",
+      "say": "WebDriver is the standard way the test code talks to the browser. Here is the fixture that creates the browser for each test. It starts Chrome, headless by default, which means without a visible window, and that is how Jenkins runs it. Setting HEADLESS to zero shows the window. It gets the driver program from Selenium itself, and it quits the browser after every test. If a test fails, it also saves a screenshot.",
+      "cmd": "Get-Content tests/e2e/conftest.py | Select-Object -Skip 43 -First 25",
+      "expect": "The driver fixture: ChromeOptions, optional headless flag, window size, chromedriver service, implicitly_wait(0), yield, then failure artifacts and quit.",
+      "tell": "Every test gets its own clean browser, started by WebDriver, and it is closed afterwards.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Test data: unique and independent",
+      "say": "Test data must not make tests depend on each other. Every test registers a new guest with a random email built from a UUID, and uses dates far in the future that change for each run. So tests never clash, even against a deployment that already has old bookings. The password is a fixed value that only exists for tests.",
+      "cmd": "Get-Content tests/e2e/test_journeys.py | Select-Object -Skip 14 -First 19",
+      "expect": "PASSWORD constant, a random session offset, wait helper, stay() for unique dates and unique_email() with a UUID.",
+      "tell": "Each test creates its own data, so tests do not depend on each other or on old data.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Element locators",
+      "say": "A locator tells Selenium which element on the page to use. We use ids, such as full name, email and register button. Ids are the most stable locator, because the developers put them in the page on purpose, and they do not change when the design changes. The helper function register shows the pattern: find the element, type into it, click, then wait for the result.",
+      "cmd": "Select-String -Path tests/e2e/test_journeys.py -Pattern '^def register' -Context 0,7 | ForEach-Object { $_.Line; $_.Context.PostContext }",
+      "expect": "register(): find_element(By.ID, ...) for each field, send_keys, click on register-btn, then a wait for nav-user.",
+      "tell": "Elements are found by stable ids that were added to the pages for testing.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Explicit waits",
+      "say": "Web pages take time to respond, so a test must wait, but not blindly. We never use fixed sleeps. We use explicit waits: wait until this element is visible, or until this text appears, for at most ten seconds. As soon as the condition is true, the test continues. The fixture even sets the implicit wait to zero so that only our explicit waits apply. This makes tests fast and stable.",
+      "cmd": "Select-String -Path tests/e2e/*.py -Pattern 'WebDriverWait|implicitly_wait|EC\\.' | Select-Object -First 8 | ForEach-Object { '{0}:{1}  {2}' -f $_.Filename, $_.LineNumber, $_.Line.Trim() }",
+      "expect": "Lines using WebDriverWait, implicitly_wait(0) and expected_conditions such as visibility_of_element_located.",
+      "tell": "I wait for conditions, not for fixed times, so the tests are both fast and reliable.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Assertions: what the test checks",
+      "say": "An assertion is the check that decides pass or fail. Here is journey three. After searching and booking, it asserts that the status is PENDING and that the dates on the page equal the dates I chose. After clicking Confirm, it waits for CONFIRMED and asserts that the message says booking confirmed, and that the confirm button is gone. If any assertion is false, the test fails and the pipeline stops.",
+      "cmd": "Select-String -Path tests/e2e/test_journeys.py -Pattern '^def test_journey_3' -Context 0,18 | ForEach-Object { $_.Line; $_.Context.PostContext }",
+      "expect": "The body of journey 3 with register, search, book, assert status == 'PENDING', date checks, confirm click, wait for CONFIRMED and assertions.",
+      "tell": "Each journey asserts the visible result, so a broken feature turns the test red.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Failure screenshots",
+      "say": "When a browser test fails, text alone is hard to understand, so the fixture saves a screenshot and the page source. This is the function. These files are real ones from earlier deliberate failure experiments, with their dates. In Jenkins they are archived with the build. A passing run creates none.",
+      "cmd": "Select-String -Path tests/e2e/conftest.py -Pattern '^def _save_failure' -Context 0,6 | ForEach-Object { $_.Line; $_.Context.PostContext }; Get-ChildItem reports/screenshots | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize",
+      "expect": "The _save_failure_artifacts function (save_screenshot + page_source) and the earlier failure png/html files with their timestamps.",
+      "tell": "On a failure the pipeline keeps a picture of what the browser saw.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Running the browser tests and reading the report",
+      "say": "Now I run the browser tests with the documented command. Pytest starts the real application on a free port, drives headless Chrome through the five journeys, and prints one line per test. I also ask for a JUnit XML report, the format Jenkins reads, and then print its summary: tests, failures and errors. The next video part shows the same tests in a visible browser.",
+      "cmd": "pytest -m e2e -v --junitxml=reports/e2e-demo.xml; ([xml](Get-Content reports/e2e-demo.xml)).testsuites.testsuite | Select-Object name, tests, failures, errors, skipped, time | Format-List",
+      "expect": "Five PASSED lines, '5 passed', then the XML summary with tests=5, failures=0, errors=0.",
+      "tell": "The five journeys pass in a real browser and produce a report that Jenkins can read.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "How Selenium tests differ from unit and integration tests",
+      "say": "How do the three kinds of test differ? Unit tests check one function or class, in isolation, in milliseconds. Integration tests send requests to the Flask app without a browser and check routes together with the database. Selenium tests use a real browser through the whole stack, so they are slowest, but they prove that a real user can complete a journey. Here are the real counts of each kind in this project.",
+      "cmd": "foreach ($d in 'unit','integration','e2e') { '{0,-12} {1}' -f $d, (pytest tests/$d --collect-only -q | Select-Object -Last 1) }",
+      "expect": "unit: 59 tests, integration: 26 tests, e2e: 5 tests collected.",
+      "tell": "Many fast unit tests at the bottom, fewer integration tests, and a few slow browser journeys on top.",
+      "pauseAfter": 4
+    }
+  ]
+}

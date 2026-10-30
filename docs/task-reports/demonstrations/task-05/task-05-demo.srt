@@ -1,0 +1,201 @@
+﻿1
+00:00:01,000 --> 00:00:05,000
+This is Task 5, feature development with branching.
+
+2
+00:00:05,000 --> 00:00:14,000
+A feature branch is a separate line of development for one feature, so unfinished work never disturbs the stable code.
+
+3
+00:00:14,000 --> 00:00:18,000
+This command lists the merge commits on the develop branch.
+
+4
+00:00:18,000 --> 00:00:28,000
+Each line is one feature or fix branch that was merged: app mvp, tests, docker, jenkins pipeline, ansible, security hardening and more.
+
+5
+00:00:28,000 --> 00:00:31,000
+This is the real project history.
+
+6
+00:00:34,000 --> 00:00:37,000
+Let me follow one feature, security hardening.
+
+7
+00:00:37,000 --> 00:00:40,000
+On its branch there are two commits.
+
+8
+00:00:40,000 --> 00:00:48,000
+The first adds the CSRF protection, secure cookies and a database guard against overlapping bookings.
+
+9
+00:00:48,000 --> 00:00:50,000
+The second adds the tests for them.
+
+10
+00:00:50,000 --> 00:00:54,000
+The prefixes feat and test follow our commit convention.
+
+11
+00:00:54,000 --> 00:00:57,000
+Small commits, one purpose each.
+
+12
+00:01:00,000 --> 00:01:02,000
+These are the feature files.
+
+13
+00:01:02,000 --> 00:01:12,000
+The controllers got a CSRF check, the schema got the database triggers, the templates got the token field, and there are new integration tests.
+
+14
+00:01:12,000 --> 00:01:17,000
+Seventeen files, mostly additions, and no unrelated changes.
+
+15
+00:01:17,000 --> 00:01:21,000
+A reviewer can understand the whole feature from this list.
+
+16
+00:01:24,000 --> 00:01:25,000
+Now the merge itself.
+
+17
+00:01:25,000 --> 00:01:33,000
+This merge commit has two parents: the previous tip of develop, and the last commit of the feature branch.
+
+18
+00:01:33,000 --> 00:01:42,000
+We merged with the no fast forward option, so Git always creates this merge commit, and the history shows the feature as one unit.
+
+19
+00:01:42,000 --> 00:01:46,000
+If this feature had to be undone, we would revert this single commit.
+
+20
+00:01:49,000 --> 00:01:58,000
+To show the commands themselves safely, I make a small practice repository in the temporary folder, not in the project.
+
+21
+00:01:58,000 --> 00:02:09,000
+I create the develop branch, write a file, run git add, which puts the file in the staging area, then git commit, which saves a snapshot with a message.
+
+22
+00:02:09,000 --> 00:02:12,000
+This is practice, not project history.
+
+23
+00:02:15,000 --> 00:02:17,000
+Now a feature branch.
+
+24
+00:02:17,000 --> 00:02:23,000
+Git switch with dash c creates feature slash room search and moves me onto it.
+
+25
+00:02:23,000 --> 00:02:24,000
+I edit the file.
+
+26
+00:02:24,000 --> 00:02:29,000
+Git status short shows a space and M: modified but not staged.
+
+27
+00:02:29,000 --> 00:02:34,000
+After git add it shows M in the first column: staged.
+
+28
+00:02:34,000 --> 00:02:38,000
+Then git commit saves it on the feature branch only.
+
+29
+00:02:38,000 --> 00:02:39,000
+Develop is untouched.
+
+30
+00:02:42,000 --> 00:02:46,000
+Git push sends my branch to the remote, the shared copy.
+
+31
+00:02:46,000 --> 00:02:53,000
+In this practice the remote is another local folder, and on a real project it would be GitHub.
+
+32
+00:02:53,000 --> 00:03:00,000
+The dash u option links my local branch to the remote one, so later pushes and pulls know where to go.
+
+33
+00:03:00,000 --> 00:03:04,000
+Git branch dash vv shows that link in square brackets.
+
+34
+00:03:07,000 --> 00:03:11,000
+This is the merge, normally done after a pull request is reviewed.
+
+35
+00:03:11,000 --> 00:03:15,000
+I switch to develop and merge the feature with no fast forward.
+
+36
+00:03:15,000 --> 00:03:22,000
+The graph shows the shape: develop, a side line for the feature, and a merge commit joining them.
+
+37
+00:03:22,000 --> 00:03:27,000
+This is exactly the shape of the real project history we saw earlier.
+
+38
+00:03:30,000 --> 00:03:35,000
+Git pull is the opposite of push: it brings other people's commits to my copy.
+
+39
+00:03:35,000 --> 00:03:42,000
+I push develop, then a second clone, a pretend teammate, makes a commit and pushes it.
+
+40
+00:03:42,000 --> 00:03:44,000
+Now in my repository I run git pull.
+
+41
+00:03:44,000 --> 00:03:49,000
+It fetches the new commit and fast forwards develop to it.
+
+42
+00:03:49,000 --> 00:03:53,000
+Teams run pull often so they work on the latest code.
+
+43
+00:03:56,000 --> 00:04:00,000
+A pull request asks the team to review a branch before it is merged.
+
+44
+00:04:00,000 --> 00:04:11,000
+Our prepared pull request text for security hardening has a summary, how it was tested, and an author checklist, and the reviewer checks a second list.
+
+45
+00:04:11,000 --> 00:04:12,000
+But I must be honest.
+
+46
+00:04:12,000 --> 00:04:15,000
+This live query to GitHub shows zero pull requests.
+
+47
+00:04:15,000 --> 00:04:20,000
+Our features were reviewed with this checklist and merged locally.
+
+48
+00:04:20,000 --> 00:04:26,000
+Opening real pull requests on GitHub is a remaining step that needs my GitHub login.
+
+49
+00:04:30,000 --> 00:04:41,000
+Last, I delete the three practice folders and confirm that my real project repository is unchanged: same branch, and no changes except this demonstration folder.
+
+50
+00:04:41,000 --> 00:04:44,000
+The practice never touched the project history.
+
+

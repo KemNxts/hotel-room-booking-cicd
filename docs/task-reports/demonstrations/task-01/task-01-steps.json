@@ -1,0 +1,103 @@
+{
+  "title": "Task 1 - Problem Definition and Scope",
+  "steps": [
+    {
+      "title": "Where the Task 1 document lives",
+      "say": "Welcome. This is Task 1, problem definition and scope. Before writing any code, a project must say what problem it solves and when it counts as finished. That agreement is written in one document inside the project's docs folder. I am listing the numbered documents. The first one, zero one, is our Task 1 document, and it is kept in Git like code.",
+      "cmd": "Get-ChildItem docs -Filter 0*.md | Select-Object Name, Length",
+      "pauseAfter": 2,
+      "expect": "The docs folder holds numbered documents, one per area; 01 is Task 1. Git history proves it is version-controlled.",
+      "tell": "Our scope is written down and kept in Git, so every change to it is tracked."
+    },
+    {
+      "title": "Problem statement",
+      "say": "I am opening the problem statement. A small hotel with six rooms takes bookings by phone and spreadsheet. Guests cannot see free rooms, and sometimes two people get the same room for the same night. That is the business problem. The second paragraph is the DevOps problem: changes must reach guests quickly without breaking bookings, so we replace manual copying and testing with an automated pipeline.",
+      "cmd": "Get-Content docs/01-problem-definition.md | Select-Object -Skip 2 -First 12",
+      "pauseAfter": 3,
+      "expect": "The first paragraph is the business problem (manual bookings, double bookings); the second is the DevOps problem (unsafe manual releases).",
+      "tell": "The project solves two problems: guests cannot self-book, and releases were manual and untested."
+    },
+    {
+      "title": "Target users and stakeholders",
+      "say": "Target users are the people who use the system directly: the guest, the developer and the operator. Stakeholders are everyone affected by it, such as the hotel owner and the front desk. Each wants something different. The owner wants no double bookings, the operator wants safe deployments. Please note that these are a reasoned model of a small hotel. We did not interview real hotel staff.",
+      "cmd": "Get-Content docs/01-problem-definition.md | Select-Object -Skip 15 -First 18",
+      "pauseAfter": 3,
+      "expect": "Users use the system; stakeholders are affected by it. Each group wants something different.",
+      "tell": "We identified who uses and who cares about the system, and we are honest that no real interviews were done."
+    },
+    {
+      "title": "Pain points and objectives",
+      "say": "These are the six existing pain points, from double bookings to having no rollback after a bad release. Each objective, O1 to O7, answers them. For example O2 says overlapping bookings must be impossible, both in code and in the database, and O4 says a failing test must block deployment automatically.",
+      "cmd": "Get-Content docs/01-problem-definition.md | Select-Object -Skip 34 -First 21",
+      "pauseAfter": 3,
+      "expect": "Six pain points map to seven objectives O1 to O7. O2 (no overlap) and O4 (failing test blocks deploy) are the key ones.",
+      "tell": "Every pain point has an objective that answers it."
+    },
+    {
+      "title": "Constraints",
+      "say": "Constraints are the limits we work within. Technically we use Python, Flask and SQLite, which allows one writer at a time. Operationally we have a ten day schedule, no paid cloud, and no public server, so Jenkins polls Git instead of using a webhook. Stating constraints early explains design choices later.",
+      "cmd": "Get-Content docs/01-problem-definition.md | Select-Object -Skip 55 -First 19",
+      "pauseAfter": 3,
+      "expect": "Constraints explain design choices: SQLite means one writer, no public server means Jenkins polls Git.",
+      "tell": "Our limits were stated up front, and they explain why the design looks the way it does."
+    },
+    {
+      "title": "Measurable success criteria",
+      "say": "Success criteria are targets you can check with a number or a yes or no. The left column is the target, the right column is the evidence we achieved it. For example, at least fifty automated tests all passing, and a repeat Ansible run that changes nothing. Saying it works well cannot be proven. Ninety of ninety tests passing can.",
+      "cmd": "Get-Content docs/01-problem-definition.md | Select-Object -Skip 74 -First 13",
+      "pauseAfter": 4,
+      "expect": "Each row has a target and the evidence that it was achieved, e.g. 90 tests, changed=0 on repeat Ansible run.",
+      "tell": "Success is measured with numbers I can show you, not opinions."
+    },
+    {
+      "title": "Proving one criterion live: the automated tests",
+      "say": "Let me prove one criterion live instead of just reading it. I am running the project's automated tests, without the browser tests. If every test passes, the criterion that the tests must all pass is met right now, not only on the day the document was written. This takes about twenty seconds.",
+      "cmd": "pytest -q -m \"not e2e\"",
+      "pauseAfter": 3,
+      "expect": "pytest prints one dot per passing test and a summary line such as '85 passed, 5 deselected'. Deselected are the 5 browser tests that this command skips.",
+      "tell": "The criterion that all automated tests pass is true right now, not only on the day we wrote it."
+    },
+    {
+      "title": "Approved MVP scope",
+      "say": "Finally the scope. MVP means Minimum Viable Product, the smallest version that is genuinely useful. Ours is six booking workflows: register and log in, check availability by date, request, confirm, cancel, and track a booking. Payments, an admin screen and e-mails are deliberately out of scope, so the project stays finishable. What I tell the professor: the problem is clear, the scope is fixed, and success is measured.",
+      "cmd": "Get-Content docs/01-problem-definition.md | Select-Object -Skip 87 -First 17",
+      "pauseAfter": 4,
+      "expect": "The MVP is the 6 workflows; payments, admin UI and e-mail are listed as out of scope on purpose.",
+      "tell": "The scope is fixed at six workflows, which is what makes the project finishable and checkable."
+    }
+  ],
+  "prereq": [
+    "Nothing needs to be running: Task 1 is a document. Only the final test step needs the project's `.venv` (Python virtual environment).",
+    "Open PowerShell (or the VS Code terminal) in the project folder."
+  ],
+  "recovery": [
+    {
+      "symptom": "`pytest` is not recognised",
+      "fix": "Use `.venv\\Scripts\\pytest -q -m \"not e2e\"`. If `.venv` is missing: `python -m venv .venv` then `.venv\\Scripts\\pip install -r requirements-dev.txt`."
+    },
+    {
+      "symptom": "Some tests fail",
+      "fix": "Read the first failure message. Run `git status` - you may be on an unfinished branch. `git switch develop` and run again."
+    },
+    {
+      "symptom": "Line ranges in the document look shifted",
+      "fix": "The document was edited. Open `docs/01-problem-definition.md` in VS Code (Ctrl+Shift+V for preview) and scroll instead of using -Skip / -First."
+    }
+  ],
+  "extra": [
+    {
+      "what": "Read the whole document with a preview in VS Code",
+      "cmd": "code docs/01-problem-definition.md"
+    },
+    {
+      "what": "Show which commits changed the document",
+      "cmd": "git log --oneline -- docs/01-problem-definition.md"
+    }
+  ],
+  "extraQuestions": [
+    {
+      "q": "Why did you not interview real hotel staff?",
+      "a": "The project is a course exercise with a 10-day schedule. The users and pain points are a reasoned model of a small hotel, and the document says so. Real interviews would be the first step if this became a real product."
+    }
+  ]
+}

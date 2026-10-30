@@ -1,0 +1,153 @@
+﻿1
+00:00:01,000 --> 00:00:02,000
+Welcome.
+
+2
+00:00:02,000 --> 00:00:05,000
+This is Task 1, problem definition and scope.
+
+3
+00:00:05,000 --> 00:00:13,000
+Before writing any code, a project must say what problem it solves and when it counts as finished.
+
+4
+00:00:13,000 --> 00:00:19,000
+That agreement is written in one document inside the project's docs folder.
+
+5
+00:00:19,000 --> 00:00:21,000
+I am listing the numbered documents.
+
+6
+00:00:21,000 --> 00:00:28,000
+The first one, zero one, is our Task 1 document, and it is kept in Git like code.
+
+7
+00:00:30,000 --> 00:00:32,000
+I am opening the problem statement.
+
+8
+00:00:32,000 --> 00:00:37,000
+A small hotel with six rooms takes bookings by phone and spreadsheet.
+
+9
+00:00:37,000 --> 00:00:43,000
+Guests cannot see free rooms, and sometimes two people get the same room for the same night.
+
+10
+00:00:43,000 --> 00:00:45,000
+That is the business problem.
+
+11
+00:00:45,000 --> 00:00:57,000
+The second paragraph is the DevOps problem: changes must reach guests quickly without breaking bookings, so we replace manual copying and testing with an automated pipeline.
+
+12
+00:01:00,000 --> 00:01:07,000
+Target users are the people who use the system directly: the guest, the developer and the operator.
+
+13
+00:01:07,000 --> 00:01:13,000
+Stakeholders are everyone affected by it, such as the hotel owner and the front desk.
+
+14
+00:01:13,000 --> 00:01:15,000
+Each wants something different.
+
+15
+00:01:15,000 --> 00:01:20,000
+The owner wants no double bookings, the operator wants safe deployments.
+
+16
+00:01:20,000 --> 00:01:24,000
+Please note that these are a reasoned model of a small hotel.
+
+17
+00:01:24,000 --> 00:01:27,000
+We did not interview real hotel staff.
+
+18
+00:01:30,000 --> 00:01:37,000
+These are the six existing pain points, from double bookings to having no rollback after a bad release.
+
+19
+00:01:37,000 --> 00:01:40,000
+Each objective, O1 to O7, answers them.
+
+20
+00:01:40,000 --> 00:01:52,000
+For example O2 says overlapping bookings must be impossible, both in code and in the database, and O4 says a failing test must block deployment automatically.
+
+21
+00:01:55,000 --> 00:01:58,000
+Constraints are the limits we work within.
+
+22
+00:01:58,000 --> 00:02:04,000
+Technically we use Python, Flask and SQLite, which allows one writer at a time.
+
+23
+00:02:04,000 --> 00:02:13,000
+Operationally we have a ten day schedule, no paid cloud, and no public server, so Jenkins polls Git instead of using a webhook.
+
+24
+00:02:13,000 --> 00:02:18,000
+Stating constraints early explains design choices later.
+
+25
+00:02:21,000 --> 00:02:26,000
+Success criteria are targets you can check with a number or a yes or no.
+
+26
+00:02:26,000 --> 00:02:32,000
+The left column is the target, the right column is the evidence we achieved it.
+
+27
+00:02:32,000 --> 00:02:39,000
+For example, at least fifty automated tests all passing, and a repeat Ansible run that changes nothing.
+
+28
+00:02:39,000 --> 00:02:42,000
+Saying it works well cannot be proven.
+
+29
+00:02:42,000 --> 00:02:44,000
+Ninety of ninety tests passing can.
+
+30
+00:02:48,000 --> 00:02:52,000
+Let me prove one criterion live instead of just reading it.
+
+31
+00:02:52,000 --> 00:02:57,000
+I am running the project's automated tests, without the browser tests.
+
+32
+00:02:57,000 --> 00:03:06,000
+If every test passes, the criterion that the tests must all pass is met right now, not only on the day the document was written.
+
+33
+00:03:06,000 --> 00:03:09,000
+This takes about twenty seconds.
+
+34
+00:03:12,000 --> 00:03:13,000
+Finally the scope.
+
+35
+00:03:13,000 --> 00:03:19,000
+MVP means Minimum Viable Product, the smallest version that is genuinely useful.
+
+36
+00:03:19,000 --> 00:03:29,000
+Ours is six booking workflows: register and log in, check availability by date, request, confirm, cancel, and track a booking.
+
+37
+00:03:29,000 --> 00:03:37,000
+Payments, an admin screen and e-mails are deliberately out of scope, so the project stays finishable.
+
+38
+00:03:37,000 --> 00:03:44,000
+What I tell the professor: the problem is clear, the scope is fixed, and success is measured.
+
+

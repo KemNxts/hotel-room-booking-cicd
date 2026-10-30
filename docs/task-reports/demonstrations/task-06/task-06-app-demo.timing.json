@@ -1,0 +1,45 @@
+﻿{
+    "offsetSec":  1.1840000000000002,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "The portal and the six features"
+                  },
+                  {
+                      "videoStartSec":  27.8,
+                      "title":  "Feature 1: registration"
+                  },
+                  {
+                      "videoStartSec":  53.4,
+                      "title":  "Feature 1: login and a wrong password"
+                  },
+                  {
+                      "videoStartSec":  77.5,
+                      "title":  "Feature 2: room availability by date"
+                  },
+                  {
+                      "videoStartSec":  100.5,
+                      "title":  "Feature 3: booking request"
+                  },
+                  {
+                      "videoStartSec":  120.6,
+                      "title":  "Feature 4: booking confirmation"
+                  },
+                  {
+                      "videoStartSec":  143.3,
+                      "title":  "No double booking: a second guest"
+                  },
+                  {
+                      "videoStartSec":  166.7,
+                      "title":  "Feature 6: status tracking in My bookings"
+                  },
+                  {
+                      "videoStartSec":  190.8,
+                      "title":  "Feature 5: cancellation, and the room is free again"
+                  },
+                  {
+                      "videoStartSec":  216.4,
+                      "title":  "Where the DevOps side connects: /health"
+                  }
+              ]
+}

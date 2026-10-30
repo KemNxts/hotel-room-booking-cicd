@@ -1,0 +1,323 @@
+1
+00:00:01,000 --> 00:00:06,000
+This is Task 7, Jenkins installation and continuous integration.
+
+2
+00:00:06,000 --> 00:00:08,000
+Jenkins is an automation server.
+
+3
+00:00:08,000 --> 00:00:19,000
+It watches the repository, and for every change it runs the build and the tests automatically, so that mistakes are found in minutes, not weeks.
+
+4
+00:00:19,000 --> 00:00:21,000
+This is continuous integration.
+
+5
+00:00:21,000 --> 00:00:24,000
+Here Jenkins runs as a Docker container.
+
+6
+00:00:24,000 --> 00:00:44,000
+These lines of its compose file show the setup: the port 8090, only reachable from this computer, a named volume that keeps jobs and builds, the Docker socket so Jenkins can build images, our repository mounted read only, and a local image registry on port 5000.
+
+7
+00:00:48,000 --> 00:00:51,000
+The Jenkins image is built from our own Dockerfile.
+
+8
+00:00:51,000 --> 00:01:08,000
+It starts from the official long term support Jenkins, and adds what our pipeline needs: Python three point eleven, the same version as production, Chromium and chromedriver for the Selenium tests, and the Docker command line tool.
+
+9
+00:01:08,000 --> 00:01:17,000
+The plugins list is short: pipeline, Git, JUnit for test reports, credentials binding, the stage view, and timestamps.
+
+10
+00:01:21,000 --> 00:01:30,000
+To start Jenkins, the documented procedure is docker compose up dash d, in the deploy slash jenkins folder, then wait about a minute.
+
+11
+00:01:30,000 --> 00:01:39,000
+Now I check that it is really running: both containers are up, and the login page answers with the Jenkins version in its response header.
+
+12
+00:01:39,000 --> 00:01:43,000
+If Jenkins were stopped, this is the command I would run.
+
+13
+00:01:47,000 --> 00:01:49,000
+Now an important distinction.
+
+14
+00:01:49,000 --> 00:01:52,000
+Three different things can be true.
+
+15
+00:01:52,000 --> 00:01:56,000
+First: a Jenkinsfile exists in the repository.
+
+16
+00:01:56,000 --> 00:01:58,000
+That is only a file.
+
+17
+00:01:58,000 --> 00:02:04,000
+Git ls files proves it is tracked, and the log shows who changed it and why.
+
+18
+00:02:04,000 --> 00:02:06,000
+But a file alone runs nothing.
+
+19
+00:02:09,000 --> 00:02:12,000
+Second: a job is configured in Jenkins.
+
+20
+00:02:12,000 --> 00:02:22,000
+I ask Jenkins for the job configuration, using the admin password that the command reads from the environment file, without displaying it.
+
+21
+00:02:22,000 --> 00:02:36,000
+The configuration says: poll the Git repository every five minutes, take the branch from the BRANCH parameter, read the pipeline from the file called Jenkinsfile, and the repository is the mounted project.
+
+22
+00:02:36,000 --> 00:02:38,000
+The job has three parameters.
+
+23
+00:02:43,000 --> 00:02:48,000
+Third, and the only one that proves anything: the job actually ran.
+
+24
+00:02:48,000 --> 00:02:52,000
+This is the real build history from Jenkins.
+
+25
+00:02:52,000 --> 00:02:53,000
+Eleven builds.
+
+26
+00:02:53,000 --> 00:02:54,000
+Most are success.
+
+27
+00:02:54,000 --> 00:03:01,000
+Builds two and nine are failures: those are the deliberate defect experiments of Task 10.
+
+28
+00:03:01,000 --> 00:03:04,000
+Build eleven, the most recent, succeeded.
+
+29
+00:03:04,000 --> 00:03:09,000
+The names show the version and the commit that each build used.
+
+30
+00:03:14,000 --> 00:03:20,000
+Here are the stages of build eleven, with the status and the time of each.
+
+31
+00:03:20,000 --> 00:03:35,000
+Checkout, install dependencies, static checks, which is the linting, unit and integration tests, the Selenium tests, packaging the source, building the images, publishing, deploying and the health check.
+
+32
+00:03:35,000 --> 00:03:36,000
+All success.
+
+33
+00:03:36,000 --> 00:03:41,000
+The whole pipeline took about one hundred and three seconds.
+
+34
+00:03:41,000 --> 00:03:44,000
+Note: this build is from the twentieth of October.
+
+35
+00:03:44,000 --> 00:03:50,000
+It is real, but it is a historic build, not one I started just now.
+
+36
+00:03:55,000 --> 00:03:59,000
+Finally, evidence from the console log of build eleven.
+
+37
+00:03:59,000 --> 00:04:02,000
+Pip install runs for the dependencies.
+
+38
+00:04:02,000 --> 00:04:03,000
+Flake8 is the linter.
+
+39
+00:04:03,000 --> 00:04:07,000
+Eighty five unit and integration tests passed.
+
+40
+00:04:07,000 --> 00:04:13,000
+Five Selenium tests passed, and the other eighty five were deselected, as intended.
+
+41
+00:04:13,000 --> 00:04:19,000
+Then the checksum of the source archive is created, and the build finishes with SUCCESS.
+
+42
+00:04:19,000 --> 00:04:24,000
+If a stage had failed, this is where the failure would be.
+
+43
+00:04:30,866 --> 00:04:40,866
+Now the Jenkins web interface, version two point five eight, open on localhost port eight thousand ninety, already logged in as admin.
+
+44
+00:04:40,866 --> 00:04:41,866
+This is the dashboard.
+
+45
+00:04:41,866 --> 00:04:43,866
+It lists the jobs.
+
+46
+00:04:43,866 --> 00:04:49,866
+We have one, called hotel booking, which is the continuous integration job for our project.
+
+47
+00:04:49,866 --> 00:04:56,866
+The little weather icon and the last success and last failure columns summarise its health.
+
+48
+00:04:57,866 --> 00:04:58,866
+The job page.
+
+49
+00:04:58,866 --> 00:05:01,866
+On the left is the build history, the newest first.
+
+50
+00:05:01,866 --> 00:05:08,866
+In the middle, the stage view draws every build as a row and every pipeline stage as a column.
+
+51
+00:05:08,866 --> 00:05:09,866
+Green is success.
+
+52
+00:05:09,866 --> 00:05:14,866
+The red cells in build number two and nine are the deliberate failures.
+
+53
+00:05:14,866 --> 00:05:20,866
+The test result trend shows the number of passed tests growing as the project grew.
+
+54
+00:05:21,866 --> 00:05:24,866
+The job configuration, opened read only.
+
+55
+00:05:24,866 --> 00:05:26,866
+I will not save anything.
+
+56
+00:05:26,866 --> 00:05:32,866
+First: this project is parameterized, with APP ENV, BRANCH and REGISTRY.
+
+57
+00:05:32,866 --> 00:05:40,866
+Then build triggers: Poll SCM, every five minutes, which makes Jenkins check Git for new commits.
+
+58
+00:05:40,866 --> 00:05:44,866
+This is the continuous integration trigger.
+
+59
+00:05:44,866 --> 00:05:58,866
+Then the pipeline: the definition is Pipeline script from SCM, the repository URL, the branch specifier, which uses the BRANCH parameter, and the script path, Jenkinsfile.
+
+60
+00:05:59,866 --> 00:06:04,866
+Now one real build, number eleven, from the twentieth of October.
+
+61
+00:06:04,866 --> 00:06:10,866
+It was started with the parameters staging, branch develop and the local registry.
+
+62
+00:06:10,866 --> 00:06:17,866
+Its name, one point one point zero, dash one c two one zero three c, is the version and the commit.
+
+63
+00:06:17,866 --> 00:06:25,866
+The page shows the status, the duration, and the links to the console output, the test result, and the artifacts.
+
+64
+00:06:26,866 --> 00:06:30,866
+The console output is the complete log.
+
+65
+00:06:30,866 --> 00:06:32,866
+First the commit being built.
+
+66
+00:06:32,866 --> 00:06:38,866
+Then the dependencies are installed with pip, from the pinned requirements.
+
+67
+00:06:38,866 --> 00:06:43,866
+Then flake8, the linter, runs and finds nothing, so it prints nothing.
+
+68
+00:06:43,866 --> 00:06:47,866
+Then eighty five unit and integration tests pass.
+
+69
+00:06:47,866 --> 00:06:52,866
+Then five Selenium tests pass, and the rest are deselected.
+
+70
+00:06:52,866 --> 00:06:54,866
+The log ends with finished, success.
+
+71
+00:06:56,866 --> 00:07:01,866
+Jenkins also reads the JUnit XML reports and shows them as a test result page.
+
+72
+00:07:01,866 --> 00:07:07,866
+Here are the two test suites, with the number of tests, failures and the duration of each.
+
+73
+00:07:07,866 --> 00:07:17,866
+Because the reports are published after every build, Jenkins can draw the trend we saw before, and a failing test appears here by name.
+
+74
+00:07:18,866 --> 00:07:20,866
+Every build archives its artifacts.
+
+75
+00:07:20,866 --> 00:07:29,866
+In the dist folder: the source archive, a tar gz file named with the version and commit, and its sha two five six checksum.
+
+76
+00:07:29,866 --> 00:07:36,866
+In the reports folder: the test reports, the health check answer and the deployment record.
+
+77
+00:07:36,866 --> 00:07:41,866
+They are kept with the build, so any build can be reproduced or checked later.
+
+78
+00:07:42,866 --> 00:07:46,866
+Back on the job page: the build history and the trend.
+
+79
+00:07:46,866 --> 00:07:49,866
+Jenkins keeps the last twenty builds.
+
+80
+00:07:49,866 --> 00:07:56,866
+Over the project, the number of passing tests grew, and the failures are the two deliberate experiments.
+
+81
+00:07:56,866 --> 00:08:04,866
+This is continuous integration at work: every change is built and tested, and the result is visible to everyone.

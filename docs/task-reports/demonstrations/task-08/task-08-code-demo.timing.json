@@ -1,0 +1,57 @@
+﻿{
+    "offsetSec":  1.201,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.3,
+                      "title":  "The Jenkinsfile and the quality gate"
+                  },
+                  {
+                      "videoStartSec":  39.8,
+                      "title":  "Parameters and the polling trigger"
+                  },
+                  {
+                      "videoStartSec":  75.5,
+                      "title":  "Options and environment variables"
+                  },
+                  {
+                      "videoStartSec":  112.2,
+                      "title":  "Stage 1: Checkout"
+                  },
+                  {
+                      "videoStartSec":  151.3,
+                      "title":  "Stages 2 and 3: install and static checks"
+                  },
+                  {
+                      "videoStartSec":  186.2,
+                      "title":  "Stages 4 and 5: the tests, the quality gate"
+                  },
+                  {
+                      "videoStartSec":  221.3,
+                      "title":  "Stage 6: package the source with a checksum"
+                  },
+                  {
+                      "videoStartSec":  249.3,
+                      "title":  "Stage 7: build the Docker images"
+                  },
+                  {
+                      "videoStartSec":  271.5,
+                      "title":  "Stage 8: publish the images to the registry"
+                  },
+                  {
+                      "videoStartSec":  304.8,
+                      "title":  "Stage 9: deploy"
+                  },
+                  {
+                      "videoStartSec":  336.9,
+                      "title":  "Stage 10: health check and version verification"
+                  },
+                  {
+                      "videoStartSec":  366.3,
+                      "title":  "The deployment record and post actions"
+                  },
+                  {
+                      "videoStartSec":  399.3,
+                      "title":  "The stage order is the quality gate"
+                  }
+              ]
+}

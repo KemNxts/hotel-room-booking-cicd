@@ -1,0 +1,221 @@
+﻿1
+00:00:01,000 --> 00:00:03,000
+This is Task 11, Docker.
+
+2
+00:00:03,000 --> 00:00:06,000
+A Dockerfile is the recipe for an image.
+
+3
+00:00:06,000 --> 00:00:12,000
+An image is a read only template that contains our application, Python and all dependencies.
+
+4
+00:00:12,000 --> 00:00:14,000
+This is the first half.
+
+5
+00:00:14,000 --> 00:00:25,000
+It starts from a small official Python image, receives the version and commit as build arguments, and stores them in environment variables and labels.
+
+6
+00:00:25,000 --> 00:00:33,000
+Then it installs the dependencies from requirements dot txt in their own layer, so Docker can cache that step.
+
+7
+00:00:37,000 --> 00:00:44,000
+The second half copies the application code, then creates a normal user, so the app does not run as root.
+
+8
+00:00:44,000 --> 00:00:58,000
+It declares the data folder as a volume, exposes port eight thousand, and defines a health check: every ten seconds Docker calls the health address, and marks the container unhealthy after three failures.
+
+9
+00:00:58,000 --> 00:01:02,000
+The last line starts Gunicorn, the production web server.
+
+10
+00:01:06,000 --> 00:01:10,000
+Docker Compose describes the complete application in one file.
+
+11
+00:01:10,000 --> 00:01:12,000
+I print the important lines.
+
+12
+00:01:12,000 --> 00:01:22,000
+The app service uses the image tagged with the version and commit, gets its settings from environment variables, and mounts the named volume hotel data.
+
+13
+00:01:22,000 --> 00:01:31,000
+The nginx service publishes the public port, waits until the app is healthy, and both restart automatically unless stopped on purpose.
+
+14
+00:01:35,000 --> 00:01:38,000
+The difference between an image and a container.
+
+15
+00:01:38,000 --> 00:01:45,000
+The images list shows templates that exist on this computer: repository, tag, image id and size.
+
+16
+00:01:45,000 --> 00:01:49,000
+A container is a running or stopped instance of an image.
+
+17
+00:01:49,000 --> 00:01:53,000
+It has a name, a status and its own writable layer.
+
+18
+00:01:53,000 --> 00:01:57,000
+Like a class and an object: one image can create many containers.
+
+19
+00:01:57,000 --> 00:02:04,000
+These are the project's existing containers, currently in whatever state they were left.
+
+20
+00:02:08,000 --> 00:02:10,000
+Now I build an image myself.
+
+21
+00:02:10,000 --> 00:02:12,000
+Docker build reads the Dockerfile.
+
+22
+00:02:12,000 --> 00:02:18,000
+The dash t option gives it a name and a tag, here hotel booking app, colon demo.
+
+23
+00:02:18,000 --> 00:02:23,000
+The build arguments bake in a demo version and the real commit id.
+
+24
+00:02:23,000 --> 00:02:27,000
+Then docker tag adds a second name to the same image.
+
+25
+00:02:27,000 --> 00:02:34,000
+The listing shows both tags with the same image id: a tag is only a label, not a copy.
+
+26
+00:02:38,000 --> 00:02:41,000
+Now I run a container from that image.
+
+27
+00:02:41,000 --> 00:02:43,000
+Dash d runs it in the background.
+
+28
+00:02:43,000 --> 00:02:48,000
+Dash p maps port 18000 on my computer to port 8000 inside the container.
+
+29
+00:02:48,000 --> 00:02:57,000
+The environment variable gives the secret key, and the dash v option mounts a named volume at slash data, where the database lives.
+
+30
+00:02:57,000 --> 00:03:06,000
+After a few seconds Docker shows the container as healthy, and the health address answers with the demo version and the commit.
+
+31
+00:03:10,000 --> 00:03:13,000
+Docker inspect shows everything about a container.
+
+32
+00:03:13,000 --> 00:03:22,000
+I ask for a few facts: the state is running, the health is healthy, the image it came from, and the restart policy.
+
+33
+00:03:22,000 --> 00:03:26,000
+A container started with docker run has no restart policy.
+
+34
+00:03:26,000 --> 00:03:28,000
+Compose adds unless stopped.
+
+35
+00:03:28,000 --> 00:03:34,000
+Then the port mapping and the volume: my named volume is mounted at slash data.
+
+36
+00:03:38,000 --> 00:03:41,000
+Docker logs shows what the application printed.
+
+37
+00:03:41,000 --> 00:03:52,000
+Here are the last lines: Gunicorn starting its workers, then the access log lines, including the health checks that Docker itself makes every ten seconds.
+
+38
+00:03:52,000 --> 00:03:56,000
+Logs are the first place to look when a container misbehaves.
+
+39
+00:04:00,000 --> 00:04:01,000
+The lifecycle.
+
+40
+00:04:01,000 --> 00:04:05,000
+Docker stop sends a polite signal and the container exits.
+
+41
+00:04:05,000 --> 00:04:07,000
+Its status is Exited.
+
+42
+00:04:07,000 --> 00:04:10,000
+The container still exists, with its data.
+
+43
+00:04:10,000 --> 00:04:18,000
+Docker start brings the same container back, and after a few seconds the health check passes again.
+
+44
+00:04:18,000 --> 00:04:21,000
+Docker restart does both in one command.
+
+45
+00:04:32,000 --> 00:04:33,000
+Does the data survive?
+
+46
+00:04:33,000 --> 00:04:35,000
+Not automatically.
+
+47
+00:04:35,000 --> 00:04:38,000
+It survives only because of the volume.
+
+48
+00:04:38,000 --> 00:04:48,000
+First I write a row into the real SQLite database inside the container, a test user, and read back the number of users: one.
+
+49
+00:04:51,000 --> 00:04:55,000
+Now I delete the container completely, with remove dash f.
+
+50
+00:04:55,000 --> 00:04:57,000
+Its writable layer is gone.
+
+51
+00:04:57,000 --> 00:05:02,000
+Then I start a brand new container from the same image and the same volume.
+
+52
+00:05:02,000 --> 00:05:07,000
+When I count the users again, the row is still there: users, one.
+
+53
+00:05:07,000 --> 00:05:16,000
+The data lives in the volume, not in the container, which is why Compose can replace containers during a deployment without losing bookings.
+
+54
+00:05:23,000 --> 00:05:30,000
+Finally, I remove everything the demo created: the container, the volume and the two demo tags.
+
+55
+00:05:30,000 --> 00:05:41,000
+Then I list what is left: no demo containers, and the project's real volumes, like the staging and production data and Jenkins, are untouched.
+
+

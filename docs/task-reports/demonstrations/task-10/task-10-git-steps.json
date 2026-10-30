@@ -1,0 +1,87 @@
+{
+  "title": "Task 10 (part 1) - The defect experiment: code, a live failing test, and the stale-report fix",
+  "prereq": [
+    "Git and the project `.venv` (pytest). Nothing else needs to be running.",
+    "The live reproduction happens in a disposable clone under your TEMP folder (`defect-demo`), deleted at the end. The defect is never created in your project or on any branch of it.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "The clone folder already exists", "fix": "`Remove-Item $env:TEMP/defect-demo -Recurse -Force`, then run the clone step again."},
+    {"symptom": "`pytest` runs the wrong project's tests", "fix": "The command must run inside the clone: `Push-Location $d; python -m pytest ...; Pop-Location`. Check with `Get-Location` that you are in the clone."},
+    {"symptom": "Commit IDs from the documents are not found", "fix": "The history was rewritten once; see docs/evidence/git/commit-id-map.md for old to new IDs. Branch names are unchanged: experiment/defect-demo and experiment/defect-demo-2."}
+  ],
+  "extra": [
+    {"what": "Which branches contain the defect commit (proves it was never merged)", "cmd": "git branch --contains 5844eec"},
+    {"what": "The real Jenkins console log of the failed build #2", "cmd": "Get-Content docs/evidence/jenkins/build-02-defect-fails.log | Select-Object -Last 40"}
+  ],
+  "extraQuestions": [
+    {"q": "Did you break the stable application to demonstrate this?", "a": "No. The defect lives only on the throw-away branches experiment/defect-demo and experiment/defect-demo-2, which were never merged into develop or main (git branch --contains proves it). In this video it is reproduced only inside a disposable clone that is deleted afterwards."},
+    {"q": "Why did Jenkins show 5 passed Selenium tests for a build whose Selenium stage was skipped?", "a": "That was a real bug found from the evidence: Jenkins reuses its workspace, so reports/e2e-tests.xml from the previous build was still there and was published again. It was fixed by running rm -rf reports dist at the start of every build. Build #9 proves it: it failed on the same test, and its report lists only the tests that actually ran."}
+  ],
+  "steps": [
+    {
+      "title": "How a failing test stops the pipeline",
+      "say": "This is Task 10, continuous testing in Jenkins. The idea is simple. Each test stage runs a command. When pytest finds a failing test, it exits with a non zero code, Jenkins marks the stage failed, and every later stage is skipped. These are the lines of the Jenkinsfile that do it: the two test commands, the report publishing that always runs, and the clean up line at the start. Notice that package, images, publish and deploy come after the tests.",
+      "cmd": "Select-String -Path Jenkinsfile -Pattern \"stage\\('|pytest|junit |rm -rf reports\" | ForEach-Object { '{0,3}: {1}' -f $_.LineNumber, $_.Line.Trim() }",
+      "expect": "Stage names with line numbers, the two pytest commands (unit/integration and e2e), 'rm -rf reports dist' in Checkout, and the junit step in post.",
+      "tell": "A failing pytest command turns the stage red and Jenkins skips everything after it, including deployment.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "The experiment branch: a deliberate defect",
+      "say": "To prove the quality gate, I introduced a deliberate defect on a throw away branch called experiment slash defect demo. It has two commits: first the defect, then the corrective fix. And this second command proves the safety: it lists the branches that contain the defect commit. Only the two experiment branches. The defect was never merged into develop or main.",
+      "cmd": "git log --oneline develop..experiment/defect-demo; 'branches that contain the defect commit:'; git branch --contains 5844eec",
+      "expect": "Two commits (the experiment commit and the fix) and only experiment/defect-demo and experiment/defect-demo-2 containing the defect.",
+      "tell": "The defect exists only on throw-away experiment branches and was never merged.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "The defect: one character",
+      "say": "This is the defect. In the overlap rule of the booking data access layer, the strict comparison, check in less than check out, became less than or equal. A tiny off by one change, but it wrongly says that a room is booked when one guest checks out on the same day another checks in. A subtle bug like this is exactly what automated tests exist to catch.",
+      "cmd": "git diff 5844eec^ 5844eec -- app/dao/booking_dao.py",
+      "expect": "A one-line diff: '-    check_in < :check_out' and '+    check_in <= :check_out' in _OVERLAP_SQL.",
+      "tell": "The injected defect is a one-character off-by-one change in the overlap rule.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Live: the tests catch the defect",
+      "say": "Now I reproduce what Jenkins saw, safely. I clone the repository into a disposable folder, check out the defect commit, and run the same tests the pipeline runs. A test fails, the summary says failed, and the exit code is one. That non zero code is exactly what makes Jenkins stop. Nothing in my real project changed.",
+      "cmd": "$d = \"$env:TEMP/defect-demo\"; Remove-Item $d -Recurse -Force -ErrorAction SilentlyContinue; git clone -q . $d; git -C $d checkout -q 5844eec; Push-Location $d; python -m pytest tests/unit tests/integration -q -p no:cacheprovider 2>&1 | Select-Object -Last 6; 'pytest exit code: ' + $LASTEXITCODE; Pop-Location",
+      "expect": "FAILED ...test_overlap_rules[...] near the end, '1 failed, ... passed' (or similar) and 'pytest exit code: 1'.",
+      "tell": "With the defect, pytest fails and returns exit code 1, which is what stops the Jenkins pipeline.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Live: the corrective commit makes it green",
+      "say": "Now the corrective commit. I check out the fix in the same disposable clone and run the same tests. They all pass, and the exit code is zero. In Jenkins, this is build number three: green, and the deployment stage runs. The fix restored the strict comparison, one line in one file.",
+      "cmd": "git -C $d checkout -q 2fb62d6; Push-Location $d; python -m pytest tests/unit tests/integration -q -p no:cacheprovider 2>&1 | Select-Object -Last 3; 'pytest exit code: ' + $LASTEXITCODE; Pop-Location; git show 2fb62d6 --format='%h %s' -- app/dao/booking_dao.py | Select-Object -First 12",
+      "expect": "'82 passed' (the unit and integration tests that existed at that commit; Jenkins added the 5 browser tests for 87), exit code 0, then the one-line fix diff restoring '<'.",
+      "tell": "The corrective commit makes every test pass again, so the next pipeline run goes green and deploys.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Clean up the disposable clone",
+      "say": "I delete the disposable clone and confirm that my project is untouched: same branch, and no new changes except this demonstration folder.",
+      "cmd": "Remove-Item $d -Recurse -Force; 'clone exists: ' + (Test-Path $d); git status --short --branch",
+      "expect": "'clone exists: False' and the project's own branch with only the untracked demonstrations folder.",
+      "tell": "The defect never touched my project; it only existed in a throw-away clone and on experiment branches.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "The stale test report bug and its fix",
+      "say": "Studying build two, I found a real problem. Its test report listed five Selenium tests as passed, although the Selenium stage had been skipped. Jenkins reuses its workspace, so the old report from build one was still there and was published again. The fix, on branch fix slash jenkins stale reports, is this: the checkout stage now deletes the reports and dist folders first. A build can no longer publish a report from an older build.",
+      "cmd": "git show 32d5f8e --format='%h %s' -U1 -- Jenkinsfile | Select-Object -First 16",
+      "expect": "The commit 'fix: stop Jenkins publishing stale test reports from earlier builds' adding the comment lines and sh 'rm -rf reports dist' to the Checkout stage.",
+      "tell": "Every build now starts by deleting old reports, so a stale report can never be mistaken for a new one.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Commit IDs in the Jenkins evidence",
+      "say": "One last detail you may be asked about. The Jenkins builds were made before the history was rewritten, so Jenkins and the evidence logs show the original commit IDs. This map links each original ID to the current one: the defect commit, the corrective fix, and the stale report fix are all listed, with the same subject lines. Same changes, new hash.",
+      "cmd": "Select-String -Path docs/evidence/git/commit-id-map.md -Pattern '554cad3|30c6a05|8505486' | ForEach-Object { $_.Line }",
+      "expect": "Table rows mapping 554cad3 -> 5844eec, 30c6a05 -> 2fb62d6 and 8505486 -> a3d8626 with their subjects.",
+      "tell": "The evidence cites the original commit IDs; the map shows the current ones.",
+      "pauseAfter": 4
+    }
+  ]
+}

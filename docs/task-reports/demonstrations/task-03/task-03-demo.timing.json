@@ -1,0 +1,57 @@
+﻿{
+    "offsetSec":  1.186,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "SRS summary: requirements mapped to code"
+                  },
+                  {
+                      "videoStartSec":  32.9,
+                      "title":  "Use-case diagram"
+                  },
+                  {
+                      "videoStartSec":  57.4,
+                      "title":  "Architecture diagram"
+                  },
+                  {
+                      "videoStartSec":  87.8,
+                      "title":  "Application folder structure"
+                  },
+                  {
+                      "videoStartSec":  115,
+                      "title":  "Dependencies and configuration"
+                  },
+                  {
+                      "videoStartSec":  144.5,
+                      "title":  "SQLite schema and the six seeded rooms"
+                  },
+                  {
+                      "videoStartSec":  173.6,
+                      "title":  "Starting the application locally"
+                  },
+                  {
+                      "videoStartSec":  198.9,
+                      "title":  "A real request: checking room availability"
+                  },
+                  {
+                      "videoStartSec":  225.6,
+                      "title":  "Step 1 of the code path: the controller"
+                  },
+                  {
+                      "videoStartSec":  253.2,
+                      "title":  "Step 2 and 3: the service and the DAO"
+                  },
+                  {
+                      "videoStartSec":  285.3,
+                      "title":  "Why SQL belongs in the DAO layer"
+                  },
+                  {
+                      "videoStartSec":  313.1,
+                      "title":  "Python tooling is not Maven"
+                  },
+                  {
+                      "videoStartSec":  350,
+                      "title":  "Stopping the demo server"
+                  }
+              ]
+}

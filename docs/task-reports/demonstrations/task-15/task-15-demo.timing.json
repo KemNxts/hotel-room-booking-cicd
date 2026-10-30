@@ -1,0 +1,49 @@
+﻿{
+    "offsetSec":  1.255,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.3,
+                      "title":  "The complete release workflow"
+                  },
+                  {
+                      "videoStartSec":  46.2,
+                      "title":  "Links 1 and 2: the commit and Jenkins checkout"
+                  },
+                  {
+                      "videoStartSec":  79.4,
+                      "title":  "Links 3 to 6: install, lint, tests, the quality gate"
+                  },
+                  {
+                      "videoStartSec":  112.4,
+                      "title":  "Link 7: the source archive and its checksum, verified now"
+                  },
+                  {
+                      "videoStartSec":  143.2,
+                      "title":  "Links 8 to 11: image, registry, deployment, health"
+                  },
+                  {
+                      "videoStartSec":  172.2,
+                      "title":  "Link 12: Ansible configuration and rollback validation"
+                  },
+                  {
+                      "videoStartSec":  209.6,
+                      "title":  "Documentation: troubleshooting"
+                  },
+                  {
+                      "videoStartSec":  238.2,
+                      "title":  "Limitations, stated honestly"
+                  },
+                  {
+                      "videoStartSec":  278.6,
+                      "title":  "Future improvements"
+                  },
+                  {
+                      "videoStartSec":  306.6,
+                      "title":  "Viva preparation"
+                  },
+                  {
+                      "videoStartSec":  331,
+                      "title":  "What is still open"
+                  }
+              ]
+}

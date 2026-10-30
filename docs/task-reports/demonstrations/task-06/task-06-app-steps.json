@@ -1,0 +1,125 @@
+{
+  "title": "Task 6 (part 1) - The six booking features in the real web application",
+  "mode": "browser",
+  "prereq": [
+    "Chrome installed (Selenium downloads a matching chromedriver automatically the first time; internet needed once).",
+    "The `.venv` must contain Flask and Selenium (`.venv\\Scripts\\pip install -r requirements-dev.txt`).",
+    "The recorder starts the real Flask app itself on a free port with a throw-away database in your TEMP folder. To do the same by hand: `$env:DATABASE_PATH=\"$env:TEMP/demo.db\"; .venv\\Scripts\\python wsgi.py` and open http://127.0.0.1:5000.",
+    "Do not use the mouse or keyboard while this part is being recorded: the Chrome window must stay on top."
+  ],
+  "recovery": [
+    {"symptom": "Chrome does not open / 'session not created'", "fix": "Chrome and chromedriver versions differ. Update Chrome, or run once with internet so Selenium Manager can fetch the matching driver."},
+    {"symptom": "The page shows 'This site can't be reached'", "fix": "The app is not running. Start it (`.venv\\Scripts\\python wsgi.py`) and open http://127.0.0.1:5000."},
+    {"symptom": "A room shows 'Booked' for the date you want", "fix": "Pick other dates, or use a fresh database (`$env:DATABASE_PATH` pointing to a new file). Bookings are kept in the SQLite file."},
+    {"symptom": "'Invalid email or password' when you expected success", "fix": "Passwords are at least 8 characters and the email is case-insensitive. Register a new guest if unsure."}
+  ],
+  "extra": [
+    {"what": "Run the same journeys as automated tests with a visible browser", "cmd": "$env:HEADLESS='0'; pytest tests/e2e -v"},
+    {"what": "Run the app yourself", "cmd": ".venv\\Scripts\\python wsgi.py   # http://127.0.0.1:5000"}
+  ],
+  "extraQuestions": [
+    {"q": "Did you use your real database in this demonstration?", "a": "No. The recorder starts the real application against a temporary database file, so no real guest data is created or changed. The code and pages are the real application."}
+  ],
+  "steps": [
+    {
+      "title": "The portal and the six features",
+      "say": "This is part one of Task 6. It is the real Grand Stay Hotel portal running on this laptop, with a temporary database. I will use all six features as a guest: register and log in, check room availability by date, request a booking, confirm it, cancel it, and track the status of my bookings. Watch the red outline: it marks what is clicked.",
+      "caption": "The real running portal. Six features: register/login, availability, request, confirm, cancel, status tracking.",
+      "action": "Open the home page /rooms of the running application.",
+      "do": "open_home",
+      "expect": "The room list page with the Log in and Register links in the navigation.",
+      "tell": "This is the real application, and I will now use all six features as a guest.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Feature 1: registration",
+      "say": "Feature one, registration. A new guest types a full name, an email and a password of at least eight characters, then clicks Create account. The account is created, the guest is logged in automatically, the name appears in the navigation bar, and a green message confirms it. The password is stored only as a salted hash, never as plain text.",
+      "caption": "Register: name, e-mail, password (8+ characters) -> account created and logged in.",
+      "action": "Open /register, type full name, e-mail and password, click 'Create account'.",
+      "do": "register_first",
+      "expect": "A green flash message 'account has been created', the guest's name in the navigation bar and the room list.",
+      "tell": "Registration creates an account and logs the guest in; passwords are stored as hashes.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Feature 1: login and a wrong password",
+      "say": "Now login. I log out, then try a wrong password. The message says invalid email or password, and it does not say which of the two was wrong, so an attacker cannot find out which emails exist. Then I type the right password, and the portal says welcome back. Login works, and bad credentials are refused.",
+      "caption": "Wrong password -> 'Invalid email or password' (no hint which one). Right password -> 'Welcome back'.",
+      "action": "Click 'Log out'. On the login page enter the e-mail with a wrong password, click 'Log in'; then enter the right password and click 'Log in'.",
+      "do": "login_flow",
+      "expect": "First an error flash 'Invalid email or password', then 'Welcome back' and the guest's name in the navigation.",
+      "tell": "Login refuses a wrong password with a message that does not reveal whether the email exists.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Feature 2: room availability by date",
+      "say": "Feature two, room availability. I choose a check in date and a check out date two nights later, and click Check availability. The table shows each of the six rooms as Available or Booked for exactly those dates, with the type and price. Dates in the past, or a check out before the check in, would be refused with a message.",
+      "caption": "Pick dates -> every room shows Available or Booked for exactly those dates.",
+      "action": "Open /rooms, choose check-in and check-out dates, click 'Check availability'.",
+      "do": "availability",
+      "expect": "A table of the six rooms with an Available badge for each, because nothing is booked yet.",
+      "tell": "The availability search shows each room as available or booked for the chosen dates.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Feature 3: booking request",
+      "say": "Feature three, booking request. I click Book on the first free room. The system creates a booking with the status PENDING. It shows the dates and the total price, which is the number of nights times the price per night. Pending means requested, but not yet confirmed.",
+      "caption": "Book room -> a booking is created with status PENDING and a total price (nights x price).",
+      "action": "Click the 'Book room ...' button of the first available room.",
+      "do": "book",
+      "expect": "The booking page: status PENDING, check-in and check-out dates, total price, and Confirm and Cancel buttons.",
+      "tell": "A booking request creates a PENDING booking with the total price calculated.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Feature 4: booking confirmation",
+      "say": "Feature four, confirmation. I click Confirm booking. The status changes from PENDING to CONFIRMED and a message says booking confirmed. The confirm button disappears, because a booking cannot be confirmed twice. The allowed changes are fixed: pending to confirmed, and pending or confirmed to cancelled.",
+      "caption": "Confirm booking -> PENDING becomes CONFIRMED; it cannot be confirmed twice.",
+      "action": "Click 'Confirm booking'.",
+      "do": "confirm",
+      "expect": "Status CONFIRMED, the flash 'Booking confirmed' and no Confirm button any more.",
+      "tell": "Confirmation moves the booking from PENDING to CONFIRMED, and only once.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "No double booking: a second guest",
+      "say": "Now the most important rule, no double booking. I log out, register a second guest, Ben, and search the same dates. The room that Asha booked is now shown as Booked, and there is no Book button for it. The system protects this twice: in the code, and with a database trigger. Then I log Asha back in.",
+      "caption": "A second guest searches the same dates: the booked room shows 'Booked', no Book button.",
+      "action": "Log out, register a second guest, search the same dates, observe the booked room; log out and log the first guest in again.",
+      "do": "second_guest",
+      "expect": "The room booked earlier shows a Booked badge and has no Book button for the second guest.",
+      "tell": "A confirmed room is unavailable to other guests, which prevents double bookings.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Feature 6: status tracking in My bookings",
+      "say": "Feature six, status tracking. Asha makes a second booking for other dates, which is PENDING, then opens My bookings. This page lists only her own bookings, with the room, the dates, the nights and the current status: one CONFIRMED and one PENDING. Guests no longer need to phone the hotel to ask whether their booking is confirmed.",
+      "caption": "My bookings lists only my bookings and their current status: CONFIRMED and PENDING.",
+      "action": "Search other dates, book a room, click 'My bookings'.",
+      "do": "second_booking_and_tracking",
+      "expect": "A table with two rows: the first booking CONFIRMED and the new one PENDING.",
+      "tell": "My bookings shows each of my bookings with its current status, so no phone call is needed.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Feature 5: cancellation, and the room is free again",
+      "say": "Feature five, cancellation. I open the confirmed booking and click Cancel booking. A dialog asks me to confirm, so nothing is cancelled by accident. After I accept, the status is CANCELLED. My bookings shows it, and when I search the same dates again, the room is Available again, because cancelled bookings do not block a room.",
+      "caption": "Cancel -> confirm dialog -> CANCELLED. My bookings shows it, and the room is Available again.",
+      "action": "Open the booking, click 'Cancel booking', then 'Yes, cancel booking'; open My bookings; search the same dates again.",
+      "do": "cancel_and_recheck",
+      "expect": "Status CANCELLED, the My bookings row marked CANCELLED, and the room's badge back to Available.",
+      "tell": "Cancelling needs a confirmation, updates the status, and frees the room.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Where the DevOps side connects: /health",
+      "say": "Finally, the health page. It reports the status, the environment and the version of the running application. Later tasks use exactly this address to check that a deployment, or a rollback, put the right version in place. All six features work, and the application also identifies itself.",
+      "caption": "/health reports status, environment and version: used later to verify deployments and rollbacks.",
+      "action": "Open /health.",
+      "do": "closing",
+      "expect": "A small JSON document: status ok, env, version and commit.",
+      "tell": "All six features work, and the app reports its own version for the pipeline to check.",
+      "pauseAfter": 1
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+﻿1
+00:00:01,000 --> 00:00:06,000
+This is the job's stage view, and the real defect experiment.
+
+2
+00:00:06,000 --> 00:00:07,000
+The rows are builds.
+
+3
+00:00:07,000 --> 00:00:15,000
+Build number one is green: the baseline, version one point zero point zero, commit six four three five one f e.
+
+4
+00:00:15,000 --> 00:00:25,000
+Build number two, the one with the deliberate defect, is red, and it fails at exactly one place: the unit and integration tests stage.
+
+5
+00:00:25,000 --> 00:00:28,000
+Build number three is green again.
+
+6
+00:00:29,000 --> 00:00:30,000
+Build two's console.
+
+7
+00:00:30,000 --> 00:00:34,000
+Pytest reports one failed, eighty one passed.
+
+8
+00:00:34,000 --> 00:00:41,000
+The failure has a name: test overlap rules, with the dates the eighth to the tenth of January 2030.
+
+9
+00:00:41,000 --> 00:00:48,000
+The assertion says room one oh one was expected to be free, but it was reported booked.
+
+10
+00:00:48,000 --> 00:00:51,000
+That is exactly the off by one defect.
+
+11
+00:00:52,000 --> 00:00:54,000
+And here is the quality gate.
+
+12
+00:00:54,000 --> 00:01:02,000
+Right after the failure, for every following stage Jenkins writes: stage skipped due to earlier failures.
+
+13
+00:01:02,000 --> 00:01:07,000
+E2E tests, package source, build images, publish images, and deploy.
+
+14
+00:01:07,000 --> 00:01:12,000
+Nothing was packaged, nothing was published, and nothing was deployed.
+
+15
+00:01:12,000 --> 00:01:18,000
+The pipeline ends with its own message: pipeline failed, nothing was deployed.
+
+16
+00:01:19,000 --> 00:01:25,000
+The test result page of build two lists the failing test by name, with its error.
+
+17
+00:01:25,000 --> 00:01:37,000
+This page also contains something surprising, which I will explain in a moment: a package called tests dot e2e with five passed tests, although the Selenium stage never ran in this build.
+
+18
+00:01:38,000 --> 00:01:40,000
+This is the stale report bug.
+
+19
+00:01:40,000 --> 00:01:47,000
+Build two never packaged anything, yet its artifacts list a source archive and a deployment record.
+
+20
+00:01:47,000 --> 00:01:48,000
+They are not new.
+
+21
+00:01:48,000 --> 00:01:57,000
+They are left over from build number one, because Jenkins reuses its workspace, and the archive step collected the old files.
+
+22
+00:01:57,000 --> 00:02:04,000
+That is why build two showed five passing Selenium tests: they came from build one's report.
+
+23
+00:02:05,000 --> 00:02:06,000
+What happened to staging?
+
+24
+00:02:06,000 --> 00:02:15,000
+The deployment record of build one says staging ran version one point zero point zero, commit six four three five one f e.
+
+25
+00:02:15,000 --> 00:02:20,000
+Because build two's deploy stage was skipped, the staging containers were never touched.
+
+26
+00:02:20,000 --> 00:02:25,000
+So that version stayed active the whole time the defect build was failing.
+
+27
+00:02:26,000 --> 00:02:31,000
+After the corrective commit, build three ran the same pipeline.
+
+28
+00:02:31,000 --> 00:02:32,000
+All stages are green.
+
+29
+00:02:32,000 --> 00:02:43,000
+Its deployment record shows the staging environment now runs version one point zero point zero, commit three zero c six a zero five, the corrected code.
+
+30
+00:02:43,000 --> 00:02:48,000
+So the pipeline blocked the defective version, and released the fixed one.
+
+31
+00:02:49,000 --> 00:02:56,000
+After I fixed the stale report problem, I repeated the experiment as build number nine.
+
+32
+00:02:56,000 --> 00:02:58,000
+It fails on the same test.
+
+33
+00:02:58,000 --> 00:03:03,000
+But look at its test result: only the tests that really ran.
+
+34
+00:03:03,000 --> 00:03:06,000
+There is no tests dot e2e package any more.
+
+35
+00:03:06,000 --> 00:03:11,000
+The report does not claim Selenium tests that did not happen.
+
+36
+00:03:11,000 --> 00:03:14,000
+Eighty one passed, one failed, total eighty two.
+
+37
+00:03:15,000 --> 00:03:22,000
+And the artifacts of build nine: only the one test report that this build produced.
+
+38
+00:03:22,000 --> 00:03:27,000
+No source archive, no deployment record, no health file from earlier builds.
+
+39
+00:03:27,000 --> 00:03:30,000
+The same bug can no longer happen.
+
+40
+00:03:31,000 --> 00:03:39,000
+This is the fix, in every build log, here build eleven: the very first command after checkout is rm minus rf reports dist.
+
+41
+00:03:39,000 --> 00:03:47,000
+Old outputs are deleted before anything runs, so a build can never reuse an old report as if it were new.
+
+42
+00:03:47,000 --> 00:03:58,000
+That closes the experiment: the defect was caught by the tests, deployment was blocked, the fix was released, and a bug in the pipeline itself was found and fixed.
+
+

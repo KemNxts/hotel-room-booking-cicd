@@ -1,0 +1,29 @@
+﻿{
+    "offsetSec":  1.197,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.3,
+                      "title":  "The saved results of the first runs"
+                  },
+                  {
+                      "videoStartSec":  50.4,
+                      "title":  "Live: the repeat run changes nothing"
+                  },
+                  {
+                      "videoStartSec":  162.7,
+                      "title":  "Health check: what is running now"
+                  },
+                  {
+                      "videoStartSec":  183,
+                      "title":  "Live: deploy a pretend bad release"
+                  },
+                  {
+                      "videoStartSec":  277,
+                      "title":  "Live: roll back to the previous release"
+                  },
+                  {
+                      "videoStartSec":  313.8,
+                      "title":  "Verify the restored release"
+                  }
+              ]
+}

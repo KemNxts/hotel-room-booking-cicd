@@ -1,0 +1,96 @@
+{
+  "title": "Task 6 (part 2) - Git collaboration: merge conflict, resolution and release tags",
+  "prereq": [
+    "Git installed. Nothing else needs to be running.",
+    "The conflict is reproduced inside a disposable clone under your TEMP folder (`conflict-demo`), which is deleted at the end. The project repository is never changed.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "The clone folder already exists", "fix": "`Remove-Item $env:TEMP/conflict-demo -Recurse -Force`, then run the clone step again."},
+    {"symptom": "'Author identity unknown' while merging", "fix": "Set a name and email inside the clone only: `git -C $c config user.name Practice; git -C $c config user.email practice@example.com`."},
+    {"symptom": "No conflict appears", "fix": "Check the commit IDs with `git log --graph --oneline -7 9e766ac`. If history changed, use the two merge commits named 'feature/contact-footer' and 'feature/release-footer' that `git log --merges --first-parent --oneline develop` shows."},
+    {"symptom": "Strange characters instead of the dot in the footer", "fix": "Use `Get-Content -Encoding UTF8 <file>` (Windows PowerShell 5.1 reads files without a BOM as ANSI)."}
+  ],
+  "extra": [
+    {"what": "Read the project's own saved record of the conflict", "cmd": "Get-Content docs/evidence/git/merge-conflict.txt"},
+    {"what": "See what the resolution commit changed", "cmd": "git show 9e766ac --stat"}
+  ],
+  "extraQuestions": [
+    {"q": "Is this conflict real or staged?", "a": "It is real. Two feature branches were created from the same develop commit and both added a footer in the same lines of base.html, style.css and a test file. Git could not merge them automatically. The original terminal output was saved in docs/evidence/git/merge-conflict.txt, and in the video the same conflict is reproduced live in a throw-away clone with identical results."},
+    {"q": "Why do the commit IDs in docs/evidence differ from the IDs I see now?", "a": "The history was rewritten once (12 October 2026) to remove automated co-author lines, so IDs changed; evidence files keep the original IDs and docs/evidence/git/commit-id-map.md maps old to new."}
+  ],
+  "steps": [
+    {
+      "title": "Two features built in parallel",
+      "say": "This is the Git collaboration part of Task 6. Two developers, or here two feature branches, were started from the same commit on develop. One added the hotel contact footer, the other added a footer showing the running release. Look at this graph. The two side lines branch from the same point and merge back one after the other. The common starting point is printed below.",
+      "cmd": "git log --graph --oneline -7 9e766ac; 'common starting point: ' + (git merge-base feature/contact-footer feature/release-footer).Substring(0,7)",
+      "expect": "A graph with two feature commits (contact details, running release) side by side, each merged into develop by its own merge commit, and the shared base commit id.",
+      "tell": "Two people changed the same footer at the same time from the same starting point, which is exactly how conflicts arise.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "The saved record of the real conflict",
+      "say": "When this happened in the project, I saved the unedited terminal output. Merging the second feature printed conflict in three files: style dot css, base dot html and the integration tests. Git merged what it could, and stopped, saying the automatic merge failed. The status lines starting with U U mean unmerged on both sides.",
+      "cmd": "Get-Content docs/evidence/git/merge-conflict.txt | Select-Object -First 17",
+      "expect": "'CONFLICT (content): Merge conflict in ...' for three files, 'Automatic merge failed', and git status showing 'UU' for the three files.",
+      "tell": "This is the original output from when the conflict really happened.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Reproducing the conflict live, safely",
+      "say": "To show that it is real, I reproduce it now in a disposable clone in the temporary folder, so the project is not touched. I clone the repository, go to the commit where the contact footer was already merged, and try to merge the release footer branch. Git reports the same three conflicts, exactly as in the saved evidence.",
+      "cmd": "$c = \"$env:TEMP/conflict-demo\"; Remove-Item $c -Recurse -Force -ErrorAction SilentlyContinue; git clone -q . $c; git -C $c config user.name Practice; git -C $c config user.email practice@example.com; git -C $c switch -q --detach 4463add; git -C $c merge --no-commit 63498a8; 'unmerged files:'; git -C $c diff --name-only --diff-filter=U",
+      "expect": "The same three CONFLICT lines, 'Automatic merge failed', then the three unmerged files.",
+      "tell": "I can reproduce the conflict on demand; it is a real Git conflict, not a screenshot.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Reading the conflict markers",
+      "say": "This is how Git shows a conflict inside the file. The line with seven less than signs and HEAD starts our side, the contact footer. The line of equals signs separates the two versions. The line with seven greater than signs ends the other side, the release footer. Git cannot know which to keep, so a person must decide. Here both lines are wanted.",
+      "cmd": "Get-Content -Encoding UTF8 \"$c/app/templates/base.html\" | Select-Object -Last 11",
+      "expect": "The footer element containing <<<<<<< HEAD, the hotel-contact span, =======, the app-version span, >>>>>>> and the commit id.",
+      "tell": "Git marks both versions in the file and waits for a person to decide.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "The resolution: keep both",
+      "say": "This is the real resolved file from the actual merge commit. Both features were wanted, so the resolution keeps both lines: the contact line first, the release line below. The style sheet got one combined footer rule, and each line sits on its own row. Nothing from either developer was lost.",
+      "cmd": "git show 9e766ac:app/templates/base.html | Select-Object -Last 10; git show 9e766ac:app/static/style.css | Select-String 'site-footer' | ForEach-Object { $_.Line.Trim() }",
+      "expect": "The footer with both spans and no markers, then the combined .site-footer CSS rules.",
+      "tell": "Both intended changes were preserved: the contact line and the release line.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Tests and the merge commit message",
+      "say": "The third conflicted file was the test file. Both new tests were kept, one for the contact details and one for the release footer. And the merge commit message documents the whole decision: what was in conflict in each file, what was kept, and that the linter was clean and all eighty nine tests passed before committing. That is good practice.",
+      "cmd": "git show 9e766ac:tests/integration/test_routes.py | Select-String 'def test_.*(footer|contact|release)' | ForEach-Object { $_.Line.Trim() }; git show --no-patch --format=%B 9e766ac",
+      "expect": "Two test functions (contact details, running release), then the merge message listing the resolution of each file and the verification result.",
+      "tell": "I kept both tests, and I verified flake8 and the full test suite before committing the merge.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Abort and clean up",
+      "say": "Back in the practice clone I abort the merge, which returns it to the state before the merge, then delete the clone. Then I show that my real project repository is unchanged.",
+      "cmd": "git -C $c merge --abort; Remove-Item $c -Recurse -Force; 'disposable clone exists: ' + (Test-Path $c); git status --short --branch",
+      "expect": "'disposable clone exists: False' and the project's own branch with only the untracked demonstrations folder.",
+      "tell": "The demonstration happened in a throw-away clone and left the project unchanged.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Release tags v1.0.0 and v1.1.0",
+      "say": "Now the release tags. A tag is a permanent label on one commit that marks a release. We have v1.0.0, the first complete version, and v1.1.0, which adds the nights column. For each tag I print the commit it points to, and the VERSION file as it was inside that tag. So the tag really contains the released version.",
+      "cmd": "git tag -n1; foreach ($t in 'v1.0.0','v1.1.0') { git log -1 --format=\"$t -> %h  %s\" $t; \"VERSION file inside ${t}: \" + (git show \"${t}:VERSION\") }",
+      "expect": "Both tags with their messages, the commit each points to ('release: v1.0.0', 'release: v1.1.0') and VERSION 1.0.0 and 1.1.0.",
+      "tell": "Each release is a tag that points to one exact commit and contains that version number.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Branch versus tag",
+      "say": "What is the difference between a branch and a tag? A branch is a moving line of development, it advances with every new commit. A tag stays fixed on one commit. Proof: main has moved on eleven commits since the v1.1.0 tag, mostly documentation, but the tag still points to the same release commit. Git describe prints exactly that: the tag name, eleven commits ahead.",
+      "cmd": "git describe --tags main; 'commits on main after v1.1.0: ' + (git rev-list --count v1.1.0..main); 'v1.1.0 still points at: ' + (git log -1 --format=%h v1.1.0)",
+      "expect": "'v1.1.0-11-g...', 'commits on main after v1.1.0: 11' and the unchanged release commit id.",
+      "tell": "A branch is a line of development that moves; a tag marks one specific point in history forever.",
+      "pauseAfter": 4
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+﻿1
+00:00:01,000 --> 00:00:11,000
+Now the Jenkins web interface, version two point five eight, open on localhost port eight thousand ninety, already logged in as admin.
+
+2
+00:00:11,000 --> 00:00:12,000
+This is the dashboard.
+
+3
+00:00:12,000 --> 00:00:14,000
+It lists the jobs.
+
+4
+00:00:14,000 --> 00:00:20,000
+We have one, called hotel booking, which is the continuous integration job for our project.
+
+5
+00:00:20,000 --> 00:00:27,000
+The little weather icon and the last success and last failure columns summarise its health.
+
+6
+00:00:28,000 --> 00:00:29,000
+The job page.
+
+7
+00:00:29,000 --> 00:00:32,000
+On the left is the build history, the newest first.
+
+8
+00:00:32,000 --> 00:00:39,000
+In the middle, the stage view draws every build as a row and every pipeline stage as a column.
+
+9
+00:00:39,000 --> 00:00:40,000
+Green is success.
+
+10
+00:00:40,000 --> 00:00:45,000
+The red cells in build number two and nine are the deliberate failures.
+
+11
+00:00:45,000 --> 00:00:51,000
+The test result trend shows the number of passed tests growing as the project grew.
+
+12
+00:00:52,000 --> 00:00:55,000
+The job configuration, opened read only.
+
+13
+00:00:55,000 --> 00:00:57,000
+I will not save anything.
+
+14
+00:00:57,000 --> 00:01:03,000
+First: this project is parameterized, with APP ENV, BRANCH and REGISTRY.
+
+15
+00:01:03,000 --> 00:01:11,000
+Then build triggers: Poll SCM, every five minutes, which makes Jenkins check Git for new commits.
+
+16
+00:01:11,000 --> 00:01:15,000
+This is the continuous integration trigger.
+
+17
+00:01:15,000 --> 00:01:29,000
+Then the pipeline: the definition is Pipeline script from SCM, the repository URL, the branch specifier, which uses the BRANCH parameter, and the script path, Jenkinsfile.
+
+18
+00:01:30,000 --> 00:01:35,000
+Now one real build, number eleven, from the twentieth of October.
+
+19
+00:01:35,000 --> 00:01:41,000
+It was started with the parameters staging, branch develop and the local registry.
+
+20
+00:01:41,000 --> 00:01:48,000
+Its name, one point one point zero, dash one c two one zero three c, is the version and the commit.
+
+21
+00:01:48,000 --> 00:01:56,000
+The page shows the status, the duration, and the links to the console output, the test result, and the artifacts.
+
+22
+00:01:57,000 --> 00:02:01,000
+The console output is the complete log.
+
+23
+00:02:01,000 --> 00:02:03,000
+First the commit being built.
+
+24
+00:02:03,000 --> 00:02:09,000
+Then the dependencies are installed with pip, from the pinned requirements.
+
+25
+00:02:09,000 --> 00:02:14,000
+Then flake8, the linter, runs and finds nothing, so it prints nothing.
+
+26
+00:02:14,000 --> 00:02:18,000
+Then eighty five unit and integration tests pass.
+
+27
+00:02:18,000 --> 00:02:23,000
+Then five Selenium tests pass, and the rest are deselected.
+
+28
+00:02:23,000 --> 00:02:25,000
+The log ends with finished, success.
+
+29
+00:02:27,000 --> 00:02:32,000
+Jenkins also reads the JUnit XML reports and shows them as a test result page.
+
+30
+00:02:32,000 --> 00:02:38,000
+Here are the two test suites, with the number of tests, failures and the duration of each.
+
+31
+00:02:38,000 --> 00:02:48,000
+Because the reports are published after every build, Jenkins can draw the trend we saw before, and a failing test appears here by name.
+
+32
+00:02:49,000 --> 00:02:51,000
+Every build archives its artifacts.
+
+33
+00:02:51,000 --> 00:03:00,000
+In the dist folder: the source archive, a tar gz file named with the version and commit, and its sha two five six checksum.
+
+34
+00:03:00,000 --> 00:03:07,000
+In the reports folder: the test reports, the health check answer and the deployment record.
+
+35
+00:03:07,000 --> 00:03:12,000
+They are kept with the build, so any build can be reproduced or checked later.
+
+36
+00:03:13,000 --> 00:03:17,000
+Back on the job page: the build history and the trend.
+
+37
+00:03:17,000 --> 00:03:20,000
+Jenkins keeps the last twenty builds.
+
+38
+00:03:20,000 --> 00:03:27,000
+Over the project, the number of passing tests grew, and the failures are the two deliberate experiments.
+
+39
+00:03:27,000 --> 00:03:35,000
+This is continuous integration at work: every change is built and tested, and the result is visible to everyone.
+
+

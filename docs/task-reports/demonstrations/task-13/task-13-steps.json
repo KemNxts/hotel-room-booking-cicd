@@ -1,0 +1,116 @@
+{
+  "title": "Task 13 - Configuration Management with Ansible",
+  "prereq": [
+    "Docker Desktop running. The Ansible controller image `hotel-ansible` and the lab target image `hotel-ansible-lab-target` already exist on this computer (built earlier); if not: `cd deploy\\ansible\\lab; docker compose build`.",
+    "Port 8088 on your computer is the lab server's port 80. Make sure nothing else uses it.",
+    "The lab 'server' is a privileged Ubuntu 24.04 CONTAINER (with systemd and SSH) standing in for a server. It is NOT a separate virtual machine. Every Ansible command runs from the controller container (Ansible does not run natively on Windows).",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "The first task fails: `Release file for http://archive.ubuntu.com/... is not valid yet (invalid for another 1h ...)`", "fix": "The clock of your PC (and so of Docker's virtual machine) is behind real time. Fix it in Windows: Settings > Time & language > Date & time: set the correct time zone, turn on 'Set time automatically', press 'Sync now'; then restart Docker Desktop. Lab-only workaround without touching the PC: `Set-Content $env:TEMP/99lab-clock 'Acquire::Check-Date \"false\";'; docker cp $env:TEMP/99lab-clock hotel-ansible-lab-target-1:/etc/apt/apt.conf.d/99lab-clock`."},
+    {"symptom": "`UNREACHABLE` / connection refused in Ansible", "fix": "The lab target is not running or SSH is not ready yet. `cd deploy\\ansible\\lab; docker compose up -d target`, wait 20 seconds, then `docker compose run --rm controller ansible web -i lab/inventory.ini -m ping`."},
+    {"symptom": "The playbook fails while installing Docker on the target", "fix": "The target has no internet or the apt mirror is blocked (antivirus HTTPS scanning). Check `docker exec hotel-ansible-lab-target-1 apt-get update`; put the antivirus certificate in certs/ and rebuild the target (`docker compose build target`)."},
+    {"symptom": "`docker compose run` says 'no such service: controller'", "fix": "Run the command from deploy/ansible/lab where the lab compose file is (the controller service has profile `tools` and is started only by `run`)."},
+    {"symptom": "Port 8088 already in use", "fix": "Stop the program using it, or change the port mapping of `target` in deploy/ansible/lab/docker-compose.yml."},
+    {"symptom": "Start from a completely fresh server", "fix": "`cd deploy\\ansible\\lab; docker compose down -v; docker compose up -d --build target` (this deletes the lab server and its images; the first provisioning then takes several minutes)."}
+  ],
+  "extra": [
+    {"what": "Dry run: show what WOULD change without changing it", "cmd": "cd deploy\\ansible\\lab; docker compose run --rm controller ansible-playbook -i lab/inventory.ini playbook.yml --check"},
+    {"what": "List every task of the playbook", "cmd": "cd deploy\\ansible\\lab; docker compose run --rm controller ansible-playbook -i lab/inventory.ini playbook.yml --list-tasks"},
+    {"what": "Throw the lab away", "cmd": "cd deploy\\ansible\\lab; docker compose down -v"}
+  ],
+  "extraQuestions": [
+    {"q": "Did you provision a real server or virtual machine?", "a": "No. The target in these demonstrations is a privileged Ubuntu 24.04 Docker container with systemd and SSH that stands in for a server. The playbook uses only standard Ubuntu packages and SSH, so it should work on a real Ubuntu 22.04/24.04 VM, but that was not tested. Running it on a real VM is listed as remaining work."},
+    {"q": "Why does the playbook not build the images on every run?", "a": "Rebuilding an image, even fully cached, produces a new image ID, which would make Docker Compose restart the containers on every run and break idempotency. The playbook first checks the image label with the commit and only builds when that release and commit is not on the server yet."}
+  ],
+  "steps": [
+    {
+      "title": "Configuration management and the inventory",
+      "say": "This is Task 13, configuration management with Ansible. Configuration management means describing the desired state of a server in files, so that any server can be set up the same way, automatically and repeatably, instead of by hand. Ansible does this over SSH, with no agent on the server. First file: the inventory. It is the list of servers, grouped by role. Ours has one group called web, with one server. This is the template for a real server, and below it the inventory of the lab, where I hide the lab only password.",
+      "cmd": "Get-Content deploy/ansible/inventory.ini | Select-String -NotMatch '^\\s*(#|$)' | ForEach-Object { $_.Line }; '--- lab inventory'; Get-Content deploy/ansible/lab/inventory.ini | Select-String -NotMatch '^\\s*(#|$)' | ForEach-Object { $_.Line -replace 'ansible_(become_)?password=\\S+', 'ansible_${1}password=<lab-only>' }",
+      "expect": "[web] with hotel-server and an IP address for a real server; the lab inventory points to the host 'target' with the user ubuntu and the password hidden.",
+      "tell": "The inventory lists which servers Ansible manages and how to reach them.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Variables",
+      "say": "Variables make the playbook configurable without changing the tasks. Here are the real ones: the folder on the server, the environment, the public port, and the release being deployed, which is read from the VERSION file of the repository. The commit comes from Git, so every deployment can be traced. And the secret key is generated once, stored only on the control machine and in a git ignored file, and never printed.",
+      "cmd": "Get-Content deploy/ansible/group_vars/web.yml | Select-String -NotMatch '^\\s*(#|$)' | ForEach-Object { $_.Line }",
+      "expect": "app_dir, app_env, host_port, app_version (from VERSION), image_tag, git_commit (from git describe) and secret_key (password lookup into a git-ignored file).",
+      "tell": "Variables hold the settings; secrets are generated and kept out of Git.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "The playbook: what it configures",
+      "say": "The playbook is the list of tasks, each with a name. It runs on the web group with sudo. In order: install Docker and the Compose plugin, make sure Docker runs and starts on boot, create the application folders, copy the source and Docker files, remember the previous release for rollback, write the environment file, check whether the images already exist, build them if not, start the containers and wait until healthy, then check the portal through Nginx, and check that the running version is the expected one.",
+      "cmd": "Select-String -Path deploy/ansible/playbook.yml -Pattern '^\\s*- name:|hosts:|become:' | ForEach-Object { $_.Line.Trim() }",
+      "expect": "The play 'Provision server and deploy the Hotel Booking Portal', hosts: web, become: true, and the 14 task names.",
+      "tell": "The playbook describes the whole server setup as ordered, named tasks.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "A task in detail: permissions and secrets",
+      "say": "Here is one task in detail. It writes the environment file that Docker Compose reads: the secret key, the environment, the port, the version, the commit and the image tag. The file is owned by root with mode zero six zero zero, so only root can read the secret. And no log is set, so Ansible never prints the secret in its output. Ansible describes the state, and the copy module only changes the file if its content is different.",
+      "cmd": "Get-Content deploy/ansible/playbook.yml | Select-Object -Skip 89 -First 18",
+      "expect": "The 'Write the environment file' task: copy with content, owner root, mode 0600, no_log: true.",
+      "tell": "Configuration files get exact content, owner and permissions, and secrets are never printed.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Why a second run changes nothing",
+      "say": "This is the idempotency design. Each task checks the actual state. Docker is installed? Then nothing to do. The file has this content? Then nothing to do. For the images, the playbook asks the server which commit the existing image was built from, and builds only if the release and commit are not there yet. A rebuild would create a new image id and restart the containers every time, so this check is what keeps a second run at zero changes.",
+      "cmd": "Get-Content deploy/ansible/playbook.yml | Select-Object -Skip 106 -First 22",
+      "expect": "'Check whether images for this release and commit already exist' (docker image inspect, changed_when: false) and 'Build the Docker images on the server' with a when: condition.",
+      "tell": "Tasks check the current state first, so Ansible only changes what is different.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Syntax check from the controller",
+      "say": "Ansible runs from a controller container, because it does not run natively on Windows. First a syntax check, which reads the playbook and the inventory and reports errors without touching any server. The answer is just the playbook name: the syntax is valid.",
+      "cmd": "Push-Location deploy/ansible/lab; docker compose run --rm controller ansible-playbook -i lab/inventory.ini playbook.yml --syntax-check; Pop-Location",
+      "expect": "'playbook: playbook.yml' with no errors.",
+      "tell": "The playbook is syntactically valid, checked without touching any server.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "The target: a lab server, and what it really is",
+      "say": "Now the target. I start the lab server. To be completely clear about what this is: it is not a separate virtual machine. It is a privileged Docker container running Ubuntu twenty four oh four, with systemd and SSH, standing in for a server. I print its operating system, and the privileged flag, to prove it. The playbook uses only normal Ubuntu packages and SSH, so on a real Ubuntu server it should behave the same, but that was not tested.",
+      "cmd": "Push-Location deploy/ansible/lab; docker compose up -d target 2>&1 | Out-Null; Pop-Location; Start-Sleep 25; docker ps --filter name=hotel-ansible-lab --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'; 'privileged container: ' + (docker inspect hotel-ansible-lab-target-1 --format '{{.HostConfig.Privileged}}'); docker exec hotel-ansible-lab-target-1 sh -c 'grep PRETTY_NAME /etc/os-release'; 'is Docker installed on this fresh server?'; docker exec hotel-ansible-lab-target-1 sh -c 'ls /usr/bin/docker 2>&1 | head -1'",
+      "expect": "The container hotel-ansible-lab-target-1 'Up', port 127.0.0.1:8088->80, 'privileged container: true', PRETTY_NAME=\"Ubuntu 24.04...\" and 'ls: cannot access /usr/bin/docker: No such file or directory' - Docker is not installed yet.",
+      "tell": "The target is a disposable Ubuntu container standing in for a server, not a separate VM.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "A real problem: this PC's clock, and a lab-only workaround",
+      "say": "Before the real run, a problem I found while preparing this video, and I want to show it openly. This laptop's clock is wrong. A real web server says the time in G M T is seventeen forty one. This PC says twelve eleven in U T C, five and a half hours behind. Ubuntu's package lists are dated with the real time, so on this fresh server apt refuses them as coming from the future, and the first task of the playbook, installing Docker, would fail. I did not change the PC's clock. For this disposable lab only, I switch off apt's date check with one small file, and apt update works. On your own computer, the proper fix is to set the time zone and synchronise the clock in Windows.",
+      "cmd": "$web = (Invoke-WebRequest https://www.google.com -Method Head -UseBasicParsing).Headers['Date']; 'real time (web server) : ' + $web; 'this PC, in UTC        : ' + [DateTime]::UtcNow.ToString('ddd, dd MMM yyyy HH:mm:ss') + ' GMT'; Set-Content \"$env:TEMP/99lab-clock\" 'Acquire::Check-Date \"false\";' -Encoding ASCII; docker cp \"$env:TEMP/99lab-clock\" hotel-ansible-lab-target-1:/etc/apt/apt.conf.d/99lab-clock; Remove-Item \"$env:TEMP/99lab-clock\"; 'apt update on the target, with the workaround:'; docker exec hotel-ansible-lab-target-1 sh -c 'apt-get update 2>&1 | tail -2'",
+      "expect": "Two times about five and a half hours apart (the web server's is the real one), then apt update succeeds ('Fetched ... Reading package lists...') instead of 'Release file ... is not valid yet'.",
+      "tell": "My PC's clock is wrong, which breaks apt on a fresh server; I used a lab-only workaround and did not change the PC's clock.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Can Ansible reach the server?",
+      "say": "The ping module is not a network ping. It logs in over SSH and runs a small Python check, so a pong proves that the inventory, the SSH login and Python on the server all work.",
+      "cmd": "Push-Location deploy/ansible/lab; docker compose run --rm controller ansible web -i lab/inventory.ini -m ping; Pop-Location",
+      "expect": "hotel-server | SUCCESS => { \"changed\": false, \"ping\": \"pong\" }.",
+      "tell": "Ansible can log in to the server over SSH and run commands.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Run the playbook for real",
+      "say": "Now the real run, live. This lab server is brand new, so this is a first provisioning, and it takes a few minutes: it has to install Docker, copy the files and build the images. Each task prints ok, if the server already matched, or changed, if Ansible had to change something. On a fresh server I expect most of them to say changed. Watch the task names scroll by: Docker, the folders, the files, the environment file, the images, the containers, the health check. At the end, the play recap summarises: how many tasks were ok, how many changed, and that none failed.",
+      "cmd": "Push-Location deploy/ansible/lab; docker compose run --rm controller ansible-playbook -i lab/inventory.ini playbook.yml; Pop-Location",
+      "expect": "Each TASK shows ok or changed; the PLAY RECAP line for hotel-server shows ok=..., changed=..., failed=0.",
+      "tell": "The playbook configured the server end to end, and the recap shows what changed and that nothing failed.",
+      "pauseAfter": 6
+    },
+    {
+      "title": "What the playbook configured on the server",
+      "say": "Let me look at the result on the server itself. The application folder in slash opt, with the source and the Docker files. The environment file, without the secret, and its permissions: six hundred, owned by root. The containers running inside the server, and finally the portal itself answering on port eighty eighty eight of my computer, with the version and commit it was deployed with.",
+      "cmd": "docker exec hotel-ansible-lab-target-1 sh -c 'ls /opt/hotel-booking; grep -v SECRET_KEY /opt/hotel-booking/.env; stat -c %a/%U /opt/hotel-booking/.env'; docker exec hotel-ansible-lab-target-1 docker ps --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}'; curl.exe -s http://localhost:8088/health",
+      "expect": "The application files, the .env without SECRET_KEY, '600/root' (mode and owner of the .env file), the app and nginx containers healthy, and the /health JSON with the deployed version and commit.",
+      "tell": "The server now runs the portal, configured with the right files, permissions and containers, all from the playbook.",
+      "pauseAfter": 6
+    }
+  ]
+}

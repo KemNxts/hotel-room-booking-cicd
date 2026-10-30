@@ -1,0 +1,124 @@
+{
+  "title": "Task 8 (part 1) - Pipeline as code: the Jenkinsfile, stage by stage",
+  "prereq": [
+    "Nothing needs to be running for this part: it only reads the Jenkinsfile.",
+    "Open PowerShell in the project folder, or open Jenkinsfile in VS Code and scroll."
+  ],
+  "recovery": [
+    {"symptom": "Line numbers in the commands do not match your Jenkinsfile", "fix": "The file was edited. Open it in VS Code and scroll to the stage; or find a stage with `Select-String -Path Jenkinsfile -Pattern \"stage\\('\"` and use its line number in -Skip / -First."}
+  ],
+  "extra": [
+    {"what": "List all stages with their line numbers", "cmd": "Select-String -Path Jenkinsfile -Pattern \"stage\\('\" | ForEach-Object { '{0,3}: {1}' -f $_.LineNumber, $_.Line.Trim() }"},
+    {"what": "Read the pipeline documentation", "cmd": "Get-Content docs/05-ci-cd-pipeline.md"}
+  ],
+  "extraQuestions": [
+    {"q": "Why is the pipeline written as a Jenkinsfile in the repository?", "a": "'Pipeline as code': the build and deploy process is versioned, reviewed and rolled back like the application code. Jenkins reads it from the checked-out commit, so every commit is built with the pipeline that belongs to it."},
+    {"q": "Does your pipeline run a Maven build?", "a": "No. This is a Python project, so the build stage is dependency installation plus compileall and flake8, and the tests run with pytest. The document 03-srs-architecture.md explains the Java-to-Python mapping and notes that Maven would need the professor's confirmation if it is mandatory."}
+  ],
+  "steps": [
+    {
+      "title": "The Jenkinsfile and the quality gate",
+      "say": "This is Task 8, pipeline as code and deployment. A Jenkinsfile describes the whole build and deployment process as code, stored in the repository next to the application. This is the top of ours. The comment shows the flow: checkout, install, static checks, tests, Selenium, package, build images, publish, deploy and health check. And the key rule, the quality gate: if any command fails, its stage fails and every later stage is skipped.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -First 16",
+      "expect": "The header comment with the stage flow and the quality gate explanation, plus the agent and credentials requirements.",
+      "tell": "The pipeline is code in Git, and any failure stops everything after it, including deployment.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Parameters and the polling trigger",
+      "say": "These are the pipeline parameters. They configure the target environment without changing the code. APP ENV chooses staging or prod. BRANCH chooses which Git branch to build. REGISTRY chooses where images are published, by default the local registry. Below is the trigger: poll SCM every five minutes. A GitHub webhook would be faster, but GitHub cannot reach a Jenkins running on localhost, so Jenkins asks Git for new commits instead.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 18 -First 18",
+      "expect": "parameters { choice APP_ENV [staging, prod]; string BRANCH develop; string REGISTRY localhost:5000 } and triggers { pollSCM('H/5 * * * *') }.",
+      "tell": "Parameters choose the environment, and polling gives continuous integration without a public server.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Options and environment variables",
+      "say": "Options: timestamps in the log, only the last twenty builds are kept, no two builds run at the same time because two deployments would fight over the same containers, and a thirty minute time limit. Environment variables: the Python version, and the host port, which is 8082 for prod and 8081 for staging, decided by the parameter. The compose project name includes the environment, so staging and prod get separate containers and separate database volumes.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 37 -First 15",
+      "expect": "options { timestamps, buildDiscarder 20, disableConcurrentBuilds, timeout 30 min } and environment { PYTHON, HOST_PORT staging 8081 / prod 8082, COMPOSE_PROJECT_NAME hotel-<env> }.",
+      "tell": "The environment parameter decides the port and a separate set of containers and data.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stage 1: Checkout",
+      "say": "Stage one, checkout. Jenkins gets the source from Git. The next line deletes the reports and dist folders from the previous build, because the workspace is reused, and an old test report must never be published as the result of the new build. Then it builds the version: the VERSION file plus the short commit id, for example 1.1.0 dash 1c2103c. That one tag is used for the source archive, both images and the health check, so every deployment traces back to one commit.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 54 -First 21",
+      "expect": "checkout scm, 'rm -rf reports dist', APP_VERSION from the VERSION file, GIT_SHORT, IMAGE_TAG = version-commit, build display name.",
+      "tell": "Checkout fetches the commit, clears old reports and computes the version-and-commit tag.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stages 2 and 3: install and static checks",
+      "say": "Stage two installs dependencies. It creates a fresh Python virtual environment and installs the pinned requirements, so the build is reproducible. Stage three, static checks, runs compile all, which finds syntax errors, and flake8, which finds style problems, unused imports and undefined names. These are the build and lint steps for a Python project, and the equivalent of compile in Java. This is not a Maven build.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 75 -First 23",
+      "expect": "Install: python3.11 -m venv, pip install -r requirements-dev.txt. Static checks: compileall and flake8.",
+      "tell": "Dependencies are installed in a clean environment and the code is syntax- and style-checked before any test.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stages 4 and 5: the tests, the quality gate",
+      "say": "Stage four runs the unit and integration tests with pytest and writes a JUnit XML report. Stage five runs the Selenium browser tests in headless Chromium. Each is just a shell command. If pytest finds a failing test, it exits with an error code, the stage turns red, and Jenkins skips everything after it: packaging, images, publishing and deployment. That is the quality gate, and it is why untested code can never be deployed.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 98 -First 14",
+      "expect": "'pytest tests/unit tests/integration --junitxml=reports/unit-integration-tests.xml' and 'pytest -m e2e --junitxml=reports/e2e-tests.xml'.",
+      "tell": "A failing test stops the pipeline before anything is packaged or deployed.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stage 6: package the source with a checksum",
+      "say": "Stage six packages the source. Git archive creates a tar gz file with exactly the committed files of this commit, nothing uncommitted. Then sha256 sum writes a checksum file next to it, so anyone can verify later that the archive is unchanged. Both files are archived with the build. This is the source artifact of our pipeline.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 112 -First 14",
+      "expect": "git archive ... hotel-booking-$IMAGE_TAG.tar.gz and sha256sum written to a .sha256 file.",
+      "tell": "Every build produces a source archive and a checksum that identify exactly what was built.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stage 7: build the Docker images",
+      "say": "Stage seven builds two Docker images, the application and the Nginx proxy. Both are tagged with the registry prefix and the version and commit tag. The application image receives the version and the commit as build arguments, so the running container can report them on the health address.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 126 -First 14",
+      "expect": "docker build -t ${IMAGE_PREFIX}hotel-booking-app:$IMAGE_TAG with --build-arg APP_VERSION and GIT_COMMIT, and the nginx image.",
+      "tell": "The images are tagged with version and commit so each one is traceable.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stage 8: publish the images to the registry",
+      "say": "Stage eight publishes the images. With the local registry, localhost colon 5000, a simple docker push is enough. For a remote registry such as Docker Hub, the pipeline uses a Jenkins credential, and the password is masked in the log. I must be honest: only the local registry was tested. Docker Hub is supported by the code but was never run, because it needs an account and a credential.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 140 -First 22",
+      "expect": "docker push for app and nginx; if the registry starts with localhost no login, else withCredentials registry-creds and docker login.",
+      "tell": "Images go to a local registry; the Docker Hub path exists in the code but was not tested.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Stage 9: deploy",
+      "say": "Stage nine deploys. The secret key is injected from a Jenkins credential, only for this block, and masked in the log. Docker compose pull fetches exactly the images that were just published. Docker compose up with dash dash wait starts the containers and blocks until they are healthy. If they never become healthy within two minutes, the stage fails. Deployment uses the tested image, never a rebuild.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 162 -First 14",
+      "expect": "withCredentials hotel-secret-key; docker compose pull; docker compose up -d --no-build --wait --wait-timeout 120.",
+      "tell": "Deploy pulls the exact tested images and waits until they are healthy.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stage 10: health check and version verification",
+      "say": "Stage ten, the health check. It calls the health address through the whole chain, Nginx, Gunicorn and SQLite, and saves the answer. Then two grep commands check that the version and the commit reported by the running application are exactly the ones this build created. If a wrong version were running, this stage would fail. This is how we know that what is deployed is what was tested.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 176 -First 17",
+      "expect": "wget /health inside the nginx container, saved to reports/health.json, then grep for the exact version and commit.",
+      "tell": "The pipeline verifies that the running version and commit are the ones it just built.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "The deployment record and post actions",
+      "say": "Finally, a deployment record is written: environment, branch, version, commit, image names, the address and the Jenkins build address. After every build, success or failure, the post section publishes the test results and archives reports, failure screenshots, the source archive and the record. Jenkins then shows pass and fail trends. A failure message says that nothing was deployed.",
+      "cmd": "Get-Content Jenkinsfile | Select-Object -Skip 193 -First 28",
+      "expect": "reports/deployment.txt content, then post { always { junit + archiveArtifacts }, success { echo Deployed ... }, failure { echo FAILED - nothing was deployed } }.",
+      "tell": "Every build leaves a test report, artifacts and a deployment record behind.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "The stage order is the quality gate",
+      "say": "To summarise, here are the stages with their line numbers. The tests come before package, images, publish and deploy. Deployment happens only after the quality gates pass. The next part of this video shows a real run of this pipeline in Jenkins.",
+      "cmd": "Select-String -Path Jenkinsfile -Pattern \"stage\\('\" | ForEach-Object { '{0,3}: {1}' -f $_.LineNumber, $_.Line.Trim() }",
+      "expect": "Ten stages: Checkout, Install dependencies, Static checks, Unit & integration tests, E2E tests (Selenium), Package source, Build images, Publish images, Deploy, Health check.",
+      "tell": "Deployment can only happen after every earlier stage has passed.",
+      "pauseAfter": 4
+    }
+  ]
+}

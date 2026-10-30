@@ -1,0 +1,128 @@
+{
+  "title": "Task 3 - Requirements, Architecture and Technology Setup",
+  "prereq": [
+    "Port 5000 must be free. The local Docker registry also uses port 5000, so if `hotel-jenkins-registry-1` is running, stop it first: `docker stop hotel-jenkins-registry-1`.",
+    "The project `.venv` must exist (Flask is installed there).",
+    "The demo starts the app on a throw-away database in your TEMP folder, so your real `instance/hotel.db` is never touched.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "/health does not answer", "fix": "The server needs a few seconds. Wait 5 seconds and run the health command again. If it still fails, start it in a visible window to see the error: `python wsgi.py`."},
+    {"symptom": "Port 5000 already in use", "fix": "`Get-NetTCPConnection -LocalPort 5000 -State Listen` shows the owner. Stop the registry (`docker stop hotel-jenkins-registry-1`) or an old Python process (`taskkill /PID <pid> /T /F`)."},
+    {"symptom": "`python` is not recognised or Flask is missing", "fix": "Use `.venv\\Scripts\\python wsgi.py`, or create the environment: `python -m venv .venv` then `.venv\\Scripts\\pip install -r requirements-dev.txt`."},
+    {"symptom": "A leftover server keeps running after the demo", "fix": "`Get-Process python | Stop-Process` (only if you have no other Python programs running), or `taskkill /PID <pid> /T /F`."}
+  ],
+  "extra": [
+    {"what": "Run the real development server yourself and open it in a browser", "cmd": ".venv\\Scripts\\python wsgi.py   # then open http://127.0.0.1:5000"},
+    {"what": "Open the architecture and ER diagrams drawn (VS Code preview or GitHub)", "cmd": "code docs/03-srs-architecture.md"}
+  ],
+  "extraQuestions": [
+    {"q": "Is Maven or Tomcat used in this project?", "a": "No. They are Java tools; this is a Python project. The equivalents are requirements.txt for dependencies, pytest for tests, and Gunicorn behind Nginx for serving. The project document says plainly that if Maven or Tomcat is mandatory rather than an example in the course brief, that needs the professor's confirmation. This is the one open item of Task 3."}
+  ],
+  "steps": [
+    {
+      "title": "SRS summary: requirements mapped to code",
+      "say": "This is Task 3, requirements, architecture and technology setup. The Software Requirements Specification, or SRS, lists what the system must do. There are eleven functional requirements, FR one to FR eleven. Here I print each requirement number next to the exact code that implements it, for example FR three, showing room availability, is implemented in BookingService dot search rooms.",
+      "cmd": "Select-String -Path docs/03-srs-architecture.md -Pattern '^\\| FR' | ForEach-Object { $p = $_.Line -split '\\|'; $p[1].Trim() + '  ' + $p[3].Trim() }",
+      "expect": "FR1 to FR11, each followed by the class or file that implements it.",
+      "tell": "Every requirement points to the code that implements it, so I can trace it.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Use-case diagram",
+      "say": "A use case diagram shows who uses the system and what they can do. This is the source of the diagram. The guest has six use cases, the six booking features. The developer pushes a commit that starts the pipeline, and the operator deploys and rolls back a release. On GitHub this text is drawn as a picture.",
+      "cmd": "Get-Content docs/03-srs-architecture.md | Select-Object -Skip 34 -First 22",
+      "expect": "Mermaid diagram source with three actors: Guest, Developer, Operator, linked to nine use cases.",
+      "tell": "Three kinds of people use the system: guests, developers and operators.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Architecture diagram",
+      "say": "This is the architecture. A request comes from the browser to Nginx, then Gunicorn, then our Flask app. Inside Flask there are layers: controllers handle web requests, services hold business rules, DAOs, which means data access objects, are the only place with SQL, and models hold the data. At the bottom is the SQLite file. The rules of the layers are written below the diagram.",
+      "cmd": "Get-Content docs/03-srs-architecture.md | Select-Object -Skip 59 -First 17",
+      "expect": "Browser, then Nginx, Gunicorn, Controllers, Services, DAOs, Models, SQLite file on a named volume. Under it three rules: no SQL in controllers, no HTTP in services, SQL only in DAOs.",
+      "tell": "The app is layered: controller, service, DAO, database, and each layer has one job.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Application folder structure",
+      "say": "Now the real folders. Under the app folder there are controllers, services, dao, plus models, config, db and the schema file. These match the diagram exactly. Controllers are the web layer, services are the business rules, and dao files contain the database queries. Templates and static files for the pages are in other folders.",
+      "cmd": "Get-ChildItem app -Recurse -File -Include *.py,*.sql | Where-Object { $_.FullName -notmatch '__pycache__' } | Resolve-Path -Relative",
+      "expect": "About 20 Python and SQL files under app\\controllers, app\\services, app\\dao, plus app\\models.py, app\\db.py, app\\config.py and app\\schema.sql.",
+      "tell": "The folder layout mirrors the architecture diagram.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Dependencies and configuration",
+      "say": "Dependencies are in requirements dot txt, pinned to exact versions, so every computer and the Jenkins server install the same thing. This is the Python equivalent of a Maven pom file. Configuration is in app config dot py, and every setting comes from an environment variable. That lets the same code run in development, test and production with different values, without secrets in the code.",
+      "cmd": "Get-Content requirements.txt; Select-String -Path app/config.py -Pattern 'environ.get' | ForEach-Object { $_.Line.Trim() }",
+      "expect": "Flask and Gunicorn with exact versions, then the environment variables: APP_ENV, SECRET_KEY, DATABASE_PATH, MAX_NIGHTS, APP_VERSION, GIT_COMMIT and the cookie setting.",
+      "tell": "Versions are pinned and all settings come from environment variables.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "SQLite schema and the six seeded rooms",
+      "say": "The database is SQLite. Here is the rooms table with its columns, and below it the seed data: six demo rooms, two singles, two doubles, a deluxe and a suite. Insert or ignore means that running the schema again never creates duplicates, so it is safe on every start. The same schema file also defines the users and bookings tables and the triggers that prevent double booking.",
+      "cmd": "Get-Content app/schema.sql | Select-Object -Skip 10 -First 6; Get-Content app/schema.sql | Select-Object -Skip 71",
+      "expect": "CREATE TABLE rooms with id, room_number, room_type, capacity and price; then INSERT OR IGNORE with rooms 101, 102, 201, 202, 301 and 401.",
+      "tell": "The schema creates the tables and seeds six rooms, and running it twice is safe.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Starting the application locally",
+      "say": "Now I start the real application with the documented command, python wsgi dot py. I give it a temporary database through an environment variable so that your real data is not touched. After four seconds I call the health endpoint. Status ok, environment dev, and the version I set. The server is running.",
+      "cmd": "$env:DATABASE_PATH = \"$env:TEMP/hotel-demo-t03.db\"; $env:APP_VERSION = 'demo'; $server = Start-Process python -ArgumentList 'wsgi.py' -PassThru -WindowStyle Hidden; Start-Sleep 4; Invoke-RestMethod http://127.0.0.1:5000/health",
+      "expect": "status: ok, env: dev, version: demo, commit: unknown (no commit is baked in when running locally).",
+      "tell": "The portal starts with one command and reports its own health and version.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "A real request: checking room availability",
+      "say": "Now I follow one real request. This is what the browser does when a guest searches rooms from the tenth to the twelfth of January 2030. I request the rooms page with those dates. The answer is HTTP 200, and the page says six of six rooms are available, with six Available badges. Next I show which code produced this answer.",
+      "cmd": "$r = Invoke-WebRequest 'http://127.0.0.1:5000/rooms?check_in=2030-01-10&check_out=2030-01-12' -UseBasicParsing; \"HTTP status: $($r.StatusCode)\"; ($r.Content -split '\\n' | Select-String 'rooms available').Line.Trim(); 'Available badges: ' + [regex]::Matches($r.Content, 'badge-ok\">Available').Count",
+      "expect": "HTTP status 200, '6 of 6 rooms available.' and six Available badges, because no bookings exist in the temporary database.",
+      "tell": "The same URL a guest uses returns the availability for every room.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Step 1 of the code path: the controller",
+      "say": "First, the controller. The function list rooms receives the request, reads the two dates from the web address, and calls the service. It does not contain any database code. If the dates are invalid, the service raises an error and the controller shows it as a message. Then it renders the template, which is the HTML page sent back to the browser.",
+      "cmd": "Get-Content app/controllers/room_routes.py | Select-Object -Skip 15 -First 24",
+      "expect": "list_rooms() reads check_in and check_out from request.args, calls service.search_rooms, catches BookingError, renders rooms.html.",
+      "tell": "The controller only handles the web request and delegates to the service.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Step 2 and 3: the service and the DAO",
+      "say": "Second, the service. Search rooms first validates the dates, then asks the booking DAO which rooms are already booked in that period, and marks every other room as available. This is the business rule. Third, the DAO runs the SQL. The overlap rule is written once here: a stay overlaps another when it starts before the other ends and ends after the other starts. Cancelled bookings never block a room.",
+      "cmd": "Get-Content app/services/booking_service.py | Select-Object -Skip 36 -First 6; Get-Content app/dao/booking_dao.py | Select-Object -Skip 5 -First 8; Get-Content app/dao/booking_dao.py | Select-Object -Skip 25 -First 8",
+      "expect": "search_rooms: validate, booked_room_ids, return (room, available) pairs. Then the overlap SQL condition and booked_room_ids running SELECT DISTINCT room_id.",
+      "tell": "The service decides what is allowed; the DAO runs the SQL and returns the result.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Why SQL belongs in the DAO layer",
+      "say": "Why is SQL only in the DAO? I prove it with a search. In the controllers and services there are zero lines containing SQL keywords. In the DAO files there are ten. Keeping SQL in one layer means that business rules can be tested without a web server, the database can be changed in one place, and nobody can accidentally write a query inside a web page function.",
+      "cmd": "'SQL lines in controllers + services: ' + (Select-String -CaseSensitive -Path app/controllers/*.py,app/services/*.py -Pattern 'SELECT |INSERT |UPDATE |DELETE ' | Measure-Object).Count; 'SQL lines in dao: ' + (Select-String -CaseSensitive -Path app/dao/*.py -Pattern 'SELECT |INSERT |UPDATE |DELETE ' | Measure-Object).Count",
+      "expect": "0 SQL lines in controllers and services, 10 in the DAO files.",
+      "tell": "SQL lives only in the DAO layer, which keeps the business logic testable and the database replaceable.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Python tooling is not Maven",
+      "say": "A necessary clarification. The course brief mentions Maven and Tomcat. Those are Java tools. This project is Python, so I use the Python equivalents shown in this table: requirements dot txt instead of a pom file, pytest instead of Maven test, and Gunicorn behind Nginx instead of Tomcat. The document says clearly that if Maven is mandatory and not just an example, I must confirm that with the professor. That is the one unresolved point of Task 3.",
+      "cmd": "Get-Content docs/03-srs-architecture.md | Select-Object -Skip 182 -First 17",
+      "expect": "A mapping table Java world versus this project, and the note 'To confirm with the professor'.",
+      "tell": "I used the Python equivalents and I would like to confirm with you that Maven is not mandatory.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Stopping the demo server",
+      "say": "Finally I stop the demo server, delete the temporary database, and confirm that nothing answers on port 5000 any more. The demonstration leaves your real database and files unchanged.",
+      "cmd": "taskkill /PID $server.Id /T /F | Out-Null; Remove-Item $env:DATABASE_PATH -ErrorAction SilentlyContinue; try { Invoke-RestMethod http://127.0.0.1:5000/health -TimeoutSec 2 | Out-Null; 'still running' } catch { 'server stopped - nothing answers on port 5000' }",
+      "expect": "'server stopped - nothing answers on port 5000'.",
+      "tell": "The demo cleans up after itself.",
+      "pauseAfter": 3
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+﻿1
+00:00:01,000 --> 00:00:05,000
+This is Task 15, the final end to end release.
+
+2
+00:00:05,000 --> 00:00:08,000
+Here is the whole workflow from the project report.
+
+3
+00:00:08,000 --> 00:00:13,000
+A developer commits on a feature branch and merges into develop.
+
+4
+00:00:13,000 --> 00:00:18,000
+Jenkins checks out the branch, installs, lints and runs all the tests.
+
+5
+00:00:18,000 --> 00:00:22,000
+If any test fails, the build fails and the deploy is skipped.
+
+6
+00:00:22,000 --> 00:00:35,000
+If all are green, Jenkins archives the source with a checksum, builds the Docker images with the version and commit tag, pushes them to the registry, deploys and checks the health.
+
+7
+00:00:35,000 --> 00:00:39,000
+Ansible then provisions a server and can roll back.
+
+8
+00:00:39,000 --> 00:00:42,000
+I will now verify each link with real data.
+
+9
+00:00:46,000 --> 00:00:49,000
+Link one and two: the commit and the checkout.
+
+10
+00:00:49,000 --> 00:00:52,000
+This is the commit at the tip of develop.
+
+11
+00:00:52,000 --> 00:01:02,000
+And this is what Jenkins built in its most recent build, build number twelve: the log line from the checkout stage names the same commit and the branch.
+
+12
+00:01:02,000 --> 00:01:05,000
+The build name has the version and the commit.
+
+13
+00:01:05,000 --> 00:01:10,000
+The command reads the admin password from the environment file, without displaying it.
+
+14
+00:01:19,000 --> 00:01:24,000
+Links three to six: installing, linting, testing and the quality gate.
+
+15
+00:01:24,000 --> 00:01:28,000
+The stages of that build, every one a success.
+
+16
+00:01:28,000 --> 00:01:36,000
+And the log lines that prove the tests: eighty five unit and integration tests passed, five Selenium tests passed.
+
+17
+00:01:36,000 --> 00:01:47,000
+The quality gate is this ordering: if either test stage had failed, everything after it would have been skipped, as we saw with the deliberate defect in Task 10.
+
+18
+00:01:52,000 --> 00:01:56,000
+Link seven: the source archive and the checksum.
+
+19
+00:01:56,000 --> 00:02:00,000
+I do not just trust the checksum file, I verify it.
+
+20
+00:02:00,000 --> 00:02:10,000
+This command downloads the archive and its checksum file from Jenkins, computes the SHA two five six of the archive myself, and compares.
+
+21
+00:02:10,000 --> 00:02:15,000
+If they match, the archive that Jenkins stored is exactly what it recorded.
+
+22
+00:02:15,000 --> 00:02:18,000
+Then it deletes the temporary files.
+
+23
+00:02:23,000 --> 00:02:29,000
+Links eight to eleven: the image, the registry, the deployment and the health check.
+
+24
+00:02:29,000 --> 00:02:32,000
+The registry has the image for this exact tag.
+
+25
+00:02:32,000 --> 00:02:38,000
+The running staging container was created from the image with the same id as the registry's tag.
+
+26
+00:02:38,000 --> 00:02:45,000
+And the health address reports the version and the commit of this build, the same as the tip of develop.
+
+27
+00:02:45,000 --> 00:02:47,000
+So what was tested is what is running.
+
+28
+00:02:52,000 --> 00:02:54,000
+Link twelve: Ansible.
+
+29
+00:02:54,000 --> 00:02:59,000
+Task 13 and 14 ran the playbook and the rollback live on the lab server.
+
+30
+00:02:59,000 --> 00:03:18,000
+These are the saved results of the earlier runs, unedited: first provisioning, seven changes, the upgrade, five, the repeat run, zero changes, the rollback, three changes, and five of five Selenium journeys passing on the restored release.
+
+31
+00:03:18,000 --> 00:03:21,000
+The lab is a container standing in for a server.
+
+32
+00:03:21,000 --> 00:03:25,000
+It was not tested on a real virtual machine.
+
+33
+00:03:30,000 --> 00:03:31,000
+The documentation.
+
+34
+00:03:31,000 --> 00:03:50,000
+The project report has a troubleshooting table of the problems that really happened: certificate errors caused by the antivirus, Docker Desktop not running after a reboot, missing secret keys, ports in use, Selenium and Chrome mismatches, and Ansible permission problems.
+
+35
+00:03:50,000 --> 00:03:53,000
+Each has the cause and the fix.
+
+36
+00:03:53,000 --> 00:03:54,000
+Here are the symptoms.
+
+37
+00:03:58,000 --> 00:04:01,000
+The known limitations, stated honestly.
+
+38
+00:04:01,000 --> 00:04:03,000
+SQLite means one server.
+
+39
+00:04:03,000 --> 00:04:05,000
+Plain HTTP in the demo.
+
+40
+00:04:05,000 --> 00:04:11,000
+Rollback recreates containers, so there is a few seconds of downtime.
+
+41
+00:04:11,000 --> 00:04:14,000
+Jenkins polls instead of using a webhook.
+
+42
+00:04:14,000 --> 00:04:17,000
+Docker Hub publishing was not run.
+
+43
+00:04:17,000 --> 00:04:22,000
+Ansible was verified on a container, not a real virtual machine.
+
+44
+00:04:22,000 --> 00:04:34,000
+And this older note about GitHub is out of date: the repository was pushed, as the Task 4 video showed, but issues and pull requests do not exist yet.
+
+45
+00:04:39,000 --> 00:05:03,000
+And what I would improve next: PostgreSQL for several app servers, HTTPS with Let's Encrypt, automatic expiry of pending bookings, a staff dashboard, e-mail confirmations, a GitHub webhook with a multibranch pipeline, blue green deployments for zero downtime, monitoring of the health endpoint, and image vulnerability scanning in the pipeline.
+
+46
+00:05:07,000 --> 00:05:20,000
+For the viva I prepared a cheat sheet with a thirty second introduction, a two minute explanation and the workflow in order, and for every task a file of likely questions with answers specific to this project.
+
+47
+00:05:20,000 --> 00:05:26,000
+Here is the thirty second introduction, and the number of viva question files in this demonstration pack.
+
+48
+00:05:31,000 --> 00:05:35,000
+To end, what is still open, taken from the project checklist.
+
+49
+00:05:35,000 --> 00:05:48,000
+The items marked prepared need something only I can do: the GitHub issues and pull requests need my GitHub login, Docker Hub needs an account, and a real Ansible run needs a virtual machine.
+
+50
+00:05:48,000 --> 00:05:55,000
+Everything else is verified, and this video showed the chain from a commit to a verified deployment, with real data.
+
+

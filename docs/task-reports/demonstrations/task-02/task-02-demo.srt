@@ -1,0 +1,193 @@
+﻿1
+00:00:01,000 --> 00:00:05,000
+This is Task 2, Agile planning and the DevOps workflow.
+
+2
+00:00:05,000 --> 00:00:11,000
+Agile means we build in small steps and keep a list of work to do.
+
+3
+00:00:11,000 --> 00:00:14,000
+I am listing the headings of the planning document.
+
+4
+00:00:14,000 --> 00:00:24,000
+It has user stories, a product backlog, a Kanban board, a sprint plan, the Definition of Done, and the DevOps lifecycle diagram.
+
+5
+00:00:24,000 --> 00:00:27,000
+I will walk through each one.
+
+6
+00:00:29,000 --> 00:00:37,000
+A user story is one sentence that says who wants what and why, in the form: as a guest, I want something, so that something.
+
+7
+00:00:37,000 --> 00:00:41,000
+Stories one to six are the six booking features.
+
+8
+00:00:41,000 --> 00:00:49,000
+Stories seven to nine are for the developer and the operator: automatic testing, one command deployment, and rollback.
+
+9
+00:00:49,000 --> 00:00:54,000
+Writing needs as stories keeps every feature tied to a real person.
+
+10
+00:00:57,000 --> 00:01:01,000
+Acceptance criteria say exactly when a story is finished.
+
+11
+00:01:01,000 --> 00:01:04,000
+Here is story five, cancelling a booking.
+
+12
+00:01:04,000 --> 00:01:11,000
+A pending or confirmed booking becomes cancelled, the room becomes free, and you cannot cancel twice.
+
+13
+00:01:11,000 --> 00:01:16,000
+Notice that the last part names the automated tests that check it.
+
+14
+00:01:16,000 --> 00:01:20,000
+So the criteria are not opinions, they are tests.
+
+15
+00:01:23,000 --> 00:01:25,000
+Now I prove story five live.
+
+16
+00:01:25,000 --> 00:01:29,000
+I run only the tests whose name contains cancel.
+
+17
+00:01:29,000 --> 00:01:36,000
+Seven tests run and seven should pass, including cannot cancel twice and other user cannot cancel.
+
+18
+00:01:36,000 --> 00:01:42,000
+If these pass, the acceptance criteria of the cancellation story are met today.
+
+19
+00:01:45,000 --> 00:01:48,000
+The product backlog is the ordered list of work.
+
+20
+00:01:48,000 --> 00:01:57,000
+Our backlog items are HB one to HB fifteen, one for each of the fifteen course tasks, with the task number and a status.
+
+21
+00:01:57,000 --> 00:01:58,000
+All are done.
+
+22
+00:01:58,000 --> 00:02:03,000
+Items like payments are not here, because they are out of scope.
+
+23
+00:02:06,000 --> 00:02:09,000
+I want to be honest about GitHub issues.
+
+24
+00:02:09,000 --> 00:02:14,000
+This command asks GitHub, live, how many issues the public repository has.
+
+25
+00:02:14,000 --> 00:02:15,000
+The answer is zero.
+
+26
+00:02:15,000 --> 00:02:27,000
+The backlog exists in the document, and the issue and pull request templates are ready in the dot github folder, but the real GitHub issues have not been created yet.
+
+27
+00:02:27,000 --> 00:02:31,000
+That is the one remaining step for this task.
+
+28
+00:02:34,000 --> 00:02:40,000
+A Kanban board shows work moving through columns: backlog, to do, in progress, review and done.
+
+29
+00:02:40,000 --> 00:02:43,000
+Each card moved from left to right.
+
+30
+00:02:43,000 --> 00:02:50,000
+A card reached review when its feature branch was ready to merge, and done when it met the Definition of Done.
+
+31
+00:02:50,000 --> 00:02:55,000
+Payments and an admin screen stay in the backlog as future work.
+
+32
+00:02:58,000 --> 00:03:02,000
+A sprint is a short fixed period of work with a goal.
+
+33
+00:03:02,000 --> 00:03:05,000
+We planned three sprints in ten working days.
+
+34
+00:03:05,000 --> 00:03:13,000
+Sprint one is foundation, sprint two is automation with Jenkins and Docker, and sprint three is operations and release.
+
+35
+00:03:13,000 --> 00:03:21,000
+Each sprint ends with a review, a demo of what works, and a retrospective, what to keep and what to improve.
+
+36
+00:03:24,000 --> 00:03:30,000
+The Definition of Done is the checklist that must be true before any item counts as finished.
+
+37
+00:03:30,000 --> 00:03:41,000
+Code on a feature branch, automated tests, a clean linter, a green Jenkins pipeline, a merge into develop, updated documentation and no secrets.
+
+38
+00:03:41,000 --> 00:03:46,000
+This is how completion is determined, so nobody can say it is done when it is not.
+
+39
+00:03:50,000 --> 00:03:55,000
+This is the DevOps lifecycle, written as a diagram in text form.
+
+40
+00:03:55,000 --> 00:03:57,000
+It is drawn automatically on GitHub.
+
+41
+00:03:57,000 --> 00:03:59,000
+Plan, code, build, test.
+
+42
+00:03:59,000 --> 00:04:04,000
+If any test fails we stop and fix, there is no deployment.
+
+43
+00:04:04,000 --> 00:04:16,000
+If everything is green we release, deploy, operate and monitor, and if there is a problem we roll back to the previous version, and then planning starts again.
+
+44
+00:04:19,000 --> 00:04:23,000
+Finally, here is the same workflow in real code.
+
+45
+00:04:23,000 --> 00:04:36,000
+These are the stages in our Jenkinsfile, in order: checkout, install, static checks, tests, Selenium browser tests, package, build images, publish, deploy and health check.
+
+46
+00:04:36,000 --> 00:04:41,000
+A developer's code change passes through them one after another.
+
+47
+00:04:41,000 --> 00:04:46,000
+Only if the test stages pass does the pipeline reach deployment.
+
+48
+00:04:46,000 --> 00:04:51,000
+That is how a task is traced from commit to operation.
+
+

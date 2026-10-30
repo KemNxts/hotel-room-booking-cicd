@@ -1,0 +1,116 @@
+{
+  "title": "Task 7 (part 2) - The Jenkins web interface: job, configuration, build, console, tests, artifacts",
+  "mode": "browser",
+  "app": false,
+  "baseUrl": "http://localhost:8090",
+  "jenkinsLogin": true,
+  "prereq": [
+    "Jenkins running at http://localhost:8090 (see part 1). Log in as `admin`; the password is the JENKINS_ADMIN_PASSWORD line of deploy/jenkins/.env (do not show that file).",
+    "In the recording the login happens before the video starts, so no password is on screen. Do the same for your demonstration: log in first, then start talking.",
+    "These pages are only read; nothing is saved in the configuration. When you open Configure by hand, leave it without clicking Save."
+  ],
+  "recovery": [
+    {"symptom": "Login page keeps coming back", "fix": "Wrong password. Use the JENKINS_ADMIN_PASSWORD line of deploy/jenkins/.env."},
+    {"symptom": "'Jenkins is getting ready to work' or a blank page", "fix": "Jenkins is still starting. Wait a minute and press F5."},
+    {"symptom": "The job hotel-booking is missing", "fix": "The jenkins-home volume was deleted. Restart Jenkins (`docker compose up -d` in deploy/jenkins); the job is recreated by init.groovy.d/01-setup.groovy, but the old build history is gone."}
+  ],
+  "extra": [
+    {"what": "Open the job page in your own browser", "cmd": "Start-Process http://localhost:8090/job/hotel-booking/"},
+    {"what": "See why a build was triggered (Git polling log)", "cmd": "Start-Process http://localhost:8090/job/hotel-booking/scmPollLog/"}
+  ],
+  "extraQuestions": [
+    {"q": "Does this Jenkins job build a Maven project?", "a": "No. It checks out Git, installs Python dependencies with pip, lints with flake8, runs pytest and Selenium, and builds Docker images. The Python equivalent of a Maven build is described in docs/03-srs-architecture.md."}
+  ],
+  "steps": [
+    {
+      "title": "The Jenkins dashboard",
+      "say": "Now the Jenkins web interface, version two point five eight, open on localhost port eight thousand ninety, already logged in as admin. This is the dashboard. It lists the jobs. We have one, called hotel booking, which is the continuous integration job for our project. The little weather icon and the last success and last failure columns summarise its health.",
+      "caption": "Jenkins dashboard (localhost:8090): one job, hotel-booking.",
+      "actions": [{"goto": "/"}, {"pause": 2}, {"highlight": "a[href*='job/hotel-booking']", "secs": 3}],
+      "expect": "The Jenkins dashboard listing the job hotel-booking with its last success and last failure.",
+      "tell": "This is the real Jenkins, with our CI job.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The job page: stage view and build history",
+      "say": "The job page. On the left is the build history, the newest first. In the middle, the stage view draws every build as a row and every pipeline stage as a column. Green is success. The red cells in build number two and nine are the deliberate failures. The test result trend shows the number of passed tests growing as the project grew.",
+      "caption": "Job page: Stage View (one row per build, one column per stage) and the test result trend.",
+      "actions": [{"goto": "/job/hotel-booking/"}, {"pause": 2}, {"scroll_text": "Stage View", "offset": 90}, {"pause": 4}],
+      "expect": "The Stage View table with eleven builds and the Test Result Trend graph.",
+      "tell": "The stage view shows every build and exactly which stage passed or failed.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The job configuration: parameters, polling, Git",
+      "say": "The job configuration, opened read only. I will not save anything. First: this project is parameterized, with APP ENV, BRANCH and REGISTRY. Then build triggers: Poll SCM, every five minutes, which makes Jenkins check Git for new commits. This is the continuous integration trigger. Then the pipeline: the definition is Pipeline script from SCM, the repository URL, the branch specifier, which uses the BRANCH parameter, and the script path, Jenkinsfile.",
+      "caption": "Configure (read only): parameterized job, Poll SCM every 5 minutes, Pipeline script from SCM -> Jenkinsfile.",
+      "actions": [
+        {"goto": "/job/hotel-booking/configure"}, {"pause": 2},
+        {"scroll_text": "This project is parameterized", "offset": 120}, {"pause": 3},
+        {"scroll_text": "Poll SCM", "offset": 120}, {"pause": 3},
+        {"scroll_text": "Repository URL", "offset": 120}, {"pause": 3},
+        {"scroll_text": "Branch Specifier", "offset": 120}, {"pause": 3},
+        {"scroll_text": "Script Path", "offset": 120}, {"pause": 3}
+      ],
+      "expect": "The parameterized checkbox with three parameters, Poll SCM with H/5 * * * *, Repository URL file:///repo, Branch Specifier */${BRANCH}, Script Path Jenkinsfile.",
+      "tell": "The job polls Git every five minutes, picks the branch from a parameter, and reads the pipeline from the Jenkinsfile.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "One real build: number 11",
+      "say": "Now one real build, number eleven, from the twentieth of October. It was started with the parameters staging, branch develop and the local registry. Its name, one point one point zero, dash one c two one zero three c, is the version and the commit. The page shows the status, the duration, and the links to the console output, the test result, and the artifacts.",
+      "caption": "Build #11: version 1.1.0, commit 1c2103c, branch develop, deployed to staging. Result: SUCCESS.",
+      "actions": [{"goto": "/job/hotel-booking/11/"}, {"pause": 5}],
+      "expect": "Build #11 page: success icon, the version-commit name, links to Console Output, Test Result and the build artifacts.",
+      "tell": "Build 11 is a real, successful build with a version and commit in its name.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The console output: install, lint, test",
+      "say": "The console output is the complete log. First the commit being built. Then the dependencies are installed with pip, from the pinned requirements. Then flake8, the linter, runs and finds nothing, so it prints nothing. Then eighty five unit and integration tests pass. Then five Selenium tests pass, and the rest are deselected. The log ends with finished, success.",
+      "caption": "Console: checkout commit -> pip install -> flake8 -> 85 unit/integration tests -> 5 Selenium tests -> SUCCESS.",
+      "actions": [
+        {"goto": "/job/hotel-booking/11/console"}, {"pause": 2},
+        {"scroll_text": "Building commit", "offset": 160}, {"pause": 3},
+        {"scroll_text": "pip install --quiet -r requirements-dev.txt", "offset": 160}, {"pause": 3},
+        {"scroll_text": "flake8 app tests", "offset": 160}, {"pause": 3},
+        {"scroll_text": "85 passed", "offset": 160}, {"pause": 3},
+        {"scroll_text": "5 passed, 85 deselected", "offset": 160}, {"pause": 3},
+        {"scroll_text": "Finished: SUCCESS", "offset": 200}, {"pause": 2}
+      ],
+      "expect": "Highlighted lines: Building commit 1c2103c, the pip install command, the flake8 command, '85 passed', '5 passed, 85 deselected' and 'Finished: SUCCESS'.",
+      "tell": "The console log proves the dependencies were installed, the code was linted and all tests passed.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Test results and reports",
+      "say": "Jenkins also reads the JUnit XML reports and shows them as a test result page. Here are the two test suites, with the number of tests, failures and the duration of each. Because the reports are published after every build, Jenkins can draw the trend we saw before, and a failing test appears here by name.",
+      "caption": "Test Result page: JUnit reports published by every build (0 failures).",
+      "actions": [{"goto": "/job/hotel-booking/11/testReport/"}, {"pause": 6}],
+      "expect": "The Test Result summary with 0 failures and the list of packages / test suites.",
+      "tell": "Jenkins publishes the test reports, so every build has a visible test result.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Archived artifacts: source archive and checksum",
+      "say": "Every build archives its artifacts. In the dist folder: the source archive, a tar gz file named with the version and commit, and its sha two five six checksum. In the reports folder: the test reports, the health check answer and the deployment record. They are kept with the build, so any build can be reproduced or checked later.",
+      "caption": "Artifacts kept with the build: dist/ (source tar.gz + sha256) and reports/ (tests, health.json, deployment.txt).",
+      "actions": [
+        {"goto": "/job/hotel-booking/11/artifact/"}, {"pause": 3},
+        {"goto": "/job/hotel-booking/11/artifact/dist/"}, {"pause": 4}
+      ],
+      "expect": "The artifact folders dist and reports; inside dist the tar.gz and the .sha256 file.",
+      "tell": "Each build archives its source package with a checksum and its reports.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Build history and the pass/fail trend",
+      "say": "Back on the job page: the build history and the trend. Jenkins keeps the last twenty builds. Over the project, the number of passing tests grew, and the failures are the two deliberate experiments. This is continuous integration at work: every change is built and tested, and the result is visible to everyone.",
+      "caption": "Build history and the test result trend: the CI record of the project.",
+      "actions": [{"goto": "/job/hotel-booking/"}, {"pause": 2}, {"scroll_top": true}, {"pause": 5}],
+      "expect": "The job page with the build list on the left and the trend graph.",
+      "tell": "Every change gets built and tested, and the history of passes and failures is visible.",
+      "pauseAfter": 1
+    }
+  ]
+}

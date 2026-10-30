@@ -1,0 +1,113 @@
+{
+  "title": "Task 5 - Feature Development with Branching",
+  "prereq": [
+    "Git installed. Nothing else needs to be running.",
+    "The real-history steps only read the project repository. The practice steps create three throw-away repositories under your TEMP folder (git-practice, git-practice-remote.git, git-practice-mate) and delete them at the end; they never touch the project.",
+    "The last pull-request step reads the public GitHub repository (read-only). If you are offline, skip that line and say that no pull requests exist on GitHub yet.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "`git init -b` is not recognised", "fix": "Your Git is older than 2.28. Update Git for Windows, or use `git init` then `git branch -M develop`."},
+    {"symptom": "Practice step fails because the folder already exists", "fix": "`Remove-Item $env:TEMP/git-practice, $env:TEMP/git-practice-remote.git, $env:TEMP/git-practice-mate -Recurse -Force -ErrorAction SilentlyContinue`, then start again from the first practice step."},
+    {"symptom": "'Author identity unknown'", "fix": "The practice steps set a local name and email inside the practice repository. If you skipped that line: `git -C $s config user.name Practice` and `git -C $s config user.email practice@example.com`."},
+    {"symptom": "The merge IDs differ from the video", "fix": "Use the branch names, not the IDs: `git log --merges --first-parent --oneline develop` shows the real merge commits on your machine."}
+  ],
+  "extra": [
+    {"what": "See the files of any merged feature (replace the branch)", "cmd": "git diff --stat develop...feature/nights-column"},
+    {"what": "Real old-to-new commit ID map (history was rewritten once)", "cmd": "Get-Content docs/evidence/git/commit-id-map.md"}
+  ],
+  "extraQuestions": [
+    {"q": "The project documents quote commit IDs that do not match `git log` today. Why?", "a": "On 12 October 2026 the history was rewritten once to remove automated co-author lines from commit messages, so every commit ID changed. The old-to-new map is in docs/evidence/git/commit-id-map.md. Branch names and commit messages are unchanged, so in a demo I use branch names and live git commands."},
+    {"q": "Do GitHub pull requests exist for these features?", "a": "No. The features were merged locally with git merge --no-ff after a checklist review, and the pull request texts are prepared in docs/pull-requests/. The live check shows 0 pull requests on GitHub. Opening real pull requests needs the student's GitHub login."}
+  ],
+  "steps": [
+    {
+      "title": "Every feature was merged into develop",
+      "say": "This is Task 5, feature development with branching. A feature branch is a separate line of development for one feature, so unfinished work never disturbs the stable code. This command lists the merge commits on the develop branch. Each line is one feature or fix branch that was merged: app mvp, tests, docker, jenkins pipeline, ansible, security hardening and more. This is the real project history.",
+      "cmd": "git log --merges --first-parent --oneline develop | Select-Object -First 15",
+      "expect": "Fifteen lines of the form 'Merge branch feature/... into develop', newest first.",
+      "tell": "Every feature was built on its own branch and merged into develop.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "One real feature: security hardening",
+      "say": "Let me follow one feature, security hardening. On its branch there are two commits. The first adds the CSRF protection, secure cookies and a database guard against overlapping bookings. The second adds the tests for them. The prefixes feat and test follow our commit convention. Small commits, one purpose each.",
+      "cmd": "git log --oneline bdfc2fb^1..bdfc2fb^2",
+      "expect": "Two commits: 'feat: add CSRF protection...' and 'test: add route-level integration tests...'.",
+      "tell": "The feature is two focused commits, the code and its tests.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "The files that feature changed",
+      "say": "These are the feature files. The controllers got a CSRF check, the schema got the database triggers, the templates got the token field, and there are new integration tests. Seventeen files, mostly additions, and no unrelated changes. A reviewer can understand the whole feature from this list.",
+      "cmd": "git diff --stat bdfc2fb^1 bdfc2fb^2 | Select-Object -Last 18",
+      "expect": "17 files changed: app/controllers/csrf.py new, schema.sql triggers, templates, and tests; 459 insertions, 18 deletions.",
+      "tell": "The branch contains only the files that belong to this feature.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "The merge commit and its two parents",
+      "say": "Now the merge itself. This merge commit has two parents: the previous tip of develop, and the last commit of the feature branch. We merged with the no fast forward option, so Git always creates this merge commit, and the history shows the feature as one unit. If this feature had to be undone, we would revert this single commit.",
+      "cmd": "git show --no-patch --format='%h %s%nparents: %p' bdfc2fb",
+      "expect": "'Merge branch feature/security-hardening into develop' with two parent commit IDs.",
+      "tell": "The merge commit joins the feature branch back into develop and keeps the feature visible in history.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Practice repository: git add and git commit",
+      "say": "To show the commands themselves safely, I make a small practice repository in the temporary folder, not in the project. I create the develop branch, write a file, run git add, which puts the file in the staging area, then git commit, which saves a snapshot with a message. This is practice, not project history.",
+      "cmd": "$s = \"$env:TEMP/git-practice\"; $remote = \"$env:TEMP/git-practice-remote.git\"; $mate = \"$env:TEMP/git-practice-mate\"; Remove-Item $s,$remote,$mate -Recurse -Force -ErrorAction SilentlyContinue; git init -q --bare -b develop $remote; git init -q -b develop $s; git -C $s config user.name Practice; git -C $s config user.email practice@example.com; Set-Content \"$s/README.md\" 'Practice repo'; git -C $s add README.md; git -C $s commit -q -m 'chore: first commit'; git -C $s log --oneline",
+      "expect": "One commit 'chore: first commit' on the practice repository.",
+      "tell": "git add stages a change, git commit saves it as a snapshot.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Practice: a feature branch, then stage and commit",
+      "say": "Now a feature branch. Git switch with dash c creates feature slash room search and moves me onto it. I edit the file. Git status short shows a space and M: modified but not staged. After git add it shows M in the first column: staged. Then git commit saves it on the feature branch only. Develop is untouched.",
+      "cmd": "git -C $s switch -c feature/room-search; Add-Content \"$s/README.md\" 'Room search feature'; git -C $s status --short; git -C $s add README.md; git -C $s status --short; git -C $s commit -q -m 'feat: describe room search'; git -C $s log --oneline",
+      "expect": "' M README.md' (modified, not staged), then 'M  README.md' (staged), then two commits on the feature branch.",
+      "tell": "Work happens on a feature branch; staging then committing records it there only.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Practice: git push",
+      "say": "Git push sends my branch to the remote, the shared copy. In this practice the remote is another local folder, and on a real project it would be GitHub. The dash u option links my local branch to the remote one, so later pushes and pulls know where to go. Git branch dash vv shows that link in square brackets.",
+      "cmd": "git -C $s remote add origin $remote; git -C $s push -u origin feature/room-search; git -C $s branch -vv",
+      "expect": "'[new branch] feature/room-search -> feature/room-search', and the branch list showing it tracks origin/feature/room-search.",
+      "tell": "git push publishes my branch to the shared remote.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Practice: merge the feature into develop",
+      "say": "This is the merge, normally done after a pull request is reviewed. I switch to develop and merge the feature with no fast forward. The graph shows the shape: develop, a side line for the feature, and a merge commit joining them. This is exactly the shape of the real project history we saw earlier.",
+      "cmd": "git -C $s switch develop; git -C $s merge --no-ff --no-edit feature/room-search; git -C $s log --graph --oneline",
+      "expect": "'Merge made by the ort strategy' and a graph with a merge commit joining the feature commit into develop.",
+      "tell": "Merging with --no-ff creates a visible merge commit for the feature.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Practice: git pull brings a teammate's work",
+      "say": "Git pull is the opposite of push: it brings other people's commits to my copy. I push develop, then a second clone, a pretend teammate, makes a commit and pushes it. Now in my repository I run git pull. It fetches the new commit and fast forwards develop to it. Teams run pull often so they work on the latest code.",
+      "cmd": "git -C $s push -q -u origin develop; git clone -q $remote $mate; git -C $mate config user.name Teammate; git -C $mate config user.email mate@example.com; Add-Content \"$mate/README.md\" 'Teammate edit'; git -C $mate commit -q -am 'docs: teammate edit'; git -C $mate push -q; git -C $s pull",
+      "expect": "'Updating ... Fast-forward' and 'README.md | 1 +', meaning my develop received the teammate's commit.",
+      "tell": "git pull downloads and applies teammates' commits to my branch.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Pull requests and code review: the honest status",
+      "say": "A pull request asks the team to review a branch before it is merged. Our prepared pull request text for security hardening has a summary, how it was tested, and an author checklist, and the reviewer checks a second list. But I must be honest. This live query to GitHub shows zero pull requests. Our features were reviewed with this checklist and merged locally. Opening real pull requests on GitHub is a remaining step that needs my GitHub login.",
+      "cmd": "Get-Content docs/pull-requests/feature-security-hardening.md | Select-Object -First 15; 'Pull requests on GitHub: ' + (Invoke-RestMethod 'https://api.github.com/repos/KemNxts/hotel-room-booking-cicd/pulls?state=all').Count",
+      "expect": "The prepared PR description (summary, tests, checklist) and then 'Pull requests on GitHub: 0'.",
+      "tell": "The review checklist was used and the PR texts are ready, but no pull request has been opened on GitHub yet.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Clean up and confirm the project is untouched",
+      "say": "Last, I delete the three practice folders and confirm that my real project repository is unchanged: same branch, and no changes except this demonstration folder. The practice never touched the project history.",
+      "cmd": "Remove-Item $s,$remote,$mate -Recurse -Force; 'practice folder exists: ' + (Test-Path $s); git status --short --branch",
+      "expect": "'practice folder exists: False' and the project's own branch with only the untracked demonstrations folder listed.",
+      "tell": "The practice repositories are deleted and the project history was never changed.",
+      "pauseAfter": 3
+    }
+  ]
+}

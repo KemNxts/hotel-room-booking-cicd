@@ -1,0 +1,113 @@
+{
+  "title": "Task 15 - Final End-to-End Release, Documentation and Viva",
+  "prereq": [
+    "Docker Desktop, Jenkins, the registry and the staging deployment running (see the start-up list in GENERATION_STATUS.md). At least one successful Jenkins build of `develop`.",
+    "The Jenkins admin password is read from deploy/jenkins/.env by the commands; never show that file.",
+    "This video shows the LAST real pipeline run (the build started live in Task 8) and verifies each link of the chain. It is not a new run; the live Ansible run is in Tasks 13 and 14.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "No successful build to inspect", "fix": "Start one: open http://localhost:8090/job/hotel-booking/build?delay=0sec and click Build (about 2 minutes), then repeat."},
+    {"symptom": "Staging does not answer on 8081", "fix": "The last build's deployment was stopped (Docker restart). Run the Jenkins job again; it recreates the containers."},
+    {"symptom": "The checksum does not match", "fix": "A download was cut off. Delete %TEMP%\\hb-artifact-check and run the step again. A real mismatch would mean the archive was modified."},
+    {"symptom": "HTTP 401 from Jenkins", "fix": "The password line in deploy/jenkins/.env is wrong."}
+  ],
+  "extra": [
+    {"what": "Read the whole project report", "cmd": "code docs/08-project-report.md"},
+    {"what": "Read the viva cheat sheet", "cmd": "code docs/task-reports/VIVA_CHEAT_SHEET.md"}
+  ],
+  "extraQuestions": [
+    {"q": "What happens between a git commit and a running container?", "a": "Jenkins checks out the commit; installs the pinned dependencies; runs compileall and flake8; runs the unit and integration tests and the Selenium journeys; if anything fails it stops. If everything passes it archives the source with a SHA-256 checksum, builds the images tagged version-commit, pushes them to the registry, deploys with Docker Compose and waits for healthy, and finally checks that /health reports this build's version and commit. Ansible then provisions a server the same way every time and can roll back to the previous release."},
+    {"q": "What did you not do?", "a": "No GitHub issues or pull requests exist yet (needs the student's GitHub login), Docker Hub publishing was not tested, Ansible ran against a container-based lab and not a real VM, and whether Maven is mandatory has not been confirmed with the professor. All four are listed as limitations in the report."}
+  ],
+  "steps": [
+    {
+      "title": "The complete release workflow",
+      "say": "This is Task 15, the final end to end release. Here is the whole workflow from the project report. A developer commits on a feature branch and merges into develop. Jenkins checks out the branch, installs, lints and runs all the tests. If any test fails, the build fails and the deploy is skipped. If all are green, Jenkins archives the source with a checksum, builds the Docker images with the version and commit tag, pushes them to the registry, deploys and checks the health. Ansible then provisions a server and can roll back. I will now verify each link with real data.",
+      "cmd": "Get-Content docs/08-project-report.md | Select-Object -Skip 37 -First 23",
+      "expect": "The sequence diagram source: Developer, Git, Jenkins, Registry, Staging/Prod, Ansible, Server, with the alt branch for failing tests.",
+      "tell": "This is the whole chain from a commit to a verified, recoverable release.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Links 1 and 2: the commit and Jenkins checkout",
+      "say": "Link one and two: the commit and the checkout. This is the commit at the tip of develop. And this is what Jenkins built in its most recent build, build number twelve: the log line from the checkout stage names the same commit and the branch. The build name has the version and the commit. The command reads the admin password from the environment file, without displaying it.",
+      "cmd": "$jh = @{ Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes('admin:' + ((Get-Content deploy/jenkins/.env | Where-Object { $_ -like 'JENKINS_ADMIN_PASSWORD=*' }) -replace '^[^=]+=', ''))) }; git log -1 --format='tip of develop: %h %s' develop; $b = Invoke-RestMethod 'http://localhost:8090/job/hotel-booking/lastBuild/api/json?tree=number,displayName,result' -Headers $jh; $tag = $b.displayName -replace '^#\\d+ ', ''; \"last Jenkins build: #$($b.number)  $($b.displayName)  $($b.result)\"; ((Invoke-WebRequest 'http://localhost:8090/job/hotel-booking/lastBuild/consoleText' -Headers $jh -UseBasicParsing).Content -split '\\r?\\n' | Select-String '^(\\[[^\\]]+\\] )?Building commit' | Select-Object -First 1).Line -replace '^\\[[^\\]]+\\]\\s*', ''",
+      "expect": "The develop tip commit, 'last Jenkins build: #12 #12 1.1.0-1c2103c SUCCESS' and 'Building commit 1c2103c on develop: ...'.",
+      "tell": "Jenkins built exactly the commit at the tip of develop.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Links 3 to 6: install, lint, tests, the quality gate",
+      "say": "Links three to six: installing, linting, testing and the quality gate. The stages of that build, every one a success. And the log lines that prove the tests: eighty five unit and integration tests passed, five Selenium tests passed. The quality gate is this ordering: if either test stage had failed, everything after it would have been skipped, as we saw with the deliberate defect in Task 10.",
+      "cmd": "(Invoke-RestMethod 'http://localhost:8090/job/hotel-booking/lastBuild/wfapi/describe' -Headers $jh).stages | Select-Object name, status | Format-Table -AutoSize; (Invoke-WebRequest 'http://localhost:8090/job/hotel-booking/lastBuild/consoleText' -Headers $jh -UseBasicParsing).Content -split '\\r?\\n' | Select-String ' passed' | ForEach-Object { $_.Line -replace '^\\[[^\\]]+\\]\\s*', '' }",
+      "expect": "All stages SUCCESS, then '85 passed' and '5 passed, 85 deselected'.",
+      "tell": "All quality gates passed: lint, 85 unit and integration tests and 5 browser tests.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Link 7: the source archive and its checksum, verified now",
+      "say": "Link seven: the source archive and the checksum. I do not just trust the checksum file, I verify it. This command downloads the archive and its checksum file from Jenkins, computes the SHA two five six of the archive myself, and compares. If they match, the archive that Jenkins stored is exactly what it recorded. Then it deletes the temporary files.",
+      "cmd": "$f = \"hotel-booking-$tag.tar.gz\"; $dir = Join-Path $env:TEMP 'hb-artifact-check'; New-Item -ItemType Directory -Force $dir | Out-Null; foreach ($n in $f, \"$f.sha256\") { Invoke-WebRequest \"http://localhost:8090/job/hotel-booking/lastBuild/artifact/dist/$n\" -Headers $jh -OutFile (Join-Path $dir $n) -UseBasicParsing }; $expected = ((Get-Content (Join-Path $dir \"$f.sha256\")) -split ' ')[0]; $actual = (Get-FileHash (Join-Path $dir $f) -Algorithm SHA256).Hash.ToLower(); \"archive : $f ($([int]((Get-Item (Join-Path $dir $f)).Length / 1KB)) KB)\"; \"expected: $expected\"; \"actual  : $actual\"; 'checksum matches: ' + ($expected -eq $actual); Remove-Item $dir -Recurse -Force",
+      "expect": "The archive name and size, two identical 64-character hashes and 'checksum matches: True'.",
+      "tell": "I verified the archive against its checksum; they match.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Links 8 to 11: image, registry, deployment, health",
+      "say": "Links eight to eleven: the image, the registry, the deployment and the health check. The registry has the image for this exact tag. The running staging container was created from the image with the same id as the registry's tag. And the health address reports the version and the commit of this build, the same as the tip of develop. So what was tested is what is running.",
+      "cmd": "'in the registry: ' + ((Invoke-RestMethod http://localhost:5000/v2/hotel-booking-app/tags/list).tags -contains $tag) + '  (tag ' + $tag + ')'; 'container image id: ' + (docker inspect hotel-staging-app-1 --format '{{.Image}}'); 'registry image id : ' + (docker image inspect \"localhost:5000/hotel-booking-app:$tag\" --format '{{.Id}}'); curl.exe -s http://localhost:8081/health",
+      "expect": "'in the registry: True', two identical image ids, and the health JSON with commit 1c2103c and version 1.1.0.",
+      "tell": "The running container, the registry image and the health answer all match the tested build.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Link 12: Ansible configuration and rollback validation",
+      "say": "Link twelve: Ansible. Task 13 and 14 ran the playbook and the rollback live on the lab server. These are the saved results of the earlier runs, unedited: first provisioning, seven changes, the upgrade, five, the repeat run, zero changes, the rollback, three changes, and five of five Selenium journeys passing on the restored release. The lab is a container standing in for a server. It was not tested on a real virtual machine.",
+      "cmd": "Select-String -Path docs/evidence/ansible/run*.txt -Pattern 'changed=\\d+|\\d+ passed' | ForEach-Object { '{0,-36} {1}' -f $_.Filename, ($_.Line.Trim() -replace '\\s+', ' ') }",
+      "expect": "run1 changed=7, run2 changed=5, run3 changed=0, run4 changed=3, run5 '5 passed'.",
+      "tell": "Ansible provisions the server repeatably, a second run changes nothing, and rollback is verified.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Documentation: troubleshooting",
+      "say": "The documentation. The project report has a troubleshooting table of the problems that really happened: certificate errors caused by the antivirus, Docker Desktop not running after a reboot, missing secret keys, ports in use, Selenium and Chrome mismatches, and Ansible permission problems. Each has the cause and the fix. Here are the symptoms.",
+      "cmd": "Get-Content docs/08-project-report.md | Select-Object -Skip 95 -First 13 | ForEach-Object { $c = ($_ -split '\\|')[1].Trim(); '- ' + $c.Substring(0, [Math]::Min(115, $c.Length)) }",
+      "expect": "Twelve symptoms, each with a documented cause and fix in docs/08-project-report.md section 5.",
+      "tell": "The problems that really occurred are documented with their causes and fixes.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Limitations, stated honestly",
+      "say": "The known limitations, stated honestly. SQLite means one server. Plain HTTP in the demo. Rollback recreates containers, so there is a few seconds of downtime. Jenkins polls instead of using a webhook. Docker Hub publishing was not run. Ansible was verified on a container, not a real virtual machine. And this older note about GitHub is out of date: the repository was pushed, as the Task 4 video showed, but issues and pull requests do not exist yet.",
+      "cmd": "Get-Content docs/08-project-report.md | Select-Object -Skip 109 -First 11",
+      "expect": "Nine limitations, including SQLite, HTTP, downtime on rollback, polling, untested Docker Hub, Ansible on a container, and the outdated 'not pushed to GitHub' line.",
+      "tell": "I know exactly what is not done: GitHub issues and pull requests, Docker Hub, a real VM and the Maven question.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Future improvements",
+      "say": "And what I would improve next: PostgreSQL for several app servers, HTTPS with Let's Encrypt, automatic expiry of pending bookings, a staff dashboard, e-mail confirmations, a GitHub webhook with a multibranch pipeline, blue green deployments for zero downtime, monitoring of the health endpoint, and image vulnerability scanning in the pipeline.",
+      "cmd": "Get-Content docs/08-project-report.md | Select-Object -Skip 122 -First 10",
+      "expect": "Nine future enhancements: PostgreSQL, HTTPS, expiry, staff dashboard, e-mail, webhook/multibranch, blue/green, monitoring, image scanning.",
+      "tell": "The next steps are a real database, HTTPS, zero-downtime deployments, monitoring and security scanning.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Viva preparation",
+      "say": "For the viva I prepared a cheat sheet with a thirty second introduction, a two minute explanation and the workflow in order, and for every task a file of likely questions with answers specific to this project. Here is the thirty second introduction, and the number of viva question files in this demonstration pack.",
+      "cmd": "Get-Content docs/task-reports/VIVA_CHEAT_SHEET.md | Select-Object -Skip 2 -First 10; 'viva question files in this pack: ' + (Get-ChildItem docs/task-reports/demonstrations -Recurse -Filter 'task-*-questions.md' | Measure-Object).Count",
+      "expect": "The 30-second introduction and 'viva question files in this pack: 15' (once all tasks are done).",
+      "tell": "I have a 30-second and a 2-minute explanation ready, and questions for every task.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "What is still open",
+      "say": "To end, what is still open, taken from the project checklist. The items marked prepared need something only I can do: the GitHub issues and pull requests need my GitHub login, Docker Hub needs an account, and a real Ansible run needs a virtual machine. Everything else is verified, and this video showed the chain from a commit to a verified deployment, with real data.",
+      "cmd": "Select-String -Path docs/15-task-checklist.md -Pattern '\\*\\*Prepared\\*\\*' | ForEach-Object { $c = $_.Line -split '\\|'; 'Task ' + $c[1].Trim() + ': ' + $c[2].Trim() }",
+      "expect": "The checklist rows marked Prepared: backlog linked to GitHub issues, pull requests, Docker Hub publishing.",
+      "tell": "Three things need external accounts: GitHub issues and pull requests, Docker Hub, and a real VM for Ansible.",
+      "pauseAfter": 5
+    }
+  ]
+}

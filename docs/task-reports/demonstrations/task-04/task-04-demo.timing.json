@@ -1,0 +1,53 @@
+﻿{
+    "offsetSec":  1.1869999999999998,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.3,
+                      "title":  "The repository and its key files"
+                  },
+                  {
+                      "videoStartSec":  31,
+                      "title":  "README: the front page"
+                  },
+                  {
+                      "videoStartSec":  51.8,
+                      "title":  ".gitignore: what Git must not store"
+                  },
+                  {
+                      "videoStartSec":  83.6,
+                      "title":  ".gitattributes: line endings"
+                  },
+                  {
+                      "videoStartSec":  108.3,
+                      "title":  "CONTRIBUTING: the team rules"
+                  },
+                  {
+                      "videoStartSec":  134.9,
+                      "title":  "Issue templates"
+                  },
+                  {
+                      "videoStartSec":  155.4,
+                      "title":  "Pull request template and review checklist"
+                  },
+                  {
+                      "videoStartSec":  184.4,
+                      "title":  "Branches that exist today"
+                  },
+                  {
+                      "videoStartSec":  211.9,
+                      "title":  "History as a graph"
+                  },
+                  {
+                      "videoStartSec":  238.6,
+                      "title":  "Tags and the remote"
+                  },
+                  {
+                      "videoStartSec":  265.5,
+                      "title":  "Local repository versus the GitHub repository"
+                  },
+                  {
+                      "videoStartSec":  296.2,
+                      "title":  "Anatomy of one commit"
+                  }
+              ]
+}

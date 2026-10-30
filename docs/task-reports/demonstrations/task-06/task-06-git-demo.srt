@@ -1,0 +1,157 @@
+﻿1
+00:00:01,000 --> 00:00:04,000
+This is the Git collaboration part of Task 6.
+
+2
+00:00:04,000 --> 00:00:11,000
+Two developers, or here two feature branches, were started from the same commit on develop.
+
+3
+00:00:11,000 --> 00:00:17,000
+One added the hotel contact footer, the other added a footer showing the running release.
+
+4
+00:00:17,000 --> 00:00:18,000
+Look at this graph.
+
+5
+00:00:18,000 --> 00:00:24,000
+The two side lines branch from the same point and merge back one after the other.
+
+6
+00:00:24,000 --> 00:00:27,000
+The common starting point is printed below.
+
+7
+00:00:31,000 --> 00:00:36,000
+When this happened in the project, I saved the unedited terminal output.
+
+8
+00:00:36,000 --> 00:00:45,000
+Merging the second feature printed conflict in three files: style dot css, base dot html and the integration tests.
+
+9
+00:00:45,000 --> 00:00:50,000
+Git merged what it could, and stopped, saying the automatic merge failed.
+
+10
+00:00:50,000 --> 00:00:55,000
+The status lines starting with U U mean unmerged on both sides.
+
+11
+00:00:59,000 --> 00:01:07,000
+To show that it is real, I reproduce it now in a disposable clone in the temporary folder, so the project is not touched.
+
+12
+00:01:07,000 --> 00:01:16,000
+I clone the repository, go to the commit where the contact footer was already merged, and try to merge the release footer branch.
+
+13
+00:01:16,000 --> 00:01:21,000
+Git reports the same three conflicts, exactly as in the saved evidence.
+
+14
+00:01:25,000 --> 00:01:29,000
+This is how Git shows a conflict inside the file.
+
+15
+00:01:29,000 --> 00:01:34,000
+The line with seven less than signs and HEAD starts our side, the contact footer.
+
+16
+00:01:34,000 --> 00:01:38,000
+The line of equals signs separates the two versions.
+
+17
+00:01:38,000 --> 00:01:44,000
+The line with seven greater than signs ends the other side, the release footer.
+
+18
+00:01:44,000 --> 00:01:47,000
+Git cannot know which to keep, so a person must decide.
+
+19
+00:01:47,000 --> 00:01:49,000
+Here both lines are wanted.
+
+20
+00:01:53,000 --> 00:01:58,000
+This is the real resolved file from the actual merge commit.
+
+21
+00:01:58,000 --> 00:02:05,000
+Both features were wanted, so the resolution keeps both lines: the contact line first, the release line below.
+
+22
+00:02:05,000 --> 00:02:11,000
+The style sheet got one combined footer rule, and each line sits on its own row.
+
+23
+00:02:11,000 --> 00:02:14,000
+Nothing from either developer was lost.
+
+24
+00:02:18,000 --> 00:02:21,000
+The third conflicted file was the test file.
+
+25
+00:02:21,000 --> 00:02:26,000
+Both new tests were kept, one for the contact details and one for the release footer.
+
+26
+00:02:26,000 --> 00:02:39,000
+And the merge commit message documents the whole decision: what was in conflict in each file, what was kept, and that the linter was clean and all eighty nine tests passed before committing.
+
+27
+00:02:39,000 --> 00:02:40,000
+That is good practice.
+
+28
+00:02:44,000 --> 00:02:52,000
+Back in the practice clone I abort the merge, which returns it to the state before the merge, then delete the clone.
+
+29
+00:02:52,000 --> 00:02:56,000
+Then I show that my real project repository is unchanged.
+
+30
+00:02:59,000 --> 00:03:01,000
+Now the release tags.
+
+31
+00:03:01,000 --> 00:03:05,000
+A tag is a permanent label on one commit that marks a release.
+
+32
+00:03:05,000 --> 00:03:12,000
+We have v1.0.0, the first complete version, and v1.1.0, which adds the nights column.
+
+33
+00:03:12,000 --> 00:03:20,000
+For each tag I print the commit it points to, and the VERSION file as it was inside that tag.
+
+34
+00:03:20,000 --> 00:03:24,000
+So the tag really contains the released version.
+
+35
+00:03:28,000 --> 00:03:31,000
+What is the difference between a branch and a tag?
+
+36
+00:03:31,000 --> 00:03:37,000
+A branch is a moving line of development, it advances with every new commit.
+
+37
+00:03:37,000 --> 00:03:40,000
+A tag stays fixed on one commit.
+
+38
+00:03:40,000 --> 00:03:50,000
+Proof: main has moved on eleven commits since the v1.1.0 tag, mostly documentation, but the tag still points to the same release commit.
+
+39
+00:03:50,000 --> 00:03:55,000
+Git describe prints exactly that: the tag name, eleven commits ahead.
+
+

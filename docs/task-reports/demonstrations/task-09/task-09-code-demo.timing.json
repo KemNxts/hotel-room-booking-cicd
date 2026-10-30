@@ -1,0 +1,41 @@
+﻿{
+    "offsetSec":  1.177,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "Selenium and the five critical journeys"
+                  },
+                  {
+                      "videoStartSec":  36.7,
+                      "title":  "WebDriver: the browser fixture"
+                  },
+                  {
+                      "videoStartSec":  70.3,
+                      "title":  "Test data: unique and independent"
+                  },
+                  {
+                      "videoStartSec":  96.3,
+                      "title":  "Element locators"
+                  },
+                  {
+                      "videoStartSec":  126.2,
+                      "title":  "Explicit waits"
+                  },
+                  {
+                      "videoStartSec":  159.6,
+                      "title":  "Assertions: what the test checks"
+                  },
+                  {
+                      "videoStartSec":  189.9,
+                      "title":  "Failure screenshots"
+                  },
+                  {
+                      "videoStartSec":  215.6,
+                      "title":  "Running the browser tests and reading the report"
+                  },
+                  {
+                      "videoStartSec":  252.2,
+                      "title":  "How Selenium tests differ from unit and integration tests"
+                  }
+              ]
+}

@@ -1,0 +1,73 @@
+{
+  "title": "Task 14 (part 1) - Idempotency, a new release and rollback with Ansible",
+  "prereq": [
+    "Task 13 done first: the lab target is running and has been provisioned (`cd deploy\\ansible\\lab; docker compose up -d target`, then one run of playbook.yml).",
+    "Docker Desktop running; port 8088 free. The target is a privileged Ubuntu CONTAINER standing in for a server, not a VM.",
+    "This part deploys a pretend release `1.1.1-demo` to the LAB server only and rolls it back. It never touches staging, prod or GitHub."
+  ],
+  "recovery": [
+    {"symptom": "A task fails with `Release file ... is not valid yet` (apt)", "fix": "The PC clock is behind real time (found while preparing these videos: 5 h 30 min). Fix the Windows time zone / sync the clock and restart Docker Desktop, or use the lab-only workaround shown in the Task 13 video (apt `Check-Date` off inside the lab container)."},
+    {"symptom": "`UNREACHABLE` from Ansible", "fix": "`cd deploy\\ansible\\lab; docker compose up -d target`, wait 20 seconds, retry."},
+    {"symptom": "rollback.yml fails with 'No such image'", "fix": "That release was never deployed on this server. Deploy it first, or give an existing one: `-e rollback_to=1.1.0`."},
+    {"symptom": "The repeat run shows changed>0", "fix": "Something really changed since the last run (VERSION file, a tracked file, or a commit). Read which task says 'changed'. If the working copy has uncommitted tracked changes the commit label ends in '-dirty': commit first."},
+    {"symptom": "/health on 8088 does not answer", "fix": "`docker exec hotel-ansible-lab-target-1 docker ps` shows the containers inside the server; `docker exec hotel-ansible-lab-target-1 docker compose -f /opt/hotel-booking/docker-compose.yml logs --tail 30`."}
+  ],
+  "extra": [
+    {"what": "Read the saved first-run output (changed=7)", "cmd": "Get-Content docs/evidence/ansible/run1-first-deploy-v1.0.0.txt | Select-Object -Last 25"},
+    {"what": "Throw the lab away and start from a fresh server", "cmd": "cd deploy\\ansible\\lab; docker compose down -v; docker compose up -d --build target"}
+  ],
+  "extraQuestions": [
+    {"q": "Where do the numbers changed=7, 5, 0 and 3 come from?", "a": "They are the PLAY RECAP lines of real runs, saved unedited in docs/evidence/ansible/: run 1 (first provisioning of a fresh server) changed=7, run 2 (upgrade) changed=5, run 3 (repeat) changed=0, run 4 (rollback.yml) changed=3. They were re-run on 2026-10-20 with the same result. In this video the repeat run, a new release and the rollback are executed live, and the first run is shown from the saved evidence because a fresh provisioning takes several minutes."},
+    {"q": "Does rollback rebuild the old version?", "a": "No. Every deploy keeps the older images on the server and records the release it replaced in /opt/hotel-booking/previous_release. rollback.yml checks that the target release's images exist, points the .env file at it, restarts the containers and asserts that /health reports exactly that version."}
+  ],
+  "steps": [
+    {
+      "title": "The saved results of the first runs",
+      "say": "This is Task 14, reliability: idempotency and rollback. First, the real results of the earlier runs on a fresh server, saved unedited in the evidence folder. Run one, the first provisioning: seven changes. Run two, the upgrade to version one point one: five changes. Run three, the same playbook again: zero changes. Run four, the rollback playbook: three changes. And run five, the Selenium journeys on the restored release: five passed. A first run on a fresh server takes several minutes, so I show it from the saved evidence and run the other steps live.",
+      "cmd": "Select-String -Path docs/evidence/ansible/run*.txt -Pattern 'changed=\\d+|\\d+ passed' | ForEach-Object { '{0,-36} {1}' -f $_.Filename, ($_.Line.Trim() -replace '\\s+', ' ') }",
+      "expect": "run1 ... changed=7, run2 ... changed=5, run3 ... changed=0, run4 ... changed=3 and run5 '5 passed'.",
+      "tell": "These are the saved results of real runs: seven changes on the first run, zero on the repeat, three for the rollback.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Live: the repeat run changes nothing",
+      "say": "Now live. The lab server was just provisioned in the previous task. I run the same playbook again. Ansible checks every task against the real state of the server. Everything already matches, so every task reports ok, and the play recap says changed equals zero. That is idempotency: running the same configuration twice has the same result as running it once, and a second run is safe.",
+      "cmd": "Push-Location deploy/ansible/lab; docker compose run --rm controller ansible-playbook -i lab/inventory.ini playbook.yml; Pop-Location",
+      "expect": "All tasks ok; PLAY RECAP: ok=13 (or similar) changed=0 unreachable=0 failed=0.",
+      "tell": "Running the playbook a second time changed nothing: that is idempotency.",
+      "pauseAfter": 6
+    },
+    {
+      "title": "Health check: what is running now",
+      "say": "A health check. The portal on the lab server answers on port eighty eighty eight. The answer reports the status ok, the environment, and the version and commit that are running. This is the release I will now replace, and later restore.",
+      "cmd": "curl.exe -s http://localhost:8088/health; ''; 'previous_release file: ' + (docker exec hotel-ansible-lab-target-1 sh -c 'cat /opt/hotel-booking/previous_release 2>/dev/null || echo none')",
+      "expect": "{\"commit\":\"...\",\"env\":\"prod\",\"status\":\"ok\",\"version\":\"1.1.0\"} and the previous_release file.",
+      "tell": "The health endpoint tells me exactly which version and commit is running.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Live: deploy a pretend bad release",
+      "say": "Now I simulate a new release by passing a different version number, one point one point one dash demo. Ansible copies the files, records the current release as the previous one, builds the new images, and restarts the containers on the new tag. This time several tasks report changed. The recap shows the number of changes, and the check at the end asserts that the running version is the new one.",
+      "cmd": "Push-Location deploy/ansible/lab; docker compose run --rm controller ansible-playbook -i lab/inventory.ini playbook.yml -e app_version=1.1.1-demo; Pop-Location; curl.exe -s http://localhost:8088/health",
+      "expect": "Several tasks 'changed' (previous release saved, env file, build, containers); recap changed>0, failed=0; then /health shows \"version\":\"1.1.1-demo\".",
+      "tell": "A new release changed the server, and the health check confirms the new version is running.",
+      "pauseAfter": 6
+    },
+    {
+      "title": "Live: roll back to the previous release",
+      "say": "Pretend this release is bad. The rollback playbook returns to the previous release. It reads the previous release file, refuses to continue if those images are missing, points the deployment at them, restarts the containers, and asserts that the health check reports exactly the target version. No rebuild is needed, because the old images are still on the server. The message says rolled back from one point one point one dash demo, to one point one point zero.",
+      "cmd": "Push-Location deploy/ansible/lab; docker compose run --rm controller ansible-playbook -i lab/inventory.ini rollback.yml; Pop-Location",
+      "expect": "Tasks reading previous_release, 'Refuse to continue...' skipped, containers restarted; a message 'Rolled back from 1.1.1-demo to 1.1.0'; recap changed=3 (or similar), failed=0.",
+      "tell": "Rollback switched the server back to the stored previous release in seconds, without rebuilding.",
+      "pauseAfter": 6
+    },
+    {
+      "title": "Verify the restored release",
+      "say": "Verification. The health check now reports version one point one point zero again: the restored release. Both images are still stored on the server, so I could even roll forward again. And the data lives in the same volume, so no bookings are lost. Finally I will run the Selenium journeys against this restored server, in a visible browser.",
+      "cmd": "curl.exe -s http://localhost:8088/health; ''; docker exec hotel-ansible-lab-target-1 docker images --format '{{.Repository}}:{{.Tag}}'",
+      "expect": "\"version\":\"1.1.0\" again, and the images hotel-booking-app and hotel-booking-nginx for both 1.1.0 and 1.1.1-demo are still on the server.",
+      "tell": "The previous release is back, verified by the health endpoint, and the other release is still available.",
+      "pauseAfter": 5
+    }
+  ]
+}

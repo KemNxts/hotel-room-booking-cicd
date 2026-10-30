@@ -1,0 +1,53 @@
+﻿{
+    "offsetSec":  1.193,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.3,
+                      "title":  "The Dockerfile: building the image (1/2)"
+                  },
+                  {
+                      "videoStartSec":  36.6,
+                      "title":  "The Dockerfile (2/2): safe defaults"
+                  },
+                  {
+                      "videoStartSec":  65.9,
+                      "title":  "Docker Compose: the whole stack"
+                  },
+                  {
+                      "videoStartSec":  94.7,
+                      "title":  "Image versus container"
+                  },
+                  {
+                      "videoStartSec":  127.6,
+                      "title":  "Build and tag an image"
+                  },
+                  {
+                      "videoStartSec":  158,
+                      "title":  "Run a container with a port and a volume"
+                  },
+                  {
+                      "videoStartSec":  189.7,
+                      "title":  "Inspect the container"
+                  },
+                  {
+                      "videoStartSec":  217.9,
+                      "title":  "Logs"
+                  },
+                  {
+                      "videoStartSec":  239.8,
+                      "title":  "Stop, start and restart"
+                  },
+                  {
+                      "videoStartSec":  271.5,
+                      "title":  "Persistent storage: writing data"
+                  },
+                  {
+                      "videoStartSec":  290.6,
+                      "title":  "Persistent storage: remove the container, keep the data"
+                  },
+                  {
+                      "videoStartSec":  323.4,
+                      "title":  "Clean up the demo objects"
+                  }
+              ]
+}

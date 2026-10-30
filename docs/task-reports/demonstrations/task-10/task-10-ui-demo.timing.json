@@ -1,0 +1,45 @@
+﻿{
+    "offsetSec":  1.1800000000000002,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "The Stage View: build 2 is red"
+                  },
+                  {
+                      "videoStartSec":  28.6,
+                      "title":  "Build 2: the console shows the failing test"
+                  },
+                  {
+                      "videoStartSec":  51.9,
+                      "title":  "Why deployment was skipped"
+                  },
+                  {
+                      "videoStartSec":  79.4,
+                      "title":  "The Test Result page of build 2"
+                  },
+                  {
+                      "videoStartSec":  98.2,
+                      "title":  "The stale report problem, proved by the artifacts"
+                  },
+                  {
+                      "videoStartSec":  124.7,
+                      "title":  "Staging before the defect: the record of build 1"
+                  },
+                  {
+                      "videoStartSec":  146.5,
+                      "title":  "The corrective commit: build 3 is green and staging moves"
+                  },
+                  {
+                      "videoStartSec":  169.4,
+                      "title":  "Build 9: the fix for stale reports works"
+                  },
+                  {
+                      "videoStartSec":  195.4,
+                      "title":  "Build 9: no stale artifacts either"
+                  },
+                  {
+                      "videoStartSec":  210.9,
+                      "title":  "Every build now starts clean"
+                  }
+              ]
+}

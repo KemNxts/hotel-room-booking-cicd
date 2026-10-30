@@ -1,0 +1,29 @@
+﻿{
+    "offsetSec":  1.202,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "Start a real build: Build with Parameters"
+                  },
+                  {
+                      "videoStartSec":  26.3,
+                      "title":  "Watching the stages: checkout, install, static checks, tests"
+                  },
+                  {
+                      "videoStartSec":  54,
+                      "title":  "Watching the stages: Selenium, package, images, registry"
+                  },
+                  {
+                      "videoStartSec":  83.2,
+                      "title":  "Deploy and health check, then the result"
+                  },
+                  {
+                      "videoStartSec":  106.2,
+                      "title":  "The console: images, registry push, deployment"
+                  },
+                  {
+                      "videoStartSec":  132,
+                      "title":  "The deployment record"
+                  }
+              ]
+}

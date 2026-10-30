@@ -1,0 +1,249 @@
+﻿1
+00:00:01,000 --> 00:00:05,000
+This is Task 8, pipeline as code and deployment.
+
+2
+00:00:05,000 --> 00:00:15,000
+A Jenkinsfile describes the whole build and deployment process as code, stored in the repository next to the application.
+
+3
+00:00:15,000 --> 00:00:17,000
+This is the top of ours.
+
+4
+00:00:17,000 --> 00:00:27,000
+The comment shows the flow: checkout, install, static checks, tests, Selenium, package, build images, publish, deploy and health check.
+
+5
+00:00:27,000 --> 00:00:36,000
+And the key rule, the quality gate: if any command fails, its stage fails and every later stage is skipped.
+
+6
+00:00:40,000 --> 00:00:42,000
+These are the pipeline parameters.
+
+7
+00:00:42,000 --> 00:00:47,000
+They configure the target environment without changing the code.
+
+8
+00:00:47,000 --> 00:00:49,000
+APP ENV chooses staging or prod.
+
+9
+00:00:49,000 --> 00:00:52,000
+BRANCH chooses which Git branch to build.
+
+10
+00:00:52,000 --> 00:00:58,000
+REGISTRY chooses where images are published, by default the local registry.
+
+11
+00:00:58,000 --> 00:01:02,000
+Below is the trigger: poll SCM every five minutes.
+
+12
+00:01:02,000 --> 00:01:11,000
+A GitHub webhook would be faster, but GitHub cannot reach a Jenkins running on localhost, so Jenkins asks Git for new commits instead.
+
+13
+00:01:15,000 --> 00:01:30,000
+Options: timestamps in the log, only the last twenty builds are kept, no two builds run at the same time because two deployments would fight over the same containers, and a thirty minute time limit.
+
+14
+00:01:30,000 --> 00:01:39,000
+Environment variables: the Python version, and the host port, which is 8082 for prod and 8081 for staging, decided by the parameter.
+
+15
+00:01:39,000 --> 00:01:48,000
+The compose project name includes the environment, so staging and prod get separate containers and separate database volumes.
+
+16
+00:01:52,000 --> 00:01:54,000
+Stage one, checkout.
+
+17
+00:01:54,000 --> 00:01:56,000
+Jenkins gets the source from Git.
+
+18
+00:01:56,000 --> 00:02:10,000
+The next line deletes the reports and dist folders from the previous build, because the workspace is reused, and an old test report must never be published as the result of the new build.
+
+19
+00:02:10,000 --> 00:02:18,000
+Then it builds the version: the VERSION file plus the short commit id, for example 1.1.0 dash 1c2103c.
+
+20
+00:02:18,000 --> 00:02:27,000
+That one tag is used for the source archive, both images and the health check, so every deployment traces back to one commit.
+
+21
+00:02:31,000 --> 00:02:34,000
+Stage two installs dependencies.
+
+22
+00:02:34,000 --> 00:02:42,000
+It creates a fresh Python virtual environment and installs the pinned requirements, so the build is reproducible.
+
+23
+00:02:42,000 --> 00:02:53,000
+Stage three, static checks, runs compile all, which finds syntax errors, and flake8, which finds style problems, unused imports and undefined names.
+
+24
+00:02:53,000 --> 00:03:00,000
+These are the build and lint steps for a Python project, and the equivalent of compile in Java.
+
+25
+00:03:00,000 --> 00:03:02,000
+This is not a Maven build.
+
+26
+00:03:06,000 --> 00:03:13,000
+Stage four runs the unit and integration tests with pytest and writes a JUnit XML report.
+
+27
+00:03:13,000 --> 00:03:17,000
+Stage five runs the Selenium browser tests in headless Chromium.
+
+28
+00:03:17,000 --> 00:03:20,000
+Each is just a shell command.
+
+29
+00:03:20,000 --> 00:03:32,000
+If pytest finds a failing test, it exits with an error code, the stage turns red, and Jenkins skips everything after it: packaging, images, publishing and deployment.
+
+30
+00:03:32,000 --> 00:03:37,000
+That is the quality gate, and it is why untested code can never be deployed.
+
+31
+00:03:41,000 --> 00:03:44,000
+Stage six packages the source.
+
+32
+00:03:44,000 --> 00:03:51,000
+Git archive creates a tar gz file with exactly the committed files of this commit, nothing uncommitted.
+
+33
+00:03:51,000 --> 00:03:59,000
+Then sha256 sum writes a checksum file next to it, so anyone can verify later that the archive is unchanged.
+
+34
+00:03:59,000 --> 00:04:02,000
+Both files are archived with the build.
+
+35
+00:04:02,000 --> 00:04:05,000
+This is the source artifact of our pipeline.
+
+36
+00:04:09,000 --> 00:04:14,000
+Stage seven builds two Docker images, the application and the Nginx proxy.
+
+37
+00:04:14,000 --> 00:04:19,000
+Both are tagged with the registry prefix and the version and commit tag.
+
+38
+00:04:19,000 --> 00:04:27,000
+The application image receives the version and the commit as build arguments, so the running container can report them on the health address.
+
+39
+00:04:32,000 --> 00:04:34,000
+Stage eight publishes the images.
+
+40
+00:04:34,000 --> 00:04:40,000
+With the local registry, localhost colon 5000, a simple docker push is enough.
+
+41
+00:04:40,000 --> 00:04:49,000
+For a remote registry such as Docker Hub, the pipeline uses a Jenkins credential, and the password is masked in the log.
+
+42
+00:04:49,000 --> 00:04:52,000
+I must be honest: only the local registry was tested.
+
+43
+00:04:52,000 --> 00:05:00,000
+Docker Hub is supported by the code but was never run, because it needs an account and a credential.
+
+44
+00:05:05,000 --> 00:05:06,000
+Stage nine deploys.
+
+45
+00:05:06,000 --> 00:05:13,000
+The secret key is injected from a Jenkins credential, only for this block, and masked in the log.
+
+46
+00:05:13,000 --> 00:05:18,000
+Docker compose pull fetches exactly the images that were just published.
+
+47
+00:05:18,000 --> 00:05:25,000
+Docker compose up with dash dash wait starts the containers and blocks until they are healthy.
+
+48
+00:05:25,000 --> 00:05:29,000
+If they never become healthy within two minutes, the stage fails.
+
+49
+00:05:29,000 --> 00:05:33,000
+Deployment uses the tested image, never a rebuild.
+
+50
+00:05:37,000 --> 00:05:39,000
+Stage ten, the health check.
+
+51
+00:05:39,000 --> 00:05:46,000
+It calls the health address through the whole chain, Nginx, Gunicorn and SQLite, and saves the answer.
+
+52
+00:05:46,000 --> 00:05:55,000
+Then two grep commands check that the version and the commit reported by the running application are exactly the ones this build created.
+
+53
+00:05:55,000 --> 00:05:58,000
+If a wrong version were running, this stage would fail.
+
+54
+00:05:58,000 --> 00:06:02,000
+This is how we know that what is deployed is what was tested.
+
+55
+00:06:06,000 --> 00:06:16,000
+Finally, a deployment record is written: environment, branch, version, commit, image names, the address and the Jenkins build address.
+
+56
+00:06:16,000 --> 00:06:29,000
+After every build, success or failure, the post section publishes the test results and archives reports, failure screenshots, the source archive and the record.
+
+57
+00:06:29,000 --> 00:06:32,000
+Jenkins then shows pass and fail trends.
+
+58
+00:06:32,000 --> 00:06:35,000
+A failure message says that nothing was deployed.
+
+59
+00:06:39,000 --> 00:06:44,000
+To summarise, here are the stages with their line numbers.
+
+60
+00:06:44,000 --> 00:06:48,000
+The tests come before package, images, publish and deploy.
+
+61
+00:06:48,000 --> 00:06:52,000
+Deployment happens only after the quality gates pass.
+
+62
+00:06:52,000 --> 00:06:57,000
+The next part of this video shows a real run of this pipeline in Jenkins.
+
+

@@ -1,0 +1,141 @@
+﻿1
+00:00:01,000 --> 00:00:05,000
+This is Task 10, continuous testing in Jenkins.
+
+2
+00:00:05,000 --> 00:00:06,000
+The idea is simple.
+
+3
+00:00:06,000 --> 00:00:09,000
+Each test stage runs a command.
+
+4
+00:00:09,000 --> 00:00:18,000
+When pytest finds a failing test, it exits with a non zero code, Jenkins marks the stage failed, and every later stage is skipped.
+
+5
+00:00:18,000 --> 00:00:30,000
+These are the lines of the Jenkinsfile that do it: the two test commands, the report publishing that always runs, and the clean up line at the start.
+
+6
+00:00:30,000 --> 00:00:35,000
+Notice that package, images, publish and deploy come after the tests.
+
+7
+00:00:39,000 --> 00:00:47,000
+To prove the quality gate, I introduced a deliberate defect on a throw away branch called experiment slash defect demo.
+
+8
+00:00:47,000 --> 00:00:52,000
+It has two commits: first the defect, then the corrective fix.
+
+9
+00:00:52,000 --> 00:00:58,000
+And this second command proves the safety: it lists the branches that contain the defect commit.
+
+10
+00:00:58,000 --> 00:01:01,000
+Only the two experiment branches.
+
+11
+00:01:01,000 --> 00:01:04,000
+The defect was never merged into develop or main.
+
+12
+00:01:08,000 --> 00:01:09,000
+This is the defect.
+
+13
+00:01:09,000 --> 00:01:18,000
+In the overlap rule of the booking data access layer, the strict comparison, check in less than check out, became less than or equal.
+
+14
+00:01:18,000 --> 00:01:27,000
+A tiny off by one change, but it wrongly says that a room is booked when one guest checks out on the same day another checks in.
+
+15
+00:01:27,000 --> 00:01:32,000
+A subtle bug like this is exactly what automated tests exist to catch.
+
+16
+00:01:36,000 --> 00:01:39,000
+Now I reproduce what Jenkins saw, safely.
+
+17
+00:01:39,000 --> 00:01:48,000
+I clone the repository into a disposable folder, check out the defect commit, and run the same tests the pipeline runs.
+
+18
+00:01:48,000 --> 00:01:53,000
+A test fails, the summary says failed, and the exit code is one.
+
+19
+00:01:53,000 --> 00:01:57,000
+That non zero code is exactly what makes Jenkins stop.
+
+20
+00:01:57,000 --> 00:02:00,000
+Nothing in my real project changed.
+
+21
+00:02:09,000 --> 00:02:11,000
+Now the corrective commit.
+
+22
+00:02:11,000 --> 00:02:17,000
+I check out the fix in the same disposable clone and run the same tests.
+
+23
+00:02:17,000 --> 00:02:20,000
+They all pass, and the exit code is zero.
+
+24
+00:02:20,000 --> 00:02:26,000
+In Jenkins, this is build number three: green, and the deployment stage runs.
+
+25
+00:02:26,000 --> 00:02:30,000
+The fix restored the strict comparison, one line in one file.
+
+26
+00:02:39,000 --> 00:02:48,000
+I delete the disposable clone and confirm that my project is untouched: same branch, and no new changes except this demonstration folder.
+
+27
+00:02:51,000 --> 00:02:54,000
+Studying build two, I found a real problem.
+
+28
+00:02:54,000 --> 00:03:01,000
+Its test report listed five Selenium tests as passed, although the Selenium stage had been skipped.
+
+29
+00:03:01,000 --> 00:03:09,000
+Jenkins reuses its workspace, so the old report from build one was still there and was published again.
+
+30
+00:03:09,000 --> 00:03:18,000
+The fix, on branch fix slash jenkins stale reports, is this: the checkout stage now deletes the reports and dist folders first.
+
+31
+00:03:18,000 --> 00:03:23,000
+A build can no longer publish a report from an older build.
+
+32
+00:03:28,000 --> 00:03:30,000
+One last detail you may be asked about.
+
+33
+00:03:30,000 --> 00:03:39,000
+The Jenkins builds were made before the history was rewritten, so Jenkins and the evidence logs show the original commit IDs.
+
+34
+00:03:39,000 --> 00:03:51,000
+This map links each original ID to the current one: the defect commit, the corrective fix, and the stale report fix are all listed, with the same subject lines.
+
+35
+00:03:51,000 --> 00:03:52,000
+Same changes, new hash.
+
+

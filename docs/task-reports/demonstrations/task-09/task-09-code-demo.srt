@@ -1,0 +1,173 @@
+﻿1
+00:00:01,000 --> 00:00:04,000
+This is Task 9, Selenium test design.
+
+2
+00:00:04,000 --> 00:00:17,000
+Selenium is a tool that controls a real web browser from code: it opens pages, types in fields, clicks buttons and reads what is on the screen, like a very fast, very careful user.
+
+3
+00:00:17,000 --> 00:00:20,000
+We chose five critical user journeys.
+
+4
+00:00:20,000 --> 00:00:34,000
+Here are the five test functions: register, login with wrong and right password, search request and confirm, cancel and track, and a booked room being unavailable to another guest.
+
+5
+00:00:37,000 --> 00:00:41,000
+WebDriver is the standard way the test code talks to the browser.
+
+6
+00:00:41,000 --> 00:00:46,000
+Here is the fixture that creates the browser for each test.
+
+7
+00:00:46,000 --> 00:00:54,000
+It starts Chrome, headless by default, which means without a visible window, and that is how Jenkins runs it.
+
+8
+00:00:54,000 --> 00:00:57,000
+Setting HEADLESS to zero shows the window.
+
+9
+00:00:57,000 --> 00:01:03,000
+It gets the driver program from Selenium itself, and it quits the browser after every test.
+
+10
+00:01:03,000 --> 00:01:06,000
+If a test fails, it also saves a screenshot.
+
+11
+00:01:10,000 --> 00:01:14,000
+Test data must not make tests depend on each other.
+
+12
+00:01:14,000 --> 00:01:23,000
+Every test registers a new guest with a random email built from a UUID, and uses dates far in the future that change for each run.
+
+13
+00:01:23,000 --> 00:01:28,000
+So tests never clash, even against a deployment that already has old bookings.
+
+14
+00:01:28,000 --> 00:01:32,000
+The password is a fixed value that only exists for tests.
+
+15
+00:01:36,000 --> 00:01:40,000
+A locator tells Selenium which element on the page to use.
+
+16
+00:01:40,000 --> 00:01:44,000
+We use ids, such as full name, email and register button.
+
+17
+00:01:44,000 --> 00:01:54,000
+Ids are the most stable locator, because the developers put them in the page on purpose, and they do not change when the design changes.
+
+18
+00:01:54,000 --> 00:02:02,000
+The helper function register shows the pattern: find the element, type into it, click, then wait for the result.
+
+19
+00:02:06,000 --> 00:02:12,000
+Web pages take time to respond, so a test must wait, but not blindly.
+
+20
+00:02:12,000 --> 00:02:14,000
+We never use fixed sleeps.
+
+21
+00:02:14,000 --> 00:02:22,000
+We use explicit waits: wait until this element is visible, or until this text appears, for at most ten seconds.
+
+22
+00:02:22,000 --> 00:02:26,000
+As soon as the condition is true, the test continues.
+
+23
+00:02:26,000 --> 00:02:33,000
+The fixture even sets the implicit wait to zero so that only our explicit waits apply.
+
+24
+00:02:33,000 --> 00:02:36,000
+This makes tests fast and stable.
+
+25
+00:02:40,000 --> 00:02:43,000
+An assertion is the check that decides pass or fail.
+
+26
+00:02:43,000 --> 00:02:45,000
+Here is journey three.
+
+27
+00:02:45,000 --> 00:02:53,000
+After searching and booking, it asserts that the status is PENDING and that the dates on the page equal the dates I chose.
+
+28
+00:02:53,000 --> 00:03:02,000
+After clicking Confirm, it waits for CONFIRMED and asserts that the message says booking confirmed, and that the confirm button is gone.
+
+29
+00:03:02,000 --> 00:03:06,000
+If any assertion is false, the test fails and the pipeline stops.
+
+30
+00:03:10,000 --> 00:03:18,000
+When a browser test fails, text alone is hard to understand, so the fixture saves a screenshot and the page source.
+
+31
+00:03:18,000 --> 00:03:20,000
+This is the function.
+
+32
+00:03:20,000 --> 00:03:26,000
+These files are real ones from earlier deliberate failure experiments, with their dates.
+
+33
+00:03:26,000 --> 00:03:30,000
+In Jenkins they are archived with the build.
+
+34
+00:03:30,000 --> 00:03:32,000
+A passing run creates none.
+
+35
+00:03:36,000 --> 00:03:40,000
+Now I run the browser tests with the documented command.
+
+36
+00:03:40,000 --> 00:03:49,000
+Pytest starts the real application on a free port, drives headless Chrome through the five journeys, and prints one line per test.
+
+37
+00:03:49,000 --> 00:03:58,000
+I also ask for a JUnit XML report, the format Jenkins reads, and then print its summary: tests, failures and errors.
+
+38
+00:03:58,000 --> 00:04:02,000
+The next video part shows the same tests in a visible browser.
+
+39
+00:04:12,000 --> 00:04:15,000
+How do the three kinds of test differ?
+
+40
+00:04:15,000 --> 00:04:19,000
+Unit tests check one function or class, in isolation, in milliseconds.
+
+41
+00:04:19,000 --> 00:04:27,000
+Integration tests send requests to the Flask app without a browser and check routes together with the database.
+
+42
+00:04:27,000 --> 00:04:36,000
+Selenium tests use a real browser through the whole stack, so they are slowest, but they prove that a real user can complete a journey.
+
+43
+00:04:36,000 --> 00:04:40,000
+Here are the real counts of each kind in this project.
+
+

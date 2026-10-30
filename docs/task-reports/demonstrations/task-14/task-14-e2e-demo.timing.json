@@ -1,0 +1,33 @@
+﻿{
+    "offsetSec":  1.2109999999999999,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "Selenium against the restored lab server"
+                  },
+                  {
+                      "videoStartSec":  32.5,
+                      "title":  "Journey 1: register"
+                  },
+                  {
+                      "videoStartSec":  42.4,
+                      "title":  "Journey 2: login"
+                  },
+                  {
+                      "videoStartSec":  63.7,
+                      "title":  "Journey 3: search, book and confirm"
+                  },
+                  {
+                      "videoStartSec":  78.7,
+                      "title":  "Journey 4: cancel and track"
+                  },
+                  {
+                      "videoStartSec":  98.8,
+                      "title":  "Journey 5: no double booking"
+                  },
+                  {
+                      "videoStartSec":  121.5,
+                      "title":  "Rollback verified end to end"
+                  }
+              ]
+}

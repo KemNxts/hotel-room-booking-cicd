@@ -1,0 +1,225 @@
+﻿1
+00:00:01,000 --> 00:00:05,000
+This is Task 13, configuration management with Ansible.
+
+2
+00:00:05,000 --> 00:00:19,000
+Configuration management means describing the desired state of a server in files, so that any server can be set up the same way, automatically and repeatably, instead of by hand.
+
+3
+00:00:19,000 --> 00:00:23,000
+Ansible does this over SSH, with no agent on the server.
+
+4
+00:00:23,000 --> 00:00:25,000
+First file: the inventory.
+
+5
+00:00:25,000 --> 00:00:28,000
+It is the list of servers, grouped by role.
+
+6
+00:00:28,000 --> 00:00:32,000
+Ours has one group called web, with one server.
+
+7
+00:00:32,000 --> 00:00:40,000
+This is the template for a real server, and below it the inventory of the lab, where I hide the lab only password.
+
+8
+00:00:44,000 --> 00:00:49,000
+Variables make the playbook configurable without changing the tasks.
+
+9
+00:00:49,000 --> 00:01:01,000
+Here are the real ones: the folder on the server, the environment, the public port, and the release being deployed, which is read from the VERSION file of the repository.
+
+10
+00:01:01,000 --> 00:01:05,000
+The commit comes from Git, so every deployment can be traced.
+
+11
+00:01:05,000 --> 00:01:13,000
+And the secret key is generated once, stored only on the control machine and in a git ignored file, and never printed.
+
+12
+00:01:17,000 --> 00:01:20,000
+The playbook is the list of tasks, each with a name.
+
+13
+00:01:20,000 --> 00:01:22,000
+It runs on the web group with sudo.
+
+14
+00:01:22,000 --> 00:01:50,000
+In order: install Docker and the Compose plugin, make sure Docker runs and starts on boot, create the application folders, copy the source and Docker files, remember the previous release for rollback, write the environment file, check whether the images already exist, build them if not, start the containers and wait until healthy, then check the portal through Nginx, and check that the running version is the expected one.
+
+15
+00:01:55,000 --> 00:01:56,000
+Here is one task in detail.
+
+16
+00:01:56,000 --> 00:02:07,000
+It writes the environment file that Docker Compose reads: the secret key, the environment, the port, the version, the commit and the image tag.
+
+17
+00:02:07,000 --> 00:02:13,000
+The file is owned by root with mode zero six zero zero, so only root can read the secret.
+
+18
+00:02:13,000 --> 00:02:18,000
+And no log is set, so Ansible never prints the secret in its output.
+
+19
+00:02:18,000 --> 00:02:25,000
+Ansible describes the state, and the copy module only changes the file if its content is different.
+
+20
+00:02:29,000 --> 00:02:31,000
+This is the idempotency design.
+
+21
+00:02:31,000 --> 00:02:34,000
+Each task checks the actual state.
+
+22
+00:02:34,000 --> 00:02:35,000
+Docker is installed?
+
+23
+00:02:35,000 --> 00:02:37,000
+Then nothing to do.
+
+24
+00:02:37,000 --> 00:02:39,000
+The file has this content?
+
+25
+00:02:39,000 --> 00:02:40,000
+Then nothing to do.
+
+26
+00:02:40,000 --> 00:02:51,000
+For the images, the playbook asks the server which commit the existing image was built from, and builds only if the release and commit are not there yet.
+
+27
+00:02:51,000 --> 00:03:01,000
+A rebuild would create a new image id and restart the containers every time, so this check is what keeps a second run at zero changes.
+
+28
+00:03:05,000 --> 00:03:10,000
+Ansible runs from a controller container, because it does not run natively on Windows.
+
+29
+00:03:10,000 --> 00:03:18,000
+First a syntax check, which reads the playbook and the inventory and reports errors without touching any server.
+
+30
+00:03:18,000 --> 00:03:22,000
+The answer is just the playbook name: the syntax is valid.
+
+31
+00:03:25,000 --> 00:03:26,000
+Now the target.
+
+32
+00:03:26,000 --> 00:03:28,000
+I start the lab server.
+
+33
+00:03:28,000 --> 00:03:34,000
+To be completely clear about what this is: it is not a separate virtual machine.
+
+34
+00:03:34,000 --> 00:03:43,000
+It is a privileged Docker container running Ubuntu twenty four oh four, with systemd and SSH, standing in for a server.
+
+35
+00:03:43,000 --> 00:03:48,000
+I print its operating system, and the privileged flag, to prove it.
+
+36
+00:03:48,000 --> 00:03:57,000
+The playbook uses only normal Ubuntu packages and SSH, so on a real Ubuntu server it should behave the same, but that was not tested.
+
+37
+00:04:13,000 --> 00:04:20,000
+Before the real run, a problem I found while preparing this video, and I want to show it openly.
+
+38
+00:04:20,000 --> 00:04:22,000
+This laptop's clock is wrong.
+
+39
+00:04:22,000 --> 00:04:27,000
+A real web server says the time in G M T is seventeen forty one.
+
+40
+00:04:27,000 --> 00:04:32,000
+This PC says twelve eleven in U T C, five and a half hours behind.
+
+41
+00:04:32,000 --> 00:04:46,000
+Ubuntu's package lists are dated with the real time, so on this fresh server apt refuses them as coming from the future, and the first task of the playbook, installing Docker, would fail.
+
+42
+00:04:46,000 --> 00:04:48,000
+I did not change the PC's clock.
+
+43
+00:04:48,000 --> 00:04:55,000
+For this disposable lab only, I switch off apt's date check with one small file, and apt update works.
+
+44
+00:04:55,000 --> 00:05:03,000
+On your own computer, the proper fix is to set the time zone and synchronise the clock in Windows.
+
+45
+00:05:08,000 --> 00:05:10,000
+The ping module is not a network ping.
+
+46
+00:05:10,000 --> 00:05:21,000
+It logs in over SSH and runs a small Python check, so a pong proves that the inventory, the SSH login and Python on the server all work.
+
+47
+00:05:24,000 --> 00:05:26,000
+Now the real run, live.
+
+48
+00:05:26,000 --> 00:05:38,000
+This lab server is brand new, so this is a first provisioning, and it takes a few minutes: it has to install Docker, copy the files and build the images.
+
+49
+00:05:38,000 --> 00:05:45,000
+Each task prints ok, if the server already matched, or changed, if Ansible had to change something.
+
+50
+00:05:45,000 --> 00:05:50,000
+On a fresh server I expect most of them to say changed.
+
+51
+00:05:50,000 --> 00:06:00,000
+Watch the task names scroll by: Docker, the folders, the files, the environment file, the images, the containers, the health check.
+
+52
+00:06:00,000 --> 00:06:08,000
+At the end, the play recap summarises: how many tasks were ok, how many changed, and that none failed.
+
+53
+00:08:05,000 --> 00:08:09,000
+Let me look at the result on the server itself.
+
+54
+00:08:09,000 --> 00:08:14,000
+The application folder in slash opt, with the source and the Docker files.
+
+55
+00:08:14,000 --> 00:08:20,000
+The environment file, without the secret, and its permissions: six hundred, owned by root.
+
+56
+00:08:20,000 --> 00:08:32,000
+The containers running inside the server, and finally the portal itself answering on port eighty eighty eight of my computer, with the version and commit it was deployed with.
+
+

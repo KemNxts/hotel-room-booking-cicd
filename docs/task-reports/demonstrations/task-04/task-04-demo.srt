@@ -1,0 +1,233 @@
+﻿1
+00:00:01,000 --> 00:00:06,000
+This is Task 4, Git and GitHub repository initialization.
+
+2
+00:00:06,000 --> 00:00:13,000
+A repository is the project folder plus its complete history, stored in a hidden dot git folder.
+
+3
+00:00:13,000 --> 00:00:26,000
+Here I list the Git related items in the project root: the dot git folder, the dot github folder, dot gitattributes, dot gitignore, CONTRIBUTING, README and a VERSION file.
+
+4
+00:00:26,000 --> 00:00:29,000
+Each one has a purpose, and I will open them.
+
+5
+00:00:31,000 --> 00:00:34,000
+The README is the front page of the project.
+
+6
+00:00:34,000 --> 00:00:40,000
+It says what the project is, what the features are, and links to the documentation.
+
+7
+00:00:40,000 --> 00:00:44,000
+Anyone who opens the repository on GitHub reads this first.
+
+8
+00:00:44,000 --> 00:00:49,000
+It also contains the commands to run and test the application.
+
+9
+00:00:52,000 --> 00:01:04,000
+The dot gitignore file lists files that Git must never store: the virtual environment, the database, test reports, environment files with passwords, and certificates.
+
+10
+00:01:04,000 --> 00:01:06,000
+Here are the real rules.
+
+11
+00:01:06,000 --> 00:01:11,000
+Then I ask Git itself, with check ignore, why three files are ignored.
+
+12
+00:01:11,000 --> 00:01:14,000
+It names the rule and the line number.
+
+13
+00:01:14,000 --> 00:01:20,000
+That is how secrets like the Jenkins password file stay out of the repository.
+
+14
+00:01:24,000 --> 00:01:28,000
+The dot gitattributes file tells Git how to treat text files.
+
+15
+00:01:28,000 --> 00:01:31,000
+Windows uses a different line ending than Linux.
+
+16
+00:01:31,000 --> 00:01:36,000
+The first rule stores everything with Linux line endings in the repository.
+
+17
+00:01:36,000 --> 00:01:45,000
+That matters because our Dockerfiles, Ansible files and scripts run inside Linux containers, and Windows line endings would break them.
+
+18
+00:01:48,000 --> 00:01:51,000
+CONTRIBUTING documents the team conventions.
+
+19
+00:01:51,000 --> 00:01:53,000
+Main holds released code.
+
+20
+00:01:53,000 --> 00:01:57,000
+Develop is where features meet and are tested together.
+
+21
+00:01:57,000 --> 00:02:02,000
+Every change is made on its own feature branch, cut from develop.
+
+22
+00:02:02,000 --> 00:02:08,000
+Branch names are lowercase with hyphens, and experiment branches are never merged.
+
+23
+00:02:08,000 --> 00:02:12,000
+Writing the rules down means everyone works the same way.
+
+24
+00:02:15,000 --> 00:02:19,000
+These are the issue templates in the dot github folder.
+
+25
+00:02:19,000 --> 00:02:28,000
+A bug report template and a feature request template give every issue the same structure: what happened, what was expected, and acceptance criteria.
+
+26
+00:02:28,000 --> 00:02:32,000
+GitHub shows them automatically when someone clicks New issue.
+
+27
+00:02:35,000 --> 00:02:38,000
+This is the pull request template.
+
+28
+00:02:38,000 --> 00:02:43,000
+When a developer opens a pull request, GitHub pre fills this text.
+
+29
+00:02:43,000 --> 00:02:56,000
+It asks what the change does and how it was tested, and gives an author checklist: branch name, commit message, linter clean, tests passing, Jenkins green and no secrets.
+
+30
+00:02:56,000 --> 00:02:59,000
+A reviewer has a second checklist below.
+
+31
+00:02:59,000 --> 00:03:01,000
+This is what supports code review.
+
+32
+00:03:04,000 --> 00:03:06,000
+Now the real repository.
+
+33
+00:03:06,000 --> 00:03:11,000
+Git status shows the current branch and whether anything is changed.
+
+34
+00:03:11,000 --> 00:03:14,000
+A branch is a separate line of development.
+
+35
+00:03:14,000 --> 00:03:25,000
+Below is the list of all local branches: main for releases, develop for integration, many feature branches, fix branches, and two experiment branches.
+
+36
+00:03:25,000 --> 00:03:28,000
+The star marks the branch I am on now.
+
+37
+00:03:32,000 --> 00:03:34,000
+The log graph shows the history.
+
+38
+00:03:34,000 --> 00:03:38,000
+Each line is a commit, a saved snapshot with a message.
+
+39
+00:03:38,000 --> 00:03:44,000
+The lines with a slash show a feature branch splitting from develop and merging back.
+
+40
+00:03:44,000 --> 00:03:46,000
+The names in brackets are branches.
+
+41
+00:03:46,000 --> 00:03:55,000
+Each feature, such as nights column or ansible rollback, is visible as a unit because we merged with no fast forward.
+
+42
+00:03:59,000 --> 00:04:04,000
+A tag is a permanent label on one commit, used for releases.
+
+43
+00:04:04,000 --> 00:04:07,000
+We have version 1.0.0 and 1.1.0.
+
+44
+00:04:07,000 --> 00:04:11,000
+A branch moves forward as you commit, a tag stays put.
+
+45
+00:04:11,000 --> 00:04:16,000
+A remote is another copy of the repository on a server.
+
+46
+00:04:16,000 --> 00:04:20,000
+Ours is called origin and points to GitHub.
+
+47
+00:04:20,000 --> 00:04:23,000
+The address contains no password.
+
+48
+00:04:26,000 --> 00:04:28,000
+Local and remote are different things.
+
+49
+00:04:28,000 --> 00:04:31,000
+My local repository is on this laptop.
+
+50
+00:04:31,000 --> 00:04:33,000
+The remote is on GitHub.
+
+51
+00:04:33,000 --> 00:04:35,000
+So I ask GitHub directly.
+
+52
+00:04:35,000 --> 00:04:46,000
+It confirms a public repository, with nineteen branches and both release tags, and the develop branch is at the same commit locally and on GitHub.
+
+53
+00:04:46,000 --> 00:04:52,000
+Issues and pull requests do not exist yet, only their templates and prepared texts.
+
+54
+00:04:56,000 --> 00:04:58,000
+Finally, one commit in detail.
+
+55
+00:04:58,000 --> 00:05:07,000
+It has an identifier, an author, a date and a message that follows our convention: type, colon, short description.
+
+56
+00:05:07,000 --> 00:05:10,000
+Here feat means a new feature.
+
+57
+00:05:10,000 --> 00:05:17,000
+The statistics show exactly which files changed, here the my bookings template and a test.
+
+58
+00:05:17,000 --> 00:05:21,000
+Small, focused commits make review and rollback easy.
+
+

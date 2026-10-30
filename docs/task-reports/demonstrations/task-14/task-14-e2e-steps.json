@@ -1,0 +1,79 @@
+{
+  "title": "Task 14 (part 2) - Selenium verification of the restored release on the lab server",
+  "mode": "browser",
+  "launcher": "pytest",
+  "pytestArgs": "tests/e2e/test_journeys.py",
+  "e2eBaseUrl": "http://localhost:8088",
+  "prereq": [
+    "The lab server running the restored release (part 1) and answering on http://localhost:8088.",
+    "Chrome installed; the project `.venv` with Selenium.",
+    "To run it yourself without the recorder's slow motion: `$env:E2E_BASE_URL='http://localhost:8088'; $env:HEADLESS='0'; pytest tests/e2e -v`. Remove the variable afterwards: `Remove-Item Env:E2E_BASE_URL`."
+  ],
+  "recovery": [
+    {"symptom": "Tests fail with connection errors", "fix": "The lab server is not answering. `curl.exe -s http://localhost:8088/health`; start it with `cd deploy\\ansible\\lab; docker compose up -d target` and wait."},
+    {"symptom": "A journey fails on the page layout", "fix": "The tests use the interface of the working copy. If the server runs an older release with a different interface (for example v1.0.0), use the tests from that tag: `git show v1.0.0:tests/e2e/test_journeys.py`."},
+    {"symptom": "Tests ran against the wrong place", "fix": "`E2E_BASE_URL` still set from an earlier run. `Remove-Item Env:E2E_BASE_URL`, then run again."}
+  ],
+  "extra": [
+    {"what": "Run the journeys against the lab server headless", "cmd": "$env:E2E_BASE_URL='http://localhost:8088'; pytest -m e2e -q; Remove-Item Env:E2E_BASE_URL"}
+  ],
+  "extraQuestions": [
+    {"q": "Why do the Selenium tests run against the lab server after the rollback?", "a": "Because a health check only proves the server answers. The five browser journeys prove that a real user can register, book, confirm, cancel and track bookings on the restored release. Setting E2E_BASE_URL makes the same tests run against that server instead of starting a local copy of the application."}
+  ],
+  "steps": [
+    {
+      "title": "Selenium against the restored lab server",
+      "say": "The last proof of Task 14. After the rollback, the health check says the right version is running. But a real user needs more than a health check. So I run the five Selenium journeys, the project's own tests, against the restored lab server on port eighty eighty eight, not against a local copy. Setting the E2E base URL variable tells the tests where to go. The browser is visible, and slowed down.",
+      "caption": "The project's Selenium tests, run against the restored lab server http://localhost:8088 (E2E_BASE_URL).",
+      "expect": "A Chrome window; the tests open the pages of the lab server (address bar shows localhost:8088).",
+      "tell": "The restored release is checked by real browser tests, not only by a health check."
+    },
+    {
+      "title": "Journey 1: register",
+      "test": "test_journey_1_register_new_guest",
+      "say": "Journey one: a new guest registers on the restored server, and the name appears in the navigation bar.",
+      "caption": "Journey 1 on the lab server: register a new guest.",
+      "expect": "The guest registers on localhost:8088.",
+      "tell": "Registration works on the restored release."
+    },
+    {
+      "title": "Journey 2: login",
+      "test": "test_journey_2_login_rejects_wrong_password_then_accepts_right_one",
+      "say": "Journey two: a wrong password is refused with the generic message, and the right password logs in.",
+      "caption": "Journey 2 on the lab server: wrong password refused, right password accepted.",
+      "expect": "Error message, then welcome back.",
+      "tell": "Login works on the restored release."
+    },
+    {
+      "title": "Journey 3: search, book and confirm",
+      "test": "test_journey_3_search_request_and_confirm_booking",
+      "say": "Journey three: search the rooms for two nights, book one, see it pending, then confirm it.",
+      "caption": "Journey 3 on the lab server: availability -> book (PENDING) -> confirm (CONFIRMED).",
+      "expect": "PENDING then CONFIRMED.",
+      "tell": "Availability, booking and confirmation work on the restored release."
+    },
+    {
+      "title": "Journey 4: cancel and track",
+      "test": "test_journey_4_cancel_booking_and_track_status",
+      "say": "Journey four: book, confirm, then cancel with the confirmation dialog, and see the cancelled status in My bookings.",
+      "caption": "Journey 4 on the lab server: cancel -> CANCELLED -> status in My bookings.",
+      "expect": "CANCELLED on the booking page and in My bookings.",
+      "tell": "Cancellation and status tracking work on the restored release."
+    },
+    {
+      "title": "Journey 5: no double booking",
+      "test": "test_journey_5_booked_room_is_unavailable_to_another_guest",
+      "say": "Journey five: one guest books a room, and a second guest searching the same dates sees it as booked, with no Book button.",
+      "caption": "Journey 5 on the lab server: a booked room is unavailable to another guest.",
+      "expect": "The second guest sees the room as Booked.",
+      "tell": "The no double booking rule holds on the restored release."
+    },
+    {
+      "title": "Rollback verified end to end",
+      "say": "All five journeys ran against the restored release on the lab server. Together with the health check that reports the right version, and the Ansible output, this completes the reliability workflow: provision, repeat with no changes, deploy a new release, roll back, and verify.",
+      "caption": "Reliability workflow complete: provision -> repeat (changed=0) -> new release -> rollback -> verified.",
+      "expect": "The run ends; the browser shows a blank page.",
+      "tell": "The release was provisioned, redeployed, rolled back and verified end to end."
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+﻿1
+00:00:01,000 --> 00:00:06,000
+This is Task 14, reliability: idempotency and rollback.
+
+2
+00:00:06,000 --> 00:00:14,000
+First, the real results of the earlier runs on a fresh server, saved unedited in the evidence folder.
+
+3
+00:00:14,000 --> 00:00:18,000
+Run one, the first provisioning: seven changes.
+
+4
+00:00:18,000 --> 00:00:22,000
+Run two, the upgrade to version one point one: five changes.
+
+5
+00:00:22,000 --> 00:00:26,000
+Run three, the same playbook again: zero changes.
+
+6
+00:00:26,000 --> 00:00:30,000
+Run four, the rollback playbook: three changes.
+
+7
+00:00:30,000 --> 00:00:36,000
+And run five, the Selenium journeys on the restored release: five passed.
+
+8
+00:00:36,000 --> 00:00:45,000
+A first run on a fresh server takes several minutes, so I show it from the saved evidence and run the other steps live.
+
+9
+00:00:50,000 --> 00:00:51,000
+Now live.
+
+10
+00:00:51,000 --> 00:00:55,000
+The lab server was just provisioned in the previous task.
+
+11
+00:00:55,000 --> 00:00:57,000
+I run the same playbook again.
+
+12
+00:00:57,000 --> 00:01:02,000
+Ansible checks every task against the real state of the server.
+
+13
+00:01:02,000 --> 00:01:09,000
+Everything already matches, so every task reports ok, and the play recap says changed equals zero.
+
+14
+00:01:09,000 --> 00:01:18,000
+That is idempotency: running the same configuration twice has the same result as running it once, and a second run is safe.
+
+15
+00:02:43,000 --> 00:02:44,000
+A health check.
+
+16
+00:02:44,000 --> 00:02:48,000
+The portal on the lab server answers on port eighty eighty eight.
+
+17
+00:02:48,000 --> 00:02:55,000
+The answer reports the status ok, the environment, and the version and commit that are running.
+
+18
+00:02:55,000 --> 00:02:59,000
+This is the release I will now replace, and later restore.
+
+19
+00:03:03,000 --> 00:03:10,000
+Now I simulate a new release by passing a different version number, one point one point one dash demo.
+
+20
+00:03:10,000 --> 00:03:19,000
+Ansible copies the files, records the current release as the previous one, builds the new images, and restarts the containers on the new tag.
+
+21
+00:03:19,000 --> 00:03:22,000
+This time several tasks report changed.
+
+22
+00:03:22,000 --> 00:03:29,000
+The recap shows the number of changes, and the check at the end asserts that the running version is the new one.
+
+23
+00:04:37,000 --> 00:04:39,000
+Pretend this release is bad.
+
+24
+00:04:39,000 --> 00:04:43,000
+The rollback playbook returns to the previous release.
+
+25
+00:04:43,000 --> 00:04:57,000
+It reads the previous release file, refuses to continue if those images are missing, points the deployment at them, restarts the containers, and asserts that the health check reports exactly the target version.
+
+26
+00:04:57,000 --> 00:05:01,000
+No rebuild is needed, because the old images are still on the server.
+
+27
+00:05:01,000 --> 00:05:08,000
+The message says rolled back from one point one point one dash demo, to one point one point zero.
+
+28
+00:05:14,000 --> 00:05:15,000
+Verification.
+
+29
+00:05:15,000 --> 00:05:21,000
+The health check now reports version one point one point zero again: the restored release.
+
+30
+00:05:21,000 --> 00:05:27,000
+Both images are still stored on the server, so I could even roll forward again.
+
+31
+00:05:27,000 --> 00:05:31,000
+And the data lives in the same volume, so no bookings are lost.
+
+32
+00:05:31,000 --> 00:05:38,000
+Finally I will run the Selenium journeys against this restored server, in a visible browser.
+
+

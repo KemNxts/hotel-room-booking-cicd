@@ -1,0 +1,197 @@
+﻿1
+00:00:01,000 --> 00:00:05,000
+This is Task 12, Jenkins and Docker continuous deployment.
+
+2
+00:00:05,000 --> 00:00:11,000
+Continuous deployment means that every change that passes the tests is delivered automatically.
+
+3
+00:00:11,000 --> 00:00:16,000
+Here is the proof from the build I started live in the previous video.
+
+4
+00:00:16,000 --> 00:00:21,000
+The command reads the admin password from the environment file without showing it.
+
+5
+00:00:21,000 --> 00:00:28,000
+The latest build is number twelve, named with the version and the commit, and the result is success.
+
+6
+00:00:28,000 --> 00:00:36,000
+The stages show the quality gate: the tests come first, and the images are built, published and deployed only after them.
+
+7
+00:00:41,000 --> 00:00:43,000
+How is the release identified?
+
+8
+00:00:43,000 --> 00:00:49,000
+The tag of every image is the version from the VERSION file, a dash, and the short commit id.
+
+9
+00:00:49,000 --> 00:00:59,000
+Here are the three pieces: the version, the commit at the tip of develop, and the tag I compute from them, which is exactly the tag of the build.
+
+10
+00:00:59,000 --> 00:01:03,000
+The Jenkinsfile builds it in the checkout stage.
+
+11
+00:01:03,000 --> 00:01:08,000
+So the tag tells you which release and which commit an image contains.
+
+12
+00:01:13,000 --> 00:01:14,000
+Now the Jenkins log.
+
+13
+00:01:14,000 --> 00:01:23,000
+Docker build creates the application image with the registry prefix and the tag, and passes the version and the commit as build arguments.
+
+14
+00:01:23,000 --> 00:01:32,000
+Then docker push publishes it to the local registry, and the registry answers with a digest, a unique fingerprint of the image.
+
+15
+00:01:32,000 --> 00:01:34,000
+The same happens for the Nginx image.
+
+16
+00:01:39,000 --> 00:01:41,000
+The registry itself.
+
+17
+00:01:41,000 --> 00:01:48,000
+I ask it directly, over its HTTP interface, which repositories it holds: the application and Nginx.
+
+18
+00:01:48,000 --> 00:01:56,000
+And which tags the application has: every release that the pipeline ever published, version and commit.
+
+19
+00:01:56,000 --> 00:01:58,000
+The new one is among them.
+
+20
+00:01:58,000 --> 00:02:05,000
+These older tags are also the candidates for a rollback, because nothing has to be rebuilt.
+
+21
+00:02:10,000 --> 00:02:13,000
+The image carries its own identity.
+
+22
+00:02:13,000 --> 00:02:17,000
+I inspect the image from the registry tag and print its labels.
+
+23
+00:02:17,000 --> 00:02:22,000
+The revision label holds the commit id, and the version label the version.
+
+24
+00:02:22,000 --> 00:02:26,000
+These labels are written at build time from the build arguments.
+
+25
+00:02:26,000 --> 00:02:32,000
+So even without Jenkins, anyone can ask an image which commit it was built from.
+
+26
+00:02:37,000 --> 00:02:37,000
+Deployment.
+
+27
+00:02:37,000 --> 00:02:46,000
+Jenkins runs docker compose pull, which fetches the images that were just published, then docker compose up with the wait option.
+
+28
+00:02:46,000 --> 00:02:56,000
+Look at the log: the staging app container was recreated, started, and Docker reported it healthy, then the Nginx container as well.
+
+29
+00:02:56,000 --> 00:03:00,000
+It was recreated because the new image has a new identity.
+
+30
+00:03:00,000 --> 00:03:04,000
+The database stays safe, because it lives in a separate volume.
+
+31
+00:03:09,000 --> 00:03:14,000
+Is the container running the image that was tested and published?
+
+32
+00:03:14,000 --> 00:03:15,000
+I compare two image ids.
+
+33
+00:03:15,000 --> 00:03:20,000
+The first is the image the running staging container was created from.
+
+34
+00:03:20,000 --> 00:03:24,000
+The second is the image behind the tag in the registry.
+
+35
+00:03:24,000 --> 00:03:27,000
+They are identical, character for character.
+
+36
+00:03:27,000 --> 00:03:32,000
+The tested image became the deployed release, with no rebuild in between.
+
+37
+00:03:32,000 --> 00:03:37,000
+The container list shows both staging containers, healthy.
+
+38
+00:03:42,000 --> 00:03:44,000
+Finally the health verification.
+
+39
+00:03:44,000 --> 00:03:52,000
+I ask the running staging application for its health: status ok, environment staging, the version, and the commit.
+
+40
+00:03:52,000 --> 00:04:01,000
+I compare the commit with the tip of develop, and with the health file that the pipeline itself saved during its health check stage.
+
+41
+00:04:01,000 --> 00:04:02,000
+All the same.
+
+42
+00:04:02,000 --> 00:04:07,000
+The deployed version is traceable to one commit and one Jenkins build.
+
+43
+00:04:12,000 --> 00:04:14,000
+I must be honest about Docker Hub.
+
+44
+00:04:14,000 --> 00:04:26,000
+The pipeline supports it: if the registry parameter does not start with localhost, it logs in with a Jenkins credential called registry creds, and the password is masked in the log.
+
+45
+00:04:26,000 --> 00:04:28,000
+These are the lines.
+
+46
+00:04:28,000 --> 00:04:33,000
+But I never ran it, because it needs a Docker Hub account and an access token.
+
+47
+00:04:33,000 --> 00:04:37,000
+Everything shown in this video used the local registry.
+
+48
+00:04:37,000 --> 00:04:45,000
+To publish externally I would set the registry parameter to docker dot io slash my id and add the credential in Jenkins.
+
+49
+00:04:45,000 --> 00:04:50,000
+I will not publish anything or store credentials without your authorization.
+
+

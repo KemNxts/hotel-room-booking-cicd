@@ -1,0 +1,53 @@
+﻿1
+00:00:01,000 --> 00:00:03,000
+The last proof of Task 14.
+
+2
+00:00:03,000 --> 00:00:08,000
+After the rollback, the health check says the right version is running.
+
+3
+00:00:08,000 --> 00:00:12,000
+But a real user needs more than a health check.
+
+4
+00:00:12,000 --> 00:00:23,000
+So I run the five Selenium journeys, the project's own tests, against the restored lab server on port eighty eighty eight, not against a local copy.
+
+5
+00:00:23,000 --> 00:00:27,000
+Setting the E2E base URL variable tells the tests where to go.
+
+6
+00:00:27,000 --> 00:00:30,000
+The browser is visible, and slowed down.
+
+7
+00:00:33,000 --> 00:00:39,000
+Journey one: a new guest registers on the restored server, and the name appears in the navigation bar.
+
+8
+00:00:42,000 --> 00:00:49,000
+Journey two: a wrong password is refused with the generic message, and the right password logs in.
+
+9
+00:01:04,000 --> 00:01:11,000
+Journey three: search the rooms for two nights, book one, see it pending, then confirm it.
+
+10
+00:01:19,000 --> 00:01:28,000
+Journey four: book, confirm, then cancel with the confirmation dialog, and see the cancelled status in My bookings.
+
+11
+00:01:39,000 --> 00:01:47,000
+Journey five: one guest books a room, and a second guest searching the same dates sees it as booked, with no Book button.
+
+12
+00:02:02,000 --> 00:02:06,000
+All five journeys ran against the restored release on the lab server.
+
+13
+00:02:06,000 --> 00:02:20,000
+Together with the health check that reports the right version, and the Ansible output, this completes the reliability workflow: provision, repeat with no changes, deploy a new release, roll back, and verify.
+
+

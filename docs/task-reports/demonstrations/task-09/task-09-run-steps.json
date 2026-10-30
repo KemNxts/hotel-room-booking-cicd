@@ -1,0 +1,77 @@
+{
+  "title": "Task 9 (part 2) - The real Selenium tests in a visible browser",
+  "mode": "browser",
+  "launcher": "pytest",
+  "pytestArgs": "tests/e2e/test_journeys.py",
+  "prereq": [
+    "Google Chrome installed; the project `.venv` with Selenium.",
+    "To watch it yourself, without the recorder's slow motion: `$env:HEADLESS='0'; pytest tests/e2e -v` (a Chrome window opens and closes for each test).",
+    "Do not touch the mouse or keyboard during the recording."
+  ],
+  "recovery": [
+    {"symptom": "Chrome does not open", "fix": "Run `pytest tests/e2e -k journey_1 -v` headless first. If that works, check that no other Chrome automation is running."},
+    {"symptom": "A journey fails in the visible run", "fix": "Read reports/screenshots/<test name>.png: it shows what the browser saw. Re-run that single test."}
+  ],
+  "extra": [
+    {"what": "Run one journey in a visible browser", "cmd": "$env:HEADLESS='0'; pytest tests/e2e -k journey_3 -v"}
+  ],
+  "extraQuestions": [
+    {"q": "Is the browser in the video really running your test code?", "a": "Yes. It is tests/e2e/test_journeys.py, unchanged. The recording only adds a pause after every click and keystroke, a red outline on the element about to be clicked, and a caption at the bottom, so a viewer can follow. Without those pauses the five tests finish in about 20 seconds."}
+  ],
+  "steps": [
+    {
+      "title": "The same tests, now in a visible browser",
+      "say": "This is part two. These are the real Selenium tests from the project, unchanged, now running in a visible Chrome window. I only added a short pause after every click and a red outline on the element about to be clicked, so you can follow. Without those pauses, all five journeys take about twenty seconds. Each test starts from a new guest and a clean session.",
+      "caption": "The project's real tests (tests/e2e/test_journeys.py), slowed down so they can be watched.",
+      "expect": "A blank Chrome window with the caption; then journey 1 starts.",
+      "tell": "These are the actual automated tests; they are only slowed down for the video."
+    },
+    {
+      "title": "Journey 1: register a new guest",
+      "test": "test_journey_1_register_new_guest",
+      "say": "Journey one. The test opens the register page, types a name, a unique email and a password, clicks Create account, then waits until the name appears in the navigation bar. It asserts that the name is right, that the message says the account has been created, and that the browser is on the rooms page.",
+      "caption": "Journey 1: type name, e-mail, password -> Create account -> name in the navigation bar.",
+      "expect": "The register form is filled and submitted; the rooms page appears with a green message and the guest's name.",
+      "tell": "Journey 1 checks that a guest can register and is logged in."
+    },
+    {
+      "title": "Journey 2: wrong password, then the right one",
+      "test": "test_journey_2_login_rejects_wrong_password_then_accepts_right_one",
+      "say": "Journey two. The test registers a guest and logs out. Then it tries to log in with a wrong password and asserts that the error message appears and that the guest is still logged out. Then it logs in with the right password and asserts that the welcome back message appears. This checks both the refusal and the success.",
+      "caption": "Journey 2: wrong password -> 'Invalid email or password'; right password -> 'Welcome back'.",
+      "expect": "Error message first, then the welcome back message.",
+      "tell": "Journey 2 proves that bad credentials are refused and good ones accepted."
+    },
+    {
+      "title": "Journey 3: search, request and confirm a booking",
+      "test": "test_journey_3_search_request_and_confirm_booking",
+      "say": "Journey three, the core of the application. A new guest searches rooms for two nights, books the first free room, and the test asserts the status is PENDING and the dates are correct. Then it clicks Confirm and waits for the status to change to CONFIRMED. It also asserts that the confirm button disappears, so a booking cannot be confirmed twice.",
+      "caption": "Journey 3: search dates -> book -> PENDING -> Confirm -> CONFIRMED.",
+      "expect": "Availability table, booking page with PENDING, then CONFIRMED.",
+      "tell": "Journey 3 covers availability, booking request and confirmation."
+    },
+    {
+      "title": "Journey 4: cancel a booking and track the status",
+      "test": "test_journey_4_cancel_booking_and_track_status",
+      "say": "Journey four. A guest books and confirms, then clicks Cancel. A dialog asks for confirmation, and the test asserts that nothing is cancelled yet. After accepting, the status becomes CANCELLED and the cancel button disappears. Finally the test opens My bookings and asserts that the row for this booking shows CANCELLED. That is status tracking.",
+      "caption": "Journey 4: Cancel -> confirm dialog -> CANCELLED -> My bookings shows CANCELLED.",
+      "expect": "The cancellation dialog, then CANCELLED on the booking page and in My bookings.",
+      "tell": "Journey 4 covers cancellation and status tracking."
+    },
+    {
+      "title": "Journey 5: a booked room is unavailable to another guest",
+      "test": "test_journey_5_booked_room_is_unavailable_to_another_guest",
+      "say": "Journey five protects the most important rule. The first guest books a room and logs out. A second guest registers and searches the same dates. The test asserts that the room now shows Booked, and that there is no Book button for it. So two guests can never hold the same room for the same nights.",
+      "caption": "Journey 5: guest 1 books -> guest 2 searches the same dates -> room shows 'Booked', no Book button.",
+      "expect": "The second guest's availability table shows the room as Booked.",
+      "tell": "Journey 5 proves the no double booking rule through the browser."
+    },
+    {
+      "title": "All five journeys passed",
+      "say": "That was all five journeys, with the real application and a real browser. The run ends with five passed, as in the terminal part of this video. This is what Jenkins runs in its Selenium stage, headless, every time someone pushes a commit, and a failure there stops the deployment.",
+      "caption": "5 of 5 journeys run. Jenkins runs the same tests headless in its Selenium stage.",
+      "expect": "The browser stays on a blank page; the run is finished.",
+      "tell": "The same tests run automatically in Jenkins and block deployment if any journey fails."
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "title": "Task 7 (part 1) - Jenkins installation and what is really set up (terminal)",
+  "prereq": [
+    "Docker Desktop running, then Jenkins and the registry started: `cd deploy\\jenkins; docker compose up -d` and wait about 60 seconds until http://localhost:8090/login answers.",
+    "The admin password is the `JENKINS_ADMIN_PASSWORD=` line in `deploy/jenkins/.env`. The commands read it themselves; never show that file on screen.",
+    "Open PowerShell in the project folder."
+  ],
+  "recovery": [
+    {"symptom": "`docker` commands fail (pipe not found)", "fix": "Start Docker Desktop and wait for 'Engine running'."},
+    {"symptom": "http://localhost:8090 does not answer", "fix": "`cd deploy\\jenkins; docker compose ps`. If the containers are not Up: `docker compose up -d`, then wait about a minute (Jenkins needs time to start). Check `docker logs hotel-jenkins-jenkins-1 --tail 30`."},
+    {"symptom": "HTTP 401 / 403 from the API", "fix": "The password in deploy/jenkins/.env is missing or was changed after the first start. Jenkins keeps the first password in its volume; check the JENKINS_ADMIN_PASSWORD line, or reset the lab with `docker compose down -v` (this deletes all Jenkins history)."},
+    {"symptom": "No builds listed", "fix": "The job has not run yet (or the jenkins-home volume was deleted). Open the job and click 'Build with Parameters'."}
+  ],
+  "extra": [
+    {"what": "Open Jenkins in the browser", "cmd": "Start-Process http://localhost:8090"},
+    {"what": "Jenkins logs", "cmd": "docker logs hotel-jenkins-jenkins-1 --tail 30"}
+  ],
+  "extraQuestions": [
+    {"q": "Jenkins is installed as a Docker container, not as a Windows program. Why?", "a": "A container is reproducible: one compose file and one Dockerfile give the same Jenkins (LTS, Python 3.11, Chromium, Docker CLI, plugins) on any machine, and it can be deleted and rebuilt. The Jenkins data (jobs, builds, credentials) lives in a named volume, jenkins-home, so it survives container restarts."},
+    {"q": "What is the difference between a Jenkinsfile existing, a job being configured, and a job running successfully?", "a": "Three separate facts. The Jenkinsfile is just a file in Git. The job is Jenkins's own configuration that points to the repository and the Jenkinsfile. A successful run is a build record, with its stages, tests and artifacts. In the video each one is proven separately: git ls-files, the job's config.xml, and the build list from the API."}
+  ],
+  "steps": [
+    {
+      "title": "Jenkins as a container: the compose file",
+      "say": "This is Task 7, Jenkins installation and continuous integration. Jenkins is an automation server. It watches the repository, and for every change it runs the build and the tests automatically, so that mistakes are found in minutes, not weeks. This is continuous integration. Here Jenkins runs as a Docker container. These lines of its compose file show the setup: the port 8090, only reachable from this computer, a named volume that keeps jobs and builds, the Docker socket so Jenkins can build images, our repository mounted read only, and a local image registry on port 5000.",
+      "cmd": "Get-Content deploy/jenkins/docker-compose.yml | Select-String -NotMatch '^\\s*#' | Select-String 'image:|ports:|8090|5000|jenkins-home|docker.sock|/repo|restart:|registry' | ForEach-Object { $_.Line.Trim() }",
+      "expect": "The jenkins image, 127.0.0.1:8090:8080, the registry on 5000, the jenkins-home volume, docker.sock, ../..:/repo:ro and restart: unless-stopped.",
+      "tell": "Jenkins runs as a reproducible container with its data in a volume and the project mounted read-only.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "What is inside the Jenkins image",
+      "say": "The Jenkins image is built from our own Dockerfile. It starts from the official long term support Jenkins, and adds what our pipeline needs: Python three point eleven, the same version as production, Chromium and chromedriver for the Selenium tests, and the Docker command line tool. The plugins list is short: pipeline, Git, JUnit for test reports, credentials binding, the stage view, and timestamps.",
+      "cmd": "Get-Content deploy/jenkins/Dockerfile | Select-String -NotMatch '^\\s*#' | Select-String 'FROM|python3.11|chromium|docker:|plugin' | ForEach-Object { $_.Line.Trim() }; '--- plugins.txt'; Get-Content deploy/jenkins/plugins.txt",
+      "expect": "FROM jenkins/jenkins:lts-jdk21, Python 3.11 copied in, chromium and chromium-driver, the Docker CLI, then the six plugins.",
+      "tell": "The Jenkins image contains Python, Chromium and the Docker CLI, so the whole pipeline can run inside it.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Start-up and the running instance",
+      "say": "To start Jenkins, the documented procedure is docker compose up dash d, in the deploy slash jenkins folder, then wait about a minute. Now I check that it is really running: both containers are up, and the login page answers with the Jenkins version in its response header. If Jenkins were stopped, this is the command I would run.",
+      "cmd": "Select-String -Path docs/05-ci-cd-pipeline.md -Pattern 'docker compose up' | Select-Object -First 1 | ForEach-Object { $_.Line }; docker ps --filter name=hotel-jenkins --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'; 'Jenkins version: ' + (Invoke-WebRequest http://localhost:8090/login -UseBasicParsing).Headers['X-Jenkins']",
+      "expect": "The documented command, two containers hotel-jenkins-jenkins-1 and hotel-jenkins-registry-1 'Up', and 'Jenkins version: 2.580.1'.",
+      "tell": "Jenkins and the registry are running, and the start-up command is documented.",
+      "pauseAfter": 4
+    },
+    {
+      "title": "Level 1: the Jenkinsfile exists in Git",
+      "say": "Now an important distinction. Three different things can be true. First: a Jenkinsfile exists in the repository. That is only a file. Git ls files proves it is tracked, and the log shows who changed it and why. But a file alone runs nothing.",
+      "cmd": "git ls-files Jenkinsfile; git log --oneline -4 -- Jenkinsfile",
+      "expect": "'Jenkinsfile' is tracked, followed by its last four commits.",
+      "tell": "A Jenkinsfile in Git is only the recipe; it does not prove that Jenkins ever ran it.",
+      "pauseAfter": 3
+    },
+    {
+      "title": "Level 2: the Jenkins job is configured",
+      "say": "Second: a job is configured in Jenkins. I ask Jenkins for the job configuration, using the admin password that the command reads from the environment file, without displaying it. The configuration says: poll the Git repository every five minutes, take the branch from the BRANCH parameter, read the pipeline from the file called Jenkinsfile, and the repository is the mounted project. The job has three parameters.",
+      "cmd": "$jh = @{ Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes('admin:' + ((Get-Content deploy/jenkins/.env | Where-Object { $_ -like 'JENKINS_ADMIN_PASSWORD=*' }) -replace '^[^=]+=', ''))) }; (Invoke-WebRequest 'http://localhost:8090/job/hotel-booking/config.xml' -Headers $jh -UseBasicParsing).Content -split '\\r?\\n' | Select-String 'url>|name>\\*|scriptPath|<spec>|<name>(APP_ENV|BRANCH|REGISTRY)' | ForEach-Object { $_.Line.Trim() }",
+      "expect": "<spec>H/5 * * * *</spec>, the parameter names APP_ENV, BRANCH, REGISTRY, <url>file:///repo</url>, <name>*/${BRANCH}</name> and <scriptPath>Jenkinsfile</scriptPath>.",
+      "tell": "The job is configured to poll the repository, pick the branch from a parameter and run the Jenkinsfile.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Level 3: the job actually ran, and what happened",
+      "say": "Third, and the only one that proves anything: the job actually ran. This is the real build history from Jenkins. Eleven builds. Most are success. Builds two and nine are failures: those are the deliberate defect experiments of Task 10. Build eleven, the most recent, succeeded. The names show the version and the commit that each build used.",
+      "cmd": "Invoke-RestMethod 'http://localhost:8090/job/hotel-booking/api/json?tree=builds[number,result,displayName]' -Headers $jh | Select-Object -ExpandProperty builds | Format-Table number, result, displayName -AutoSize",
+      "expect": "Builds #1 to #11 with their result: SUCCESS for most, FAILURE for #2 and #9, each named version-commit.",
+      "tell": "A job that is configured is not enough; the build history shows it really ran, with passes and deliberate failures.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "The stages of build 11",
+      "say": "Here are the stages of build eleven, with the status and the time of each. Checkout, install dependencies, static checks, which is the linting, unit and integration tests, the Selenium tests, packaging the source, building the images, publishing, deploying and the health check. All success. The whole pipeline took about one hundred and three seconds. Note: this build is from the twentieth of October. It is real, but it is a historic build, not one I started just now.",
+      "cmd": "(Invoke-RestMethod 'http://localhost:8090/job/hotel-booking/11/wfapi/describe' -Headers $jh).stages | Select-Object name, status, @{ n = 'seconds'; e = { [int]($_.durationMillis / 1000) } } | Format-Table -AutoSize",
+      "expect": "Eleven stages, each SUCCESS, e.g. Unit & integration tests 19s, E2E tests 20s, Build images 15s, Deploy 12s.",
+      "tell": "Every stage of build 11 passed; it is a real historic build from 20 October.",
+      "pauseAfter": 5
+    },
+    {
+      "title": "Proof in the log: install, lint, tests, packaging",
+      "say": "Finally, evidence from the console log of build eleven. Pip install runs for the dependencies. Flake8 is the linter. Eighty five unit and integration tests passed. Five Selenium tests passed, and the other eighty five were deselected, as intended. Then the checksum of the source archive is created, and the build finishes with SUCCESS. If a stage had failed, this is where the failure would be.",
+      "cmd": "(Invoke-WebRequest 'http://localhost:8090/job/hotel-booking/11/consoleText' -Headers $jh -UseBasicParsing).Content -split '\\r?\\n' | Select-String 'Building commit|Python 3|pip install|flake8|passed|sha256sum hotel|Finished:' | ForEach-Object { $_.Line.Trim() -replace '^\\[[^\\]]+\\]\\s*', '' }",
+      "expect": "Building commit 1c2103c on develop, Python 3.11, pip install, flake8, '85 passed', '5 passed, 85 deselected', sha256sum, Finished: SUCCESS.",
+      "tell": "The console log shows dependency installation, linting, the tests and the checksum, ending in SUCCESS.",
+      "pauseAfter": 5
+    }
+  ]
+}

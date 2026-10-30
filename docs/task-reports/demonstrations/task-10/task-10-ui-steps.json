@@ -1,0 +1,122 @@
+{
+  "title": "Task 10 (part 2) - The defect experiment in Jenkins: real builds #1, #2, #3, #9 and #11",
+  "mode": "browser",
+  "app": false,
+  "baseUrl": "http://localhost:8090",
+  "jenkinsLogin": true,
+  "prereq": [
+    "Jenkins running at http://localhost:8090 with its original build history (the jenkins-home volume). If that volume was deleted, builds #2, #3 and #9 no longer exist; use the saved logs in docs/evidence/jenkins/ instead.",
+    "Log in to Jenkins before the demo so the password is not typed in front of the examiner.",
+    "Everything here is read-only: it opens old builds and does not start a build."
+  ],
+  "recovery": [
+    {"symptom": "Build #2 / #3 / #9 not found (404)", "fix": "The Jenkins history was reset. Use docs/evidence/jenkins/build-02-defect-fails.log, build-03-fix-green.log and build-09-defect-rerun-after-report-fix.log, and the screenshots jenkins-04-build2-defect.png and jenkins-05-build2-failed-test.png in docs/evidence/screenshots/."},
+    {"symptom": "The pages ask for a login", "fix": "Log in as admin first (password in deploy/jenkins/.env, never show that file)."}
+  ],
+  "extra": [
+    {"what": "Open the failed build in your browser", "cmd": "Start-Process http://localhost:8090/job/hotel-booking/2/"},
+    {"what": "Read the saved log of the failed build", "cmd": "Get-Content docs/evidence/jenkins/build-02-defect-fails.log | Select-Object -Last 45"}
+  ],
+  "extraQuestions": [
+    {"q": "How do you know that staging kept running the previous version while build #2 failed?", "a": "Build #2's Deploy stage never ran (Jenkins logs 'Stage Deploy skipped due to earlier failure(s)'), so nothing touched the staging containers. The last deployment record before it, build #1, says staging ran 1.0.0-64351fe, and the next deployment record, build #3, says 1.0.0-30c6a05, the corrected version."}
+  ],
+  "steps": [
+    {
+      "title": "The Stage View: build 2 is red",
+      "say": "This is the job's stage view, and the real defect experiment. The rows are builds. Build number one is green: the baseline, version one point zero point zero, commit six four three five one f e. Build number two, the one with the deliberate defect, is red, and it fails at exactly one place: the unit and integration tests stage. Build number three is green again.",
+      "caption": "Stage View: #1 green (baseline), #2 red at 'Unit & integration tests' (defect), #3 green (fix).",
+      "actions": [{"goto": "/job/hotel-booking/"}, {"scroll_text": "Stage View", "offset": 80, "mark": false}, {"pause": 2}, {"scroll": 420, "secs": 2}, {"pause": 5}],
+      "expect": "The Stage View where the row of build #2 has a red cell under 'Unit & integration tests' and later cells also red.",
+      "tell": "The defect build failed in the unit test stage, and the build after the fix is green again.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Build 2: the console shows the failing test",
+      "say": "Build two's console. Pytest reports one failed, eighty one passed. The failure has a name: test overlap rules, with the dates the eighth to the tenth of January 2030. The assertion says room one oh one was expected to be free, but it was reported booked. That is exactly the off by one defect.",
+      "caption": "Build #2 console: 'FAILED ...test_overlap_rules...' and '1 failed, 81 passed'.",
+      "actions": [
+        {"goto": "/job/hotel-booking/2/console"}, {"pause": 2},
+        {"scroll_text": "FAILED tests/unit/test_booking_service.py", "offset": 170}, {"pause": 4},
+        {"scroll_text": "1 failed, 81 passed", "offset": 170}, {"pause": 3}
+      ],
+      "expect": "Highlighted: the FAILED line naming test_overlap_rules and the summary '1 failed, 81 passed'.",
+      "tell": "Jenkins names the exact test that caught the defect.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Why deployment was skipped",
+      "say": "And here is the quality gate. Right after the failure, for every following stage Jenkins writes: stage skipped due to earlier failures. E2E tests, package source, build images, publish images, and deploy. Nothing was packaged, nothing was published, and nothing was deployed. The pipeline ends with its own message: pipeline failed, nothing was deployed.",
+      "caption": "Console: 'Stage Deploy skipped due to earlier failure(s)' -> 'Pipeline FAILED ... Nothing was deployed.'",
+      "actions": [
+        {"scroll_text": "skipped due to earlier failure(s)", "offset": 170}, {"pause": 4},
+        {"scroll_text": "Nothing was deployed", "offset": 200}, {"pause": 4}
+      ],
+      "expect": "Highlighted: 'Stage ... skipped due to earlier failure(s)' lines and 'Pipeline FAILED ... Nothing was deployed.'",
+      "tell": "After the failed tests every later stage was skipped, so nothing was deployed.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The Test Result page of build 2",
+      "say": "The test result page of build two lists the failing test by name, with its error. This page also contains something surprising, which I will explain in a moment: a package called tests dot e2e with five passed tests, although the Selenium stage never ran in this build.",
+      "caption": "Test Result #2: the failing test, and a suspicious 'tests.e2e: 5 passed' although the Selenium stage was skipped.",
+      "actions": [{"goto": "/job/hotel-booking/2/testReport/"}, {"pause": 3}, {"scroll_text": "tests.e2e", "offset": 200}, {"pause": 5}],
+      "expect": "Test Result with 1 failure and the package list including tests.e2e (5 tests, all passed).",
+      "tell": "The report shows the failing test, and also revealed a stale-report problem.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The stale report problem, proved by the artifacts",
+      "say": "This is the stale report bug. Build two never packaged anything, yet its artifacts list a source archive and a deployment record. They are not new. They are left over from build number one, because Jenkins reuses its workspace, and the archive step collected the old files. That is why build two showed five passing Selenium tests: they came from build one's report.",
+      "caption": "Build #2 artifacts include build #1's tar.gz (64351fe) and deployment.txt: old files from a reused workspace.",
+      "actions": [{"goto": "/job/hotel-booking/2/artifact/"}, {"pause": 2}, {"goto": "/job/hotel-booking/2/artifact/dist/"}, {"pause": 5}],
+      "expect": "The artifact folder of build #2 listing dist/hotel-booking-1.0.0-64351fe.tar.gz: the version and commit of build #1, not of build #2.",
+      "tell": "Build 2 published old files from build 1, which is the stale artifact bug that I then fixed.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Staging before the defect: the record of build 1",
+      "say": "What happened to staging? The deployment record of build one says staging ran version one point zero point zero, commit six four three five one f e. Because build two's deploy stage was skipped, the staging containers were never touched. So that version stayed active the whole time the defect build was failing.",
+      "caption": "Build #1 deployment record: staging = 1.0.0-64351fe. Build #2 skipped Deploy, so staging stayed on it.",
+      "actions": [{"goto": "/job/hotel-booking/1/artifact/reports/deployment.txt"}, {"pause": 8}],
+      "expect": "environment=staging, version=1.0.0, commit=64351fe, image_tag=1.0.0-64351fe.",
+      "tell": "Staging stayed on the previous version because the defective build never reached the deploy stage.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The corrective commit: build 3 is green and staging moves",
+      "say": "After the corrective commit, build three ran the same pipeline. All stages are green. Its deployment record shows the staging environment now runs version one point zero point zero, commit three zero c six a zero five, the corrected code. So the pipeline blocked the defective version, and released the fixed one.",
+      "caption": "Build #3 (fix): all green; deployment record: staging = 1.0.0-30c6a05.",
+      "actions": [{"goto": "/job/hotel-booking/3/"}, {"pause": 3}, {"goto": "/job/hotel-booking/3/artifact/reports/deployment.txt"}, {"pause": 7}],
+      "expect": "Build #3 page with a success icon, then deployment.txt with commit=30c6a05 and image_tag=1.0.0-30c6a05.",
+      "tell": "The corrective commit passed all stages and staging moved to the fixed version.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Build 9: the fix for stale reports works",
+      "say": "After I fixed the stale report problem, I repeated the experiment as build number nine. It fails on the same test. But look at its test result: only the tests that really ran. There is no tests dot e2e package any more. The report does not claim Selenium tests that did not happen. Eighty one passed, one failed, total eighty two.",
+      "caption": "Build #9 (same defect, after the fix): the report lists only tests that ran - no tests.e2e package.",
+      "actions": [{"goto": "/job/hotel-booking/9/testReport/"}, {"pause": 7}],
+      "expect": "Test Result with 1 failure, 81 passed and no tests.e2e package.",
+      "tell": "After the fix, a failed build no longer shows test results from an older build.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Build 9: no stale artifacts either",
+      "say": "And the artifacts of build nine: only the one test report that this build produced. No source archive, no deployment record, no health file from earlier builds. The same bug can no longer happen.",
+      "caption": "Build #9 artifacts: only reports/unit-integration-tests.xml - nothing left over from older builds.",
+      "actions": [{"goto": "/job/hotel-booking/9/artifact/"}, {"pause": 6}],
+      "expect": "The artifact list contains only the unit-integration-tests.xml report.",
+      "tell": "A failed build now publishes only its own files.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "Every build now starts clean",
+      "say": "This is the fix, in every build log, here build eleven: the very first command after checkout is rm minus rf reports dist. Old outputs are deleted before anything runs, so a build can never reuse an old report as if it were new. That closes the experiment: the defect was caught by the tests, deployment was blocked, the fix was released, and a bug in the pipeline itself was found and fixed.",
+      "caption": "Build #11 console: '+ rm -rf reports dist' right after checkout - old reports can never be reused.",
+      "actions": [{"goto": "/job/hotel-booking/11/console"}, {"pause": 2}, {"scroll_text": "rm -rf reports dist", "offset": 170}, {"pause": 6}],
+      "expect": "Highlighted: '+ rm -rf reports dist' near the top of the console.",
+      "tell": "Every build deletes old reports first, so a stale report can never be mistaken for a new one.",
+      "pauseAfter": 1
+    }
+  ]
+}

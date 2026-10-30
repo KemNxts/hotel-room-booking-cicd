@@ -1,0 +1,49 @@
+﻿{
+    "offsetSec":  1.1760000000000002,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "What the Agile plan document contains"
+                  },
+                  {
+                      "videoStartSec":  28.5,
+                      "title":  "User stories"
+                  },
+                  {
+                      "videoStartSec":  56.9,
+                      "title":  "Acceptance criteria"
+                  },
+                  {
+                      "videoStartSec":  82.9,
+                      "title":  "Proving story 5 with its tests, live"
+                  },
+                  {
+                      "videoStartSec":  104.8,
+                      "title":  "Product backlog"
+                  },
+                  {
+                      "videoStartSec":  125.9,
+                      "title":  "GitHub issues: the honest status"
+                  },
+                  {
+                      "videoStartSec":  153.6,
+                      "title":  "Kanban board"
+                  },
+                  {
+                      "videoStartSec":  178,
+                      "title":  "Sprint plan"
+                  },
+                  {
+                      "videoStartSec":  203.9,
+                      "title":  "Definition of Done"
+                  },
+                  {
+                      "videoStartSec":  229.5,
+                      "title":  "DevOps lifecycle diagram"
+                  },
+                  {
+                      "videoStartSec":  259.3,
+                      "title":  "The lifecycle in the real pipeline"
+                  }
+              ]
+}

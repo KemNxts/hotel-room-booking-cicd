@@ -1,0 +1,125 @@
+﻿1
+00:00:01,000 --> 00:00:02,000
+This is part two.
+
+2
+00:00:02,000 --> 00:00:10,000
+These are the real Selenium tests from the project, unchanged, now running in a visible Chrome window.
+
+3
+00:00:10,000 --> 00:00:18,000
+I only added a short pause after every click and a red outline on the element about to be clicked, so you can follow.
+
+4
+00:00:18,000 --> 00:00:22,000
+Without those pauses, all five journeys take about twenty seconds.
+
+5
+00:00:22,000 --> 00:00:26,000
+Each test starts from a new guest and a clean session.
+
+6
+00:00:29,000 --> 00:00:29,000
+Journey one.
+
+7
+00:00:29,000 --> 00:00:40,000
+The test opens the register page, types a name, a unique email and a password, clicks Create account, then waits until the name appears in the navigation bar.
+
+8
+00:00:40,000 --> 00:00:49,000
+It asserts that the name is right, that the message says the account has been created, and that the browser is on the rooms page.
+
+9
+00:00:51,000 --> 00:00:52,000
+Journey two.
+
+10
+00:00:52,000 --> 00:00:55,000
+The test registers a guest and logs out.
+
+11
+00:00:55,000 --> 00:01:03,000
+Then it tries to log in with a wrong password and asserts that the error message appears and that the guest is still logged out.
+
+12
+00:01:03,000 --> 00:01:09,000
+Then it logs in with the right password and asserts that the welcome back message appears.
+
+13
+00:01:09,000 --> 00:01:12,000
+This checks both the refusal and the success.
+
+14
+00:01:14,000 --> 00:01:17,000
+Journey three, the core of the application.
+
+15
+00:01:17,000 --> 00:01:26,000
+A new guest searches rooms for two nights, books the first free room, and the test asserts the status is PENDING and the dates are correct.
+
+16
+00:01:26,000 --> 00:01:31,000
+Then it clicks Confirm and waits for the status to change to CONFIRMED.
+
+17
+00:01:31,000 --> 00:01:37,000
+It also asserts that the confirm button disappears, so a booking cannot be confirmed twice.
+
+18
+00:01:39,000 --> 00:01:40,000
+Journey four.
+
+19
+00:01:40,000 --> 00:01:44,000
+A guest books and confirms, then clicks Cancel.
+
+20
+00:01:44,000 --> 00:01:50,000
+A dialog asks for confirmation, and the test asserts that nothing is cancelled yet.
+
+21
+00:01:50,000 --> 00:01:56,000
+After accepting, the status becomes CANCELLED and the cancel button disappears.
+
+22
+00:01:56,000 --> 00:02:02,000
+Finally the test opens My bookings and asserts that the row for this booking shows CANCELLED.
+
+23
+00:02:02,000 --> 00:02:04,000
+That is status tracking.
+
+24
+00:02:07,000 --> 00:02:10,000
+Journey five protects the most important rule.
+
+25
+00:02:10,000 --> 00:02:13,000
+The first guest books a room and logs out.
+
+26
+00:02:13,000 --> 00:02:16,000
+A second guest registers and searches the same dates.
+
+27
+00:02:16,000 --> 00:02:22,000
+The test asserts that the room now shows Booked, and that there is no Book button for it.
+
+28
+00:02:22,000 --> 00:02:27,000
+So two guests can never hold the same room for the same nights.
+
+29
+00:02:30,000 --> 00:02:35,000
+That was all five journeys, with the real application and a real browser.
+
+30
+00:02:35,000 --> 00:02:40,000
+The run ends with five passed, as in the terminal part of this video.
+
+31
+00:02:40,000 --> 00:02:49,000
+This is what Jenkins runs in its Selenium stage, headless, every time someone pushes a commit, and a failure there stops the deployment.
+
+

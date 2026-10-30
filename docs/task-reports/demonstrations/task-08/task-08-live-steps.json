@@ -1,0 +1,90 @@
+{
+  "title": "Task 8 (part 2) - A live pipeline run in Jenkins: source to deployed staging",
+  "mode": "browser",
+  "app": false,
+  "baseUrl": "http://localhost:8090",
+  "jenkinsLogin": true,
+  "prereq": [
+    "Jenkins and the registry running (`cd deploy\\jenkins; docker compose up -d`), Docker Desktop running.",
+    "This part starts a REAL build of the `develop` branch and deploys it to STAGING (http://localhost:8081). It takes about 2 minutes. It does not touch prod, GitHub or Docker Hub.",
+    "Jenkins builds committed code from the repository mounted at /repo: commit your changes first if you want them in the build.",
+    "Log in to Jenkins before the demo so the password is not typed in front of the examiner."
+  ],
+  "recovery": [
+    {"symptom": "The build fails at 'Install dependencies' with CERTIFICATE_VERIFY_FAILED", "fix": "Antivirus HTTPS scanning inside the container. Put your antivirus root certificate in certs/ as a .crt file and rebuild the Jenkins image: `cd deploy\\jenkins; docker compose up -d --build`."},
+    {"symptom": "The build fails at 'Deploy' (port 8081 in use)", "fix": "Another program uses 8081. `Get-NetTCPConnection -LocalPort 8081 -State Listen` shows it; stop it and re-run the build."},
+    {"symptom": "'permission denied ... docker.sock'", "fix": "Linux host only: set DOCKER_GID in deploy/jenkins/.env."},
+    {"symptom": "A test stage fails", "fix": "That is the quality gate working. Read the Console Output and the Test Result page, fix the code, commit, and build again."},
+    {"symptom": "Build waits in the queue", "fix": "Only one build runs at a time (disableConcurrentBuilds). Wait for the running build to finish."}
+  ],
+  "extra": [
+    {"what": "Start the same build from a terminal instead of the browser (uses the API and your password from .env; the commands do not print it)", "cmd": "# open http://localhost:8090/job/hotel-booking/build?delay=0sec and click Build"},
+    {"what": "Check what the pipeline deployed", "cmd": "curl.exe -s http://localhost:8081/health"}
+  ],
+  "extraQuestions": [
+    {"q": "Why does the deploy stage come after the tests?", "a": "Because of the quality gate: if any test or lint step fails, Jenkins skips every later stage, so only tested code is packaged, published and deployed. The deploy stage also waits for the containers to be healthy and the health stage checks that the running version and commit are the ones just built."},
+    {"q": "Which environment did this build deploy to, and how is that chosen?", "a": "Staging, on port 8081. The APP_ENV parameter chooses it: staging uses port 8081 and the Docker Compose project hotel-staging, prod uses 8082 and hotel-prod, with separate containers and data volumes."}
+  ],
+  "steps": [
+    {
+      "title": "Start a real build: Build with Parameters",
+      "say": "Now a real run. In Jenkins I choose Build with Parameters. The form shows the three parameters of the Jenkinsfile with their defaults: APP ENV staging, so it deploys to the staging environment on port eight thousand eighty one; BRANCH develop, the integration branch; and REGISTRY localhost colon five thousand, the local registry. I click Build.",
+      "caption": "Build with Parameters: APP_ENV=staging, BRANCH=develop, REGISTRY=localhost:5000 -> Build.",
+      "actions": [{"trigger_build": "hotel-booking", "read_secs": 6}, {"pause": 2}],
+      "expect": "The parameter form with APP_ENV staging, BRANCH develop, REGISTRY localhost:5000; after clicking Build a new build is queued.",
+      "tell": "I start a real build of develop and deploy it to staging, using the parameters of the Jenkinsfile.",
+      "pauseAfter": 0
+    },
+    {
+      "title": "Watching the stages: checkout, install, static checks, tests",
+      "say": "This is the stage view of the new build, filling in live. Stage one, checkout, fetches the commit and builds the version and commit tag. Stage two installs the dependencies in a fresh virtual environment. Stage three, static checks, compiles the code and runs the linter. Stage four runs the unit and integration tests. If any of these turns red, everything after it is skipped.",
+      "caption": "Live Stage View: Checkout -> Install dependencies -> Static checks -> Unit & integration tests.",
+      "actions": [{"goto": "/job/hotel-booking/"}, {"scroll_text": "Stage View", "offset": 80, "mark": false}, {"pause": 22}],
+      "expect": "A new row at the top of the Stage View whose cells turn green one after another.",
+      "tell": "The pipeline runs checkout, install, static checks and the tests, and stops at the first failure.",
+      "pauseAfter": 0
+    },
+    {
+      "title": "Watching the stages: Selenium, package, images, registry",
+      "say": "Stage five runs the Selenium browser tests in headless Chromium, about twenty seconds. Stage six packages the source archive and writes its checksum. Stage seven builds the two Docker images, the application and Nginx, tagged with the version and the commit. Stage eight publishes both images to the local registry. Only code that passed every test gets this far.",
+      "caption": "Live: Selenium tests -> source archive + checksum -> Docker images -> push to the local registry.",
+      "actions": [{"pause": 28}],
+      "expect": "The row continues turning green: E2E tests, Package source, Build images, Publish images.",
+      "tell": "Images are built and published only after all the tests pass.",
+      "pauseAfter": 0
+    },
+    {
+      "title": "Deploy and health check, then the result",
+      "say": "Stage nine deploys: Docker compose pulls the published images and starts the containers, and waits until they are healthy. Stage ten, the health check, asks the running application for its version and commit and compares them with this build. When the whole row is green, the build is a success. I wait for the build to finish.",
+      "caption": "Deploy (compose up --wait) -> Health check (version and commit must match) -> build finished.",
+      "actions": [{"wait_build": "hotel-booking", "timeout": 480}, {"pause": 3}],
+      "expect": "The row is fully green and the new build is marked SUCCESS in the build history.",
+      "tell": "The build finished green: tested, packaged, published, deployed and verified.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The console: images, registry push, deployment",
+      "say": "The console of the new build confirms each step. Docker build created the application image, tagged with the registry, the version and the commit. Docker push published it. Docker compose up with the wait option started the containers, and Docker reported them healthy. Finally the pipeline printed deployed, with the version, commit tag and the staging address.",
+      "caption": "Console: docker build -> docker push -> compose up --wait (Healthy) -> 'Deployed ... to staging'.",
+      "actions": [
+        {"goto": "/job/hotel-booking/lastBuild/console"}, {"pause": 2},
+        {"scroll_text": "docker build -t localhost:5000/hotel-booking-app", "offset": 160}, {"pause": 3},
+        {"scroll_text": "docker push localhost:5000/hotel-booking-app", "offset": 160}, {"pause": 3},
+        {"scroll_text": "docker compose up -d --no-build --wait", "offset": 160}, {"pause": 3},
+        {"scroll_text": "Deployed 1.1.0-", "offset": 200}, {"pause": 3}
+      ],
+      "expect": "Highlighted: the docker build command with the registry tag, docker push, compose up --wait and the final 'Deployed ... to staging: http://localhost:8081'.",
+      "tell": "The log shows the image built, pushed to the registry, deployed and reported healthy.",
+      "pauseAfter": 1
+    },
+    {
+      "title": "The deployment record",
+      "say": "Every deployment writes a record, archived with the build. It says the environment, the branch, the version, the commit, the image tag, the names of both images, the address, and the Jenkins build address. This is the traceability: from a running staging container back to one commit and one build.",
+      "caption": "reports/deployment.txt: environment, branch, version, commit, image tag, images, URL, build URL.",
+      "actions": [{"goto": "/job/hotel-booking/lastBuild/artifact/reports/deployment.txt"}, {"pause": 8}],
+      "expect": "Plain text: environment=staging, branch=develop, version=1.1.0, commit=<short sha>, image_tag, app_image, nginx_image, url=http://localhost:8081, jenkins_build=...",
+      "tell": "Each deployment leaves a record that traces the running version back to a commit and a build.",
+      "pauseAfter": 1
+    }
+  ]
+}

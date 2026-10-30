@@ -1,0 +1,37 @@
+﻿{
+    "offsetSec":  1.246,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.3,
+                      "title":  "How a failing test stops the pipeline"
+                  },
+                  {
+                      "videoStartSec":  39,
+                      "title":  "The experiment branch: a deliberate defect"
+                  },
+                  {
+                      "videoStartSec":  67.9,
+                      "title":  "The defect: one character"
+                  },
+                  {
+                      "videoStartSec":  95.5,
+                      "title":  "Live: the tests catch the defect"
+                  },
+                  {
+                      "videoStartSec":  129,
+                      "title":  "Live: the corrective commit makes it green"
+                  },
+                  {
+                      "videoStartSec":  158.8,
+                      "title":  "Clean up the disposable clone"
+                  },
+                  {
+                      "videoStartSec":  171.2,
+                      "title":  "The stale test report bug and its fix"
+                  },
+                  {
+                      "videoStartSec":  207.6,
+                      "title":  "Commit IDs in the Jenkins evidence"
+                  }
+              ]
+}

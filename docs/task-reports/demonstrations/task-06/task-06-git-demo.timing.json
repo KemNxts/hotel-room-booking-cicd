@@ -1,0 +1,41 @@
+﻿{
+    "offsetSec":  1.27,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.3,
+                      "title":  "Two features built in parallel"
+                  },
+                  {
+                      "videoStartSec":  30.8,
+                      "title":  "The saved record of the real conflict"
+                  },
+                  {
+                      "videoStartSec":  58.8,
+                      "title":  "Reproducing the conflict live, safely"
+                  },
+                  {
+                      "videoStartSec":  85,
+                      "title":  "Reading the conflict markers"
+                  },
+                  {
+                      "videoStartSec":  113.3,
+                      "title":  "The resolution: keep both"
+                  },
+                  {
+                      "videoStartSec":  137.7,
+                      "title":  "Tests and the merge commit message"
+                  },
+                  {
+                      "videoStartSec":  164.1,
+                      "title":  "Abort and clean up"
+                  },
+                  {
+                      "videoStartSec":  178.8,
+                      "title":  "Release tags v1.0.0 and v1.1.0"
+                  },
+                  {
+                      "videoStartSec":  207.6,
+                      "title":  "Branch versus tag"
+                  }
+              ]
+}

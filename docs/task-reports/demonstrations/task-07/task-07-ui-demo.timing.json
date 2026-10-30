@@ -1,0 +1,37 @@
+﻿{
+    "offsetSec":  1.182,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "The Jenkins dashboard"
+                  },
+                  {
+                      "videoStartSec":  27.8,
+                      "title":  "The job page: stage view and build history"
+                  },
+                  {
+                      "videoStartSec":  52.2,
+                      "title":  "The job configuration: parameters, polling, Git"
+                  },
+                  {
+                      "videoStartSec":  90,
+                      "title":  "One real build: number 11"
+                  },
+                  {
+                      "videoStartSec":  117.5,
+                      "title":  "The console output: install, lint, test"
+                  },
+                  {
+                      "videoStartSec":  146.6,
+                      "title":  "Test results and reports"
+                  },
+                  {
+                      "videoStartSec":  168.5,
+                      "title":  "Archived artifacts: source archive and checksum"
+                  },
+                  {
+                      "videoStartSec":  193.3,
+                      "title":  "Build history and the pass/fail trend"
+                  }
+              ]
+}

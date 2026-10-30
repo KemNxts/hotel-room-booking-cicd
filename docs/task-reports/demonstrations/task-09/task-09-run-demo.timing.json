@@ -1,0 +1,33 @@
+﻿{
+    "offsetSec":  1.205,
+    "steps":  [
+                  {
+                      "videoStartSec":  1.2,
+                      "title":  "The same tests, now in a visible browser"
+                  },
+                  {
+                      "videoStartSec":  28.6,
+                      "title":  "Journey 1: register a new guest"
+                  },
+                  {
+                      "videoStartSec":  51.3,
+                      "title":  "Journey 2: wrong password, then the right one"
+                  },
+                  {
+                      "videoStartSec":  74.3,
+                      "title":  "Journey 3: search, request and confirm a booking"
+                  },
+                  {
+                      "videoStartSec":  99.4,
+                      "title":  "Journey 4: cancel a booking and track the status"
+                  },
+                  {
+                      "videoStartSec":  126.6,
+                      "title":  "Journey 5: a booked room is unavailable to another guest"
+                  },
+                  {
+                      "videoStartSec":  149.9,
+                      "title":  "All five journeys passed"
+                  }
+              ]
+}
